@@ -21,7 +21,7 @@ than in week 10.
 |  |  |  |  |  |  |
 |  |  |  |  |  |  |
 |  |  |  |  |  |  |
-|  |  |  |  |  |  |
+| Manar Alghanim | client leads | 5 | teams | Manar Alghanim | |    
 |  |  |  |  |  |  |
 
 Type your own name in the fifth column, in your own commit. Have Antigravity write your
