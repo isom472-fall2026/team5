@@ -17,8 +17,8 @@ than in week 10.
 
 | Name | Standing role | Hours per week I can give | How to reach me fastest | Signed — by hand | Signed again — through Antigravity |
 |---|---|---|---|---|---|
-|  |  |  |  |  |  |
-|  |  |  |  |  |  |
+|  nouf| client lead |8  | teams | nouf | nouf542,2026-09-24 |
+| Manar  | quality lead | 8 | team's | manar alghanem |  |
 |  |  |  |  |  |  |
 |  |  |  |  |  |  |
 |  |  |  |  |  |  |
