@@ -19,7 +19,7 @@ than in week 10.
 |---|---|---|---|---|---|
 | Esraa Taheri | Build & Data Lead | 12 | Whatsapp | Esraa |  |
 | nouf almutairi |client lead  |8  | teams |nouf  |nouf542,26-09-2026  |
-|  |  |  |  |  |  |
+| Manar Alghanim | quality lead | 8 | teams  | Manar Alghanim |  |
 |  |  |  |  |  |  |
 |  |  |  |  |  |  |
 |  |  |  |  |  |  |
