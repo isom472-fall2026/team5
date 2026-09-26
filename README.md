@@ -38,8 +38,8 @@ it. Do not delete it.
 |---|---|---|
 | Client Lead | TODO | the backlog of user stories |
 | Design Lead | TODO | the prototype and the screen list |
-| Data Lead | TODO | the schema and seed data in Supabase |
-| Build Lead | TODO | the running system and release notes |
+| Data Lead | Esraa Taheri | the schema and seed data in Supabase |
+| Build Lead | Esraa Taheri | the running system and release notes |
 | FinOps Lead | TODO | the ledger |
 | Quality Lead | TODO | bug issues, each closed as fixed, will-not-fix or not-a-bug |
 
