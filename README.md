@@ -36,12 +36,12 @@ it. Do not delete it.
 
 | Role | Name | What they hand in |
 |---|---|---|
-| Client Lead | TODO | the backlog of user stories |
-| Design Lead | TODO | the prototype and the screen list |
-| Data Lead | TODO | the schema and seed data in Supabase |
-| Build Lead | TODO | the running system and release notes |
+| Client Lead | nouf | the backlog of user stories |
+| Design Lead | manar | the prototype and the screen list |
+| Data Lead | Esraa Taheri | the schema and seed data in Supabase |
+| Build Lead | Esraa Taheri | the running system and release notes |
 | FinOps Lead | TODO | the ledger |
-| Quality Lead | TODO | bug issues, each closed as fixed, will-not-fix or not-a-bug |
+| Quality Lead | nouf | bug issues, each closed as fixed, will-not-fix or not-a-bug |
 
 At six members, every role is held by one person. At five, one person holds a combined
 Quality and FinOps Lead. **At four there is no FinOps or Quality Lead at all:** whoever is

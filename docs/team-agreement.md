@@ -17,11 +17,10 @@ than in week 10.
 
 | Name | Standing role | Hours per week I can give | How to reach me fastest | Signed — by hand | Signed again — through Antigravity |
 |---|---|---|---|---|---|
-|  nouf| client lead |8  | teams | nouf | nouf542,2026-09-24 |
-| Manar  | quality lead | 8 | team's | manar alghanem |  |
-|  |  |  |  |  |  |
-|  |  |  |  |  |  |
-|  |  |  |  |  |  |
+
+| Esraa Taheri | Build & Data Lead | 12 | Whatsapp | Esraa |  |
+| nouf almutairi |client lead  |8  | teams |nouf  |nouf542,26-09-2026  |
+| Manar Alghanim | quality lead | 8 | teams  | Manar Alghanim |  |
 |  |  |  |  |  |  |
 
 Type your own name in the fifth column, in your own commit. Have Antigravity write your
