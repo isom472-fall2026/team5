@@ -17,7 +17,7 @@ than in week 10.
 
 | Name | Standing role | Hours per week I can give | How to reach me fastest | Signed — by hand | Signed again — through Antigravity |
 |---|---|---|---|---|---|
-| Esraa Taheri | Build & Data Lead | 12 | Whatsapp | Esraa | |
+| Esraa Taheri | Build & Data Lead | 12 | Whatsapp | Esraa | EsraaHTaheri 28-09-2026|
 | nouf almutairi | client lead | 8 | teams | nouf | nouf542, 26-09-2026 |
 | Manar Alghanim | quality lead | 8 | teams | Manar Alghanim |s2182160972, 27-09-2026 |
 
