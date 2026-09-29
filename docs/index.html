@@ -12,7 +12,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Proposal — ISOM 472</title>
+<title>Academic Field Training System — Proposal</title>
 <style>
   body {
     max-width: 40em;
@@ -21,36 +21,110 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     line-height: 1.6;
   }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  th {
+    background-color: #f2f2f2;
+  }
 </style>
 </head>
 <body>
 
-<h1>TODO: the system's name — Proposal</h1>
-<p>TODO: your team name and members.</p>
+<h1>Academic Field Training System — Proposal</h1>
+<p>Team 5: Esraa Taheri, Nouf Almutairi, Manar Alghanim</p>
 
 <h2>1. The client, and how you reach them</h2>
-<p>TODO</p>
+<p>Dr. Asmaa Alfadhel, Coordinator of the Academic Field Training Unit at the College.<br>
+We communicate via her university email and in-person weekly coordination meetings at the OSTA office.</p>
 
 <h2>2. What happens today, and what goes wrong</h2>
-<p>TODO</p>
+<p>Students find placements by contacting companies directly or reading department lists. Students hand registration forms to the training coordinator. During training, students record hours on sign-in sheets at company sites. Supervisors write evaluations at the completion of training. Supervisors transmit these forms through email, post, or student delivery. The breakdown occurs when forms sit in email inboxes or on desks, so the coordinator lacks records to enter grades before deadlines. No coordination between the professor and the office and the training partners regarding student placement, grading and nature of work.</p>
 
 <h2>3. Who is better off, and how you would know</h2>
-<p>TODO</p>
+<p>Students, academic coordinators, and external workplace mentors gain a single point of interaction and status tracking.<br>
+We know it worked when the coordinator closes the semester with zero missing evaluation forms and zero untracked attendance records.<br>
+Grade approvals for training completion are finalized within forty-eight hours of the semester conclusion.</p>
 
 <h2>4. What the system does, in outline</h2>
-<p>TODO</p>
+<ul>
+  <li>Browse approved training organizations and submit placement applications online.</li>
+  <li>Log daily attendance hours and submit weekly training summary reports.</li>
+  <li>Review submitted attendance entries and approve completed student hours.</li>
+  <li>Fill and submit milestone evaluation forms with scoring rubrics for trainees.</li>
+  <li>Broadcast automated reminder notifications for approaching report and evaluation deadlines.</li>
+  <li>Export cohort attendance records and final performance summaries for academic grading.</li>
+</ul>
 
 <h2>5. What it records</h2>
-<p>TODO</p>
+<table>
+  <thead>
+    <tr>
+      <th>Entity</th>
+      <th>Attributes Recorded</th>
+      <th>Relationships</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>User Profile</td>
+      <td>User ID, full name, role (student, coordinator, mentor), email, phone</td>
+      <td>Associated with placements, reports, and evaluations</td>
+    </tr>
+    <tr>
+      <td>Training Opportunity</td>
+      <td>Placement ID, organization name, address, available capacity, description</td>
+      <td>Linked to approved student applicants</td>
+    </tr>
+    <tr>
+      <td>Attendance Record</td>
+      <td>Record ID, date, check-in time, check-out time, hours logged</td>
+      <td>Created by student; validated by company mentor</td>
+    </tr>
+    <tr>
+      <td>Training Report</td>
+      <td>Report ID, week number, task summary, submission timestamp</td>
+      <td>Submitted by student; reviewed by academic coordinator</td>
+    </tr>
+    <tr>
+      <td>Evaluation Submission</td>
+      <td>Evaluation ID, rubric ratings, mentor feedback, completion date</td>
+      <td>Authored by mentor; attached to student training record</td>
+    </tr>
+  </tbody>
+</table>
 
 <h2>6. In scope by the final week — and what is not</h2>
-<p>TODO</p>
+<p><strong>In scope by the final week:</strong></p>
+<ul>
+  <li>Web interface for students to browse organizations and submit training applications.</li>
+  <li>Daily attendance logging module with workplace supervisor approval actions.</li>
+  <li>Weekly progress report submission and coordinator review view.</li>
+  <li>Supervisor evaluation submission form based on standard evaluation criteria.</li>
+  <li>Automated notification triggers for pending report submissions and overdue evaluations.</li>
+</ul>
+<p><strong>Deliberately leaving out:</strong></p>
+<ul>
+  <li>Native mobile applications for iOS or Android.</li>
+  <li>Bi-directional synchronization with university student information systems (SIS).</li>
+  <li>GPS-based geofencing or biometric verification for physical attendance tracking.</li>
+  <li>Financial stipend processing or commercial contract management between parties.</li>
+</ul>
 
 <h2>7. After the semester</h2>
-<p>TODO</p>
+<p>The department coordinator can deploy the system to pilot the subsequent summer internship cohort.<br>
+A succeeding student project team can implement university single sign-on (SSO) and develop push-notification integrations for mobile devices.</p>
 
 <h2>8. What you told the client this is</h2>
-<p>TODO</p>
+<p>We told the client that this is an undergraduate capstone prototype built by student developers, focused strictly on core placement, tracking, and evaluation workflows.<br>
+We specified that development ends with the academic semester, after which we hand over the source repository, setup guide, and documentation without ongoing maintenance commitments.</p>
 
 </body>
 </html>
