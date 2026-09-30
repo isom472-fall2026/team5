@@ -16,10 +16,10 @@ than in week 10.
 ## What each of us commits to
 
 | Name | Standing role | Hours per week I can give | How to reach me fastest | Signed — by hand | Signed again — through Antigravity |
-|---|---|---|---|---|---|
 | Esraa Taheri | Build & Data Lead | 12 | Whatsapp | Esraa | EsraaHTaheri 28-09-2026|
 | nouf almutairi | client lead | 8 | teams | nouf | nouf542, 26-09-2026 |
 | Manar Alghanim | quality lead | 8 | teams | Manar Alghanim |s2182160972, 27-09-2026 |
+|Heba Matar |finop|8|whatspp|Heba Matar|----|
 
 Type your own name in the fifth column, in your own commit. Have Antigravity write your
 GitHub handle and today's date in the sixth, in a second commit. Nobody signs for anybody
