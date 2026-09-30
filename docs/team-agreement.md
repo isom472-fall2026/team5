@@ -14,11 +14,11 @@ three things, and all three are easier to settle now, while everyone is still fr
 than in week 10.
 
 ## What each of us commits to
-
 | Name | Standing role | Hours per week I can give | How to reach me fastest | Signed — by hand | Signed again — through Antigravity |
-| Esraa Taheri | Build & Data Lead | 12 | Whatsapp | Esraa | EsraaHTaheri 28-09-2026|
+| --- | --- | --- | --- | --- | --- |
+| Esraa Taheri | Build & Data Lead | 12 | Whatsapp | Esraa | EsraaHTaheri 28-09-2026 |
 | nouf almutairi | client & design lead | 8 | teams | nouf | nouf542, 26-09-2026 |
-| Manar Alghanim | quality lead | 8 | teams | Manar Alghanim |s2182160972, 27-09-2026 |
+| Manar Alghanim | quality lead | 8 | teams | Manar Alghanim | s2182160972, 27-09-2026 |
 | Heba Matar | finop | 8 | whatspp | Heba Matar | s2211113980-ui, 30-09-2026 |
 
 Type your own name in the fifth column, in your own commit. Have Antigravity write your
