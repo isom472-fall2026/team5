@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>erd</title>
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 2rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      transition: color 0.15s ease;
+    }
+
+    .back-link:hover {
+      color: var(--primary-hover);
+      text-decoration: underline;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-top: 0.25rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: #0f172a;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .image-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #ffffff;
+      padding: 1rem;
+      border-radius: var(--radius);
+      overflow-x: auto;
+    }
+
+    .image-wrapper img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 4px;
+    }
+
+    .caption {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 0.75rem 1rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    .entity-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.9em;
+      background: #f1f5f9;
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      color: #0f172a;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../index.html" class="back-link">&larr; Back to Proposal</a>
+      <h1>erd</h1>
+      <p class="subtitle">Entity Relationship Diagram &mdash; Internship Management System</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Diagram View</h2>
+        <div class="image-wrapper">
+          <img src="../ERD.png" alt="Entity Relationship Diagram for Internship Management System" id="erd-diagram">
+        </div>
+        <p class="caption">Figure 1: Entity Relationship Diagram showing entities, attributes, primary keys, and relationships.</p>
+      </section>
+
+      <section class="card">
+        <h2>Entities &amp; Schema Overview</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Entity</th>
+              <th>Primary Key</th>
+              <th>Foreign Keys / References</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="entity-code">Student</span></td>
+              <td><span class="entity-code">student_id</span></td>
+              <td><span class="entity-code">employment_place</span> &rarr; <span class="entity-code">EmploymentPlace.place_name</span></td>
+              <td>Stores trainee profile, academic performance (GPA, credits), contact details, and department.</td>
+            </tr>
+            <tr>
+              <td><span class="entity-code">InternshipCycle</span></td>
+              <td><span class="entity-code">cycle_id</span></td>
+              <td>
+                <span class="entity-code">student_id</span> &rarr; <span class="entity-code">Student.student_id</span><br>
+                <span class="entity-code">professor_id</span> &rarr; <span class="entity-code">SupervisingProfessor.professor_id</span><br>
+                <span class="entity-code">place_name</span> &rarr; <span class="entity-code">EmploymentPlace.place_name</span>
+              </td>
+              <td>Connects a student, supervising professor, and host workplace for a specific semester and year.</td>
+            </tr>
+            <tr>
+              <td><span class="entity-code">SupervisingProfessor</span></td>
+              <td><span class="entity-code">professor_id</span></td>
+              <td><em>None</em></td>
+              <td>Maintains faculty coordinator profiles, university emails, and academic departments.</td>
+            </tr>
+            <tr>
+              <td><span class="entity-code">EmploymentPlace</span></td>
+              <td><span class="entity-code">place_name</span></td>
+              <td><em>None</em></td>
+              <td>Stores external training organizations, coordination contact numbers, and available departments.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>Key Relationships</h2>
+        <ul>
+          <li><strong>Supervision:</strong> A <span class="entity-code">SupervisingProfessor</span> supervises one or more <span class="entity-code">InternshipCycle</span> sessions.</li>
+          <li><strong>Hosting:</strong> An <span class="entity-code">EmploymentPlace</span> hosts one or more <span class="entity-code">InternshipCycle</span> placements.</li>
+          <li><strong>Participation:</strong> A <span class="entity-code">Student</span> is linked to their training cycle via <span class="entity-code">InternshipCycle</span> and references their host organization in <span class="entity-code">employment_place</span>.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>Academic Field Training System &bull; Team 5</p>
+    </footer>
+  </div>
+</body>
+</html>
