@@ -1,9 +1,8 @@
 # TODO: the system's name
 
-**Client:** TODO: who the client is — the organisation and the person you deal with.
-
-TODO: what the system does, in two lines. Plain language, no jargon. Someone who has
-never met your client should understand what it is for after reading these two lines.
+**Client:**  College of Business Administration at Kuwait Universit 'CBA'
+who the client is — Office of Student Training and Alumni 'OSTA'
+TODO: This system addresses the frequent loss of daily evaluation forms
 
 > **Next due: Wednesday 23 September — your proposal.**
 > Write it in `docs/proposal.md`, then publish it. Steps: [docs/how-we-work.md](docs/how-we-work.md#phase-1--the-proposal)
