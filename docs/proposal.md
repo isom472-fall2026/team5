@@ -4,11 +4,11 @@
 
 Dr. Asmaa Alfadhel, Coordinator of the Academic Field Training Unit at the College.  
 We communicate via her university email and in-person weekly coordination meetings at the OSTA office.
-
+The coordinator will continue to meet with the team until the end of the semester
 ## 2. What happens today, and what goes wrong
 
 Students find placements by contacting companies directly or reading department lists. Students hand registration forms to the training coordinator. During training, students record hours on sign-in sheets at company sites. Supervisors write evaluations at the completion of training. Supervisors transmit these forms through email, post, or student delivery. The breakdown occurs when forms sit in email inboxes or on desks, so the coordinator lacks records to enter grades before deadlines. No coordination between the professor and the office and the training partners regarding student placement, grading and nature of work.
-
+Many evaluation forms go missing in transit or storage, contributing to incomplete records.
 ## 3. Who is better off, and how you would know
 
 Students, academic coordinators, and external workplace mentors gain a single point of interaction and status tracking.  
@@ -17,12 +17,13 @@ Grade approvals for training completion are finalized within forty-eight hours o
 
 ## 4. What the system does, in outline
 
-* Browse approved training organizations and submit placement applications online.
+* Submit placement applications online.
 * Log daily attendance hours and submit weekly training summary reports.
 * Review submitted attendance entries and approve completed student hours.
 * Fill and submit milestone evaluation forms with scoring rubrics for trainees.
 * Broadcast automated reminder notifications for approaching report and evaluation deadlines.
 * Export cohort attendance records and final performance summaries for academic grading.
+  
 
 ## 5. What it records
 
@@ -53,6 +54,7 @@ Grade approvals for training completion are finalized within forty-eight hours o
 
 The department coordinator can deploy the system to pilot the subsequent summer internship cohort.  
 A succeeding student project team can implement university single sign-on (SSO) and develop push-notification integrations for mobile devices.
+We confirmed that the deployed system is publicly visible at a public address for public viewing
 
 ## 8. What you told the client this is
 
