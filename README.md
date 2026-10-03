@@ -37,11 +37,11 @@ it. Do not delete it.
 | Role | Name | What they hand in |
 |---|---|---|
 | Client Lead | nouf | the backlog of user stories |
-| Design Lead | manar | the prototype and the screen list |
+| Design Lead | nouf | the prototype and the screen list |
 | Data Lead | Esraa Taheri | the schema and seed data in Supabase |
 | Build Lead | Esraa Taheri | the running system and release notes |
-| FinOps Lead | TODO | the ledger |
-| Quality Lead | nouf | bug issues, each closed as fixed, will-not-fix or not-a-bug |
+| FinOps Lead | heba | the ledger |
+| Quality Lead | manar | bug issues, each closed as fixed, will-not-fix or not-a-bug |
 
 At six members, every role is held by one person. At five, one person holds a combined
 Quality and FinOps Lead. **At four there is no FinOps or Quality Lead at all:** whoever is
@@ -52,12 +52,12 @@ cuts the tag.
 
 | Phase | Phase Lead | Due |
 |---|---|---|
-| 1 — team, environment, proposal | TODO | Wed 23 Sep |
-| 2 — design sprint | TODO | Wed 7 Oct |
-| 3 — sprint 1 | TODO | Wed 21 Oct |
-| 4 — sprint 2 | TODO | Wed 4 Nov |
-| 5 — sprint 3 | TODO | Wed 18 Nov |
-| 6 — final sprint | TODO | Wed 9 Dec |
+| 1 — team, environment, proposal | esraa | Wed 23 Sep |
+| 2 — design sprint | nouf| Wed 7 Oct |
+| 3 — sprint 1 | manar | Wed 21 Oct |
+| 4 — sprint 2 | heba | Wed 4 Nov |
+| 5 — sprint 3 | nouf | Wed 18 Nov |
+| 6 — final sprint | manar | Wed 9 Dec |
 
 ## What is in this repository
 
