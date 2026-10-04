@@ -5,33 +5,41 @@ whoever is free at the end.*
 
 ## What was delivered
 
-<!-- What works now that did not work at the start of the phase. Plain language, what a
-     user can do. Not a list of commits. -->
+<!--We defined the client requirements and personas for the Academic Field Training Unit system. We established the relational schema supporting users, placements, attendance logs, weekly reports, and evaluation forms with row-level security.
 
 ## Who did what
+## Who did what
+- Team Lead / Client Lead: Defined personas, user stories with acceptance criteria, and updated the backlog.
+- Data Lead: Designed `db/schema.sql` with primary/foreign keys and RLS policies, and documented table definitions in `docs/schema.md`.
+- FinOps Lead: Formulated the token management plan and maintained the AI request usage log in `docs/finops-ledger.md`.
+- Quality Lead: Verified schema constraints, tested RLS policies, reviewed persona consistency, and conducted quality assurance across all Phase 2 deliverables.
+- Build / Phase Lead: Managed branch integrations, environment commits, and drafted the delivery note.
 
-<!-- One line per team member: name, then the stories they built. Everybody appears. -->
 
 | Name | Stories |
 |---|---|
-|  |  |
+| nouf | Personas & Project Scope |
+| esraa |SQL Schema & RLS Policies |
+| manar | Quality Assurance & Schema Testing|
+|heba  | FinOps Ledger & Token Plan|
+
 
 ## Links to the stories
 
-*The full story list at this tag is saved in ../backlog.md — do not repeat it here.*
+The full story list at this tag is saved in [backlog.md](../backlog.md)
+- Personas & Client Requirements
+- SQL Schema & RLS Policies
+- FinOps Plan & Token Ledger
+- Quality Assurance & Schema Review
+- Branch Management & Phase 2 Delivery Note
 
-<!-- Link each story listed above to its issue. -->
-
-- #__ —
 
 ## The tag cut for this phase
 
 `phase-2`
 
-<!-- Created by the Phase Lead — steps in ../how-we-work.md#how-to-create-the-tag. The tag is what gets graded — anything pushed after it does not
-     count for this phase. -->
+
 
 ## Anything not finished, and where it went
 
-<!-- What was planned and was not finished, and what happened to it: moved to the next phase,
-     dropped, or replaced. Say which. -->
+All Phase 2 deliverables specified in the checklist were completed. No planned items were dropped, replaced, or deferred to Phase 3
