@@ -1,24 +1,10 @@
 # Personas
 
-Two to four people who will use your system. Real roles, not demographics.
-
-One paragraph each: who they are, what they are trying to get done, and what makes it hard
-today. A persona you cannot picture doing their job is not useful.
-
-You write these in Phase 2, from what your client told you — not from imagination.
-
 ---
 
-## <!-- EXAMPLE — delete this persona --> Mariam, shop supervisor
+## Persona 1: Dr. Asmaa - Academic Field Training Coordinator
+Dr. Asmaa is the coordinator of the Academic Field Training Unit who manages student placements, tracks daily attendance logs, and collects final evaluation forms. She is trying to oversee the entire internship cohort smoothly and finalize student grades before university deadlines. What makes it hard today is that evaluation forms and sign-in sheets get lost in email inboxes or physical transit, leaving her without complete records when grading deadlines arrive.
 
-Mariam runs the counter on the morning shift. She takes orders on paper because the till
-is slow, then types them in when it is quiet. By the afternoon she cannot remember whether
-an order was already entered, so she checks the last ten by eye and sometimes ships the
-same box twice. She is fast, she is not interested in computers, and she will stop using
-anything that takes more than a few seconds.
-
----
-
-## <name>, <role>
-
+##Persona 2: Faisal - Field Training Student
+Faisal is a senior undergraduate student enrolled in the field training program who needs to fulfill his internship requirements at an assigned company. He is trying to submit his placement application online, log his daily attendance hours, and submit weekly progress reports easily. What makes it hard today is the manual process of handling paper registration forms and sign-in sheets, with no clear way to track whether his supervisor has submitted his evaluation.
 <one paragraph>
