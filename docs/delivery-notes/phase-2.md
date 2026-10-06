@@ -43,3 +43,4 @@ The full story list at this tag is saved in [backlog.md](../backlog.md)
 ## Anything not finished, and where it went
 
 All Phase 2 deliverables specified in the checklist were completed. No planned items were dropped, replaced, or deferred to Phase 3
+.
