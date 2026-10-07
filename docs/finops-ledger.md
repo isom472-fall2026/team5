@@ -24,7 +24,7 @@ Our limit: <!-- EXAMPLE — delete --> the free tier. If we hit it we stop and t
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
 |---|---|---|---|---|
-| Story: Environment setup & README docs   | Assistant used: Gemini   |What it used (tokens, requests, or your own estimate): ~1,500 tokens (8 requests)    | What we gave it (files, story, schema): ⁠README.md⁠ & setup instructions    |  What we would do differently: Be more specific in prompts to save tokens
+ Environment setup & README docs   | Gemini   |1,500 tokens (8 requests)    | ⁠README.md⁠ & setup instructions    |   Be more specific in prompts to save tokens
  |
 
 ## Phase 3
