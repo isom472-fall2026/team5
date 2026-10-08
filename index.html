@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Employment places | Field Training</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", sans-serif;
+      background: #f4f6f3;
+      color: #202b27;
+    }
+
+    * { box-sizing: border-box; }
+
+    body { margin: 0; }
+
+    main {
+      width: min(1120px, calc(100% - 40px));
+      margin: 40px auto;
+    }
+
+    section {
+      overflow: hidden;
+      border: 1px solid #d5ddd7;
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 24px;
+      border-bottom: 1px solid #d5ddd7;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 650;
+    }
+
+    button {
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid #176b56;
+      border-radius: 4px;
+      background: #176b56;
+      color: white;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:disabled { cursor: wait; opacity: 0.7; }
+
+    #table-status {
+      min-height: 24px;
+      margin: 0;
+      padding: 14px 24px 4px;
+      color: #53635b;
+      font-size: 14px;
+    }
+
+    .table-wrap { overflow-x: auto; padding: 8px 24px 24px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th, td {
+      min-width: 130px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #e4e9e5;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f4f6f3;
+      color: #34483f;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    td:first-child, th:first-child { padding-left: 16px; }
+
+    @media (max-width: 600px) {
+      main { width: min(100% - 24px, 1120px); margin: 20px auto; }
+      .section-heading { padding: 16px; }
+      #table-status { padding-right: 16px; padding-left: 16px; }
+      .table-wrap { padding: 8px 12px 16px; }
+      h1 { font-size: 19px; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+</head>
+<body>
+  <main>
+    <section aria-labelledby="employment-places-heading">
+      <div class="section-heading">
+        <h1 id="employment-places-heading">Employment places</h1>
+        <button id="refresh-button" type="button">Refresh</button>
+      </div>
+      <p id="table-status" role="status" aria-live="polite">Loading employment places...</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Place</th>
+              <th scope="col">Sector</th>
+              <th scope="col">Target major</th>
+              <th scope="col">Approval</th>
+              <th scope="col">Phone</th>
+              <th scope="col">Coordination office</th>
+              <th scope="col">Available departments</th>
+              <th scope="col">Email</th>
+              <th scope="col">Opportunity</th>
+              <th scope="col">Requirements</th>
+              <th scope="col">Required documents</th>
+              <th scope="col">Company requirements</th>
+              <th scope="col">Last updated</th>
+            </tr>
+          </thead>
+          <tbody id="employment-places-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script>
+    const { createClient } = window.supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const tableBody = document.getElementById("employment-places-body");
+    const tableStatus = document.getElementById("table-status");
+    const refreshButton = document.getElementById("refresh-button");
+    const columns = [
+      "place_name",
+      "sector",
+      "target_major",
+      "is_approved",
+      "phone_number",
+      "coordination_office",
+      "available_departments",
+      "email",
+      "opportunity_description",
+      "requirements",
+      "required_documents",
+      "company_requirements",
+      "last_updated_at"
+    ];
+
+    function addTableRow(place) {
+      const row = document.createElement("tr");
+
+      for (const column of columns) {
+        const cell = document.createElement("td");
+        const value = place[column];
+
+        if (column === "is_approved") {
+          cell.textContent = value ? "Approved" : "Pending";
+        } else if (column === "last_updated_at" && value) {
+          cell.textContent = new Date(value).toLocaleString();
+        } else {
+          cell.textContent = value ?? "-";
+        }
+        row.append(cell);
+      }
+
+      tableBody.append(row);
+    }
+
+    async function loadEmploymentPlaces() {
+      refreshButton.disabled = true;
+      tableStatus.textContent = "Loading employment places...";
+      tableBody.replaceChildren();
+
+      const { data, error } = await supabaseClient
+        .from("employmentplace")
+        .select("place_name, sector, target_major, is_approved, phone_number, coordination_office, available_departments, email, opportunity_description, requirements, required_documents, company_requirements, last_updated_at")
+        .order("place_name");
+
+      refreshButton.disabled = false;
+
+      if (error) {
+        tableStatus.textContent = `Could not load employment places: ${error.message}`;
+        return;
+      }
+
+      if (!data.length) {
+        tableStatus.textContent = "No employment places found.";
+        return;
+      }
+
+      for (const place of data) addTableRow(place);
+      tableStatus.textContent = `${data.length} employment place${data.length === 1 ? "" : "s"} found.`;
+    }
+
+    refreshButton.addEventListener("click", loadEmploymentPlaces);
+    loadEmploymentPlaces();
+  </script>
+</body>
+</html>
