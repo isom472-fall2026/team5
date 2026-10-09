@@ -5,7 +5,7 @@ whoever is free at the end.*
 
 ## What was delivered
 
-<!--We defined the client requirements and personas for the Academic Field Training Unit system. We established the relational schema supporting users, placements, attendance logs, weekly reports, and evaluation forms with row-level security.
+We defined the client requirements and personas for the Academic Field Training Unit system. We established the relational schema supporting users, placements, attendance logs, weekly reports, and evaluation forms with row-level security.
 
 ## Who did what
 ## Who did what
