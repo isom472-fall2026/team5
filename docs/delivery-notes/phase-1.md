@@ -9,11 +9,11 @@ Phase 1 has no stories yet. It has five things, and they are either done or they
 
 | | Done | Where it is |
 |---|---|---|
-| The proposal, in its eight sections | ☐ | `docs/proposal.md` |
-| The proposal published as a page | ☐ | link: |
-| The team table filled in on the front page | ☐ | `README.md` |
-| The team agreement, signed by everyone | ☐ | `docs/team-agreement.md` |
-| Every member has one commit GitHub shows under their name | ☐ | see the table below |
+| The proposal, in its eight sections | [x] | `docs/proposal.md` |
+| The proposal published as a page |  [x]  | link: docs/proposal.md |
+| The team table filled in on the front page |  [x]  | `README.md` |
+| The team agreement, signed by everyone |  [x]  | `docs/team-agreement.md` |
+| Every member has one commit GitHub shows under their name |  [x]  | see the table below |
 
 ## Every member's first commit
 
@@ -22,20 +22,20 @@ grey icon means it is not counted — that member fixes it before the tag.*
 
 | Name | Link to their commit |
 |---|---|
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
+| nouf |  Client & Design Lead |
+| esraa | data & build lead |
+| manar | quality lead  |
+|  heba| FinOps Lead  |
 
 ## The client
 
-*Who they are, and the last time you actually spoke to them. One line.*
+Dr. Asmaa Alfadhel, Coordinator of the Academic Field Training Unit at the College of Business Administration, Kuwait University, last spoken to on October 4, 2026.
+
+
 
 ## Anything not done, and what you are doing about it
 
-*Say which, and by when.*
+All deliverables for Phase 1 are fully completed.
 
 ## The tag for this phase
 
