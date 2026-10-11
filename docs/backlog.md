@@ -10,16 +10,16 @@ the story ID, the title, who built it, and what happened to it.
 
 | Story | Title | Who | State at the tag |
 |---|---|---|---|
-| #1 | Access Main Navigation Menu | Nouf | moved to phase 3 |
-| #2 | View Student Profile Information | Nouf | moved to phase 3 |
-| #3 | Provide Student Information for Sign In | Esraa | moved to phase 3 |
-| #4 | Select Suitable Internship Site | Manar | moved to phase 3 |
-| #5 | Select Preferred Internship Sites | Esraa | moved to phase 3 |
-| #6 | View Approved Training Opportunities | Nouf | moved to phase 3 |
-| #7 | View Placement Details | Nouf | moved to phase 3 |
-| #8 | View Company Requirements | Nouf | moved to phase 3 |
-| #9 | Manage Internship Company Requirements | Heba | moved to phase 3 |
-| #10 | Create Company-Specific Internship Channels | Manar | moved to phase 3 |
+| #46 | Access Main Navigation Menu | Nouf | moved to phase 3 |
+| #23 | View Student Profile Information | Nouf | moved to phase 3 |
+| #30 | Provide Student Information for Sign In | Esraa | moved to phase 3 |
+| #37 | Select Suitable Internship Site | Manar | moved to phase 3 |
+| #33 | Select Preferred Internship Sites | Esraa | moved to phase 3 |
+| #13 | View Approved Training Opportunities | Nouf | moved to phase 3 |
+| #15 | View Placement Details | Nouf | moved to phase 3 |
+| #20 | View Company Requirements | Nouf | moved to phase 3 |
+| #48 | Manage Internship Company Requirements | Heba | moved to phase 3 |
+| #30 | Create Company-Specific Internship Channels | Manar | moved to phase 3 |
 ## Phase 3 — saved 21 October
 
 | Story | Title | Who | State at the tag |
