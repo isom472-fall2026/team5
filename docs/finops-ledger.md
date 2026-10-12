@@ -14,9 +14,9 @@ We work using the agents feature in vs code + antigravity and record token usage
 
 | Kind of work | What we use | Why |
 |---|---|---|
-| Writing stories | VS agents | higher limit and more efficient |
+| Writing stories and code | VS Code agents | Speed up development and handles requirements efficiently |
 
-Our limit:  the free education github pack tier. If we hit it we stop and tell the team.
+Our limit: GitHub Student Developer Pack tier limit / Maximum 50,000 tokens per phase. If we hit it, we review our usage and optimize prompt lengths.
 
 ## Phase 2
 
