@@ -24,6 +24,7 @@ Our limit:  the free education github pack tier. If we hit it we stop and tell t
 |---|---|---|---|---|
  Environment setup & README docs   | Gemini   |1,500 tokens (8 requests)    | ⁠README.md⁠ & setup instructions    |   Be more specific in prompts to save tokens |
  |Issue [#13](https://github.com/isom472-fall2026/team5/issues/13) View Approved Training Opportunities | Antigravity | 111.3k | less token usage by better prompting |
+ |Issue [#30](https://github.com/isom472-fall2026/team5/issues/30) Provide student info for sign in | Agents | 20k | more validations on email |
 
 ## Phase 3
 

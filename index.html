@@ -22,6 +22,20 @@
       margin: 40px auto;
     }
 
+    .auth-section { max-width: 480px; margin: 12vh auto; }
+
+    .auth-body { padding: 24px; }
+
+    .account-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 14px;
+      margin-bottom: 12px;
+      color: #53635b;
+      font-size: 14px;
+    }
+
     section {
       overflow: hidden;
       border: 1px solid #d5ddd7;
@@ -119,6 +133,8 @@
 
     @media (max-width: 600px) {
       main { width: min(100% - 24px, 1120px); margin: 20px auto; }
+      .auth-section { margin-top: 8vh; }
+      .auth-body { padding: 18px; }
       .section-heading { padding: 16px; }
       .filters { padding: 14px 16px 8px; }
       .filter-control { min-width: 100%; }
@@ -132,7 +148,59 @@
 </head>
 <body>
   <main>
-    <section class="border rounded bg-white overflow-hidden" aria-labelledby="employment-places-heading">
+    <p id="auth-loading" class="alert alert-secondary" role="status">Checking your sign-in status...</p>
+    <section id="auth-section" class="auth-section border rounded bg-white overflow-hidden" aria-labelledby="auth-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="auth-heading">Field Training</h1>
+          <p id="auth-description">Sign in with your university email.</p>
+        </div>
+      </div>
+      <div class="auth-body">
+        <div class="btn-group w-100 mb-4" role="group" aria-label="Account access">
+          <button id="show-signin" class="btn btn-success" type="button" aria-pressed="true">Sign in</button>
+          <button id="show-signup" class="btn btn-outline-success" type="button" aria-pressed="false">Create account</button>
+        </div>
+        <p id="auth-error" class="alert alert-danger" role="alert" hidden></p>
+        <p id="auth-notice" class="alert alert-info" role="status" hidden></p>
+        <form id="signin-form">
+          <div class="mb-3">
+            <label class="form-label" for="signin-email">University email</label>
+            <input class="form-control" id="signin-email" name="email" type="email" autocomplete="username" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="signin-password">Password</label>
+            <input class="form-control" id="signin-password" name="password" type="password" autocomplete="current-password" required>
+          </div>
+          <button class="btn btn-success w-100" type="submit">Sign in</button>
+        </form>
+        <form id="signup-form" hidden>
+          <div class="mb-3">
+            <label class="form-label" for="signup-name">Name <span class="text-secondary">(optional)</span></label>
+            <input class="form-control" id="signup-name" name="name" type="text" autocomplete="name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="signup-email">University email</label>
+            <input class="form-control" id="signup-email" name="email" type="email" autocomplete="username" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="signup-password">Password</label>
+            <input class="form-control" id="signup-password" name="password" type="password" autocomplete="new-password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="signup-confirm-password">Confirm password</label>
+            <input class="form-control" id="signup-confirm-password" name="confirm-password" type="password" autocomplete="new-password" required>
+          </div>
+          <button class="btn btn-success w-100" type="submit">Create account</button>
+        </form>
+      </div>
+    </section>
+    <div id="account-bar" class="account-bar" hidden>
+      <span id="signed-in-label"></span>
+      <button id="signout-button" class="btn btn-outline-secondary btn-sm" type="button">Sign out</button>
+    </div>
+    <p id="account-status" class="small text-danger text-end" role="status" aria-live="polite" hidden></p>
+    <section id="opportunities-view" class="border rounded bg-white overflow-hidden" aria-labelledby="employment-places-heading" hidden>
       <div class="section-heading">
         <div class="heading-copy">
           <h1 id="employment-places-heading">Training opportunities</h1>
@@ -184,7 +252,23 @@
     const majorFilter = document.getElementById("major-filter");
     const fieldFilter = document.getElementById("field-filter");
     const cycleLabel = document.getElementById("cycle-label");
+    const authLoading = document.getElementById("auth-loading");
+    const authSection = document.getElementById("auth-section");
+    const opportunitiesView = document.getElementById("opportunities-view");
+    const signinForm = document.getElementById("signin-form");
+    const signupForm = document.getElementById("signup-form");
+    const authError = document.getElementById("auth-error");
+    const authNotice = document.getElementById("auth-notice");
+    const authDescription = document.getElementById("auth-description");
+    const showSigninButton = document.getElementById("show-signin");
+    const showSignupButton = document.getElementById("show-signup");
+    const accountBar = document.getElementById("account-bar");
+    const signedInLabel = document.getElementById("signed-in-label");
+    const signoutButton = document.getElementById("signout-button");
+    const accountStatus = document.getElementById("account-status");
     let opportunities = [];
+    let authStateReady = false;
+    let activeUserId = null;
     const columns = [
       "place_name",
       "sector",
@@ -218,6 +302,64 @@
       select.replaceChildren(new Option(defaultLabel, ""));
       for (const value of [...new Set(values)].sort((a, b) => a.localeCompare(b))) {
         select.add(new Option(value, value));
+      }
+    }
+
+    function showAuthFeedback(message, type) {
+      authError.hidden = true;
+      authNotice.hidden = true;
+      const target = type === "error" ? authError : authNotice;
+      target.textContent = message;
+      target.hidden = false;
+    }
+
+    function setAuthMode(mode) {
+      const isSignin = mode === "signin";
+      signinForm.hidden = !isSignin;
+      signupForm.hidden = isSignin;
+      authDescription.textContent = isSignin
+        ? "Sign in with your university email."
+        : "Create an account with your university email and password.";
+      showSigninButton.className = isSignin ? "btn btn-success" : "btn btn-outline-success";
+      showSignupButton.className = isSignin ? "btn btn-outline-success" : "btn btn-success";
+      showSigninButton.setAttribute("aria-pressed", String(isSignin));
+      showSignupButton.setAttribute("aria-pressed", String(!isSignin));
+      authError.hidden = true;
+      authNotice.hidden = true;
+    }
+
+    function setFormBusy(form, busy) {
+      const submitButton = form.querySelector('button[type="submit"]');
+      submitButton.disabled = busy;
+      submitButton.textContent = busy
+        ? "Please wait..."
+        : form === signinForm ? "Sign in" : "Create account";
+    }
+
+    function updateAuthView(session) {
+      const user = session?.user ?? null;
+      const userId = user?.id ?? null;
+      const shouldLoadOpportunities = !authStateReady || userId !== activeUserId;
+      authStateReady = true;
+      activeUserId = userId;
+      authLoading.hidden = true;
+      accountStatus.hidden = true;
+
+      if (!user) {
+        authSection.hidden = false;
+        opportunitiesView.hidden = true;
+        accountBar.hidden = true;
+        return;
+      }
+
+      authSection.hidden = true;
+      opportunitiesView.hidden = false;
+      accountBar.hidden = false;
+      signedInLabel.textContent = `Signed in as ${user.email ?? "student"}`;
+      if (shouldLoadOpportunities) {
+        setTimeout(() => {
+          if (activeUserId === userId) loadApprovedOpportunities();
+        }, 0);
       }
     }
 
@@ -323,6 +465,82 @@
         fieldFilter.disabled = false;
       }
     }
+
+    showSigninButton.addEventListener("click", () => setAuthMode("signin"));
+    showSignupButton.addEventListener("click", () => setAuthMode("signup"));
+
+    signinForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      authError.hidden = true;
+      authNotice.hidden = true;
+      setFormBusy(signinForm, true);
+
+      const formData = new FormData(signinForm);
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: formData.get("email").trim(),
+        password: formData.get("password")
+      });
+
+      setFormBusy(signinForm, false);
+      if (error) {
+        showAuthFeedback("Unable to sign in with those credentials.", "error");
+      } else {
+        updateAuthView(data.session);
+      }
+    });
+
+    signupForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      authError.hidden = true;
+      authNotice.hidden = true;
+      const formData = new FormData(signupForm);
+      const password = formData.get("password");
+
+      if (password !== formData.get("confirm-password")) {
+        showAuthFeedback("The passwords do not match.", "error");
+        return;
+      }
+
+      setFormBusy(signupForm, true);
+      const name = formData.get("name").trim();
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: formData.get("email").trim(),
+        password,
+        options: { data: name ? { name } : {} }
+      });
+      setFormBusy(signupForm, false);
+
+      if (error) {
+        showAuthFeedback("Could not create the account. Check the email and try again.", "error");
+      } else if (data.session) {
+        updateAuthView(data.session);
+      } else {
+        setAuthMode("signin");
+        document.getElementById("signin-email").value = formData.get("email").trim();
+        showAuthFeedback("Account created. Check your university email to confirm, then sign in.", "notice");
+      }
+    });
+
+    signoutButton.addEventListener("click", async () => {
+      signoutButton.disabled = true;
+      const { error } = await supabaseClient.auth.signOut();
+      signoutButton.disabled = false;
+      if (error) {
+        accountStatus.textContent = "Could not sign out. Please try again.";
+        accountStatus.hidden = false;
+      }
+    });
+
+    supabaseClient.auth.onAuthStateChange((_event, session) => updateAuthView(session));
+    supabaseClient.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        authLoading.hidden = true;
+        authSection.hidden = false;
+        showAuthFeedback("Could not check the sign-in status. Refresh the page to try again.", "error");
+        return;
+      }
+      updateAuthView(data.session);
+    });
 
     majorFilter.addEventListener("change", renderOpportunities);
     fieldFilter.addEventListener("change", renderOpportunities);
