@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS EmploymentPlace CASCADE;
 DROP TABLE IF EXISTS SupervisingProfessor CASCADE;
 DROP TYPE IF EXISTS semester_enum CASCADE;
 DROP FUNCTION IF EXISTS public.handle_new_student CASCADE;
+DROP FUNCTION IF EXISTS public.professor_owns_student_cycle(INT);
 
 -- =======================================================================================
 -- 2. CREATE CUSTOM TYPES
@@ -203,20 +204,129 @@ CREATE POLICY "Employment places can update own profile" ON EmploymentPlace FOR 
 CREATE POLICY "Authenticated users can view internship cycles" ON InternshipCycle FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Professors can manage their own internship cycles" ON InternshipCycle FOR ALL TO authenticated USING (professor_id IN (SELECT professor_id FROM SupervisingProfessor WHERE user_id = auth.uid()));
 
-CREATE POLICY "Authenticated users can view place enrollments" ON PlaceEnrolledinSemester FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Allow modifications by authenticated users" ON PlaceEnrolledinSemester FOR ALL TO authenticated USING (true);
+CREATE OR REPLACE FUNCTION public.professor_owns_student_cycle(p_student_id INT)
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.student s
+        JOIN public.internshipcycle ic ON ic.cycle_id = s.internship_cycle_id
+        JOIN public.supervisingprofessor sp ON sp.professor_id = ic.professor_id
+        WHERE s.student_id = p_student_id
+          AND sp.user_id = auth.uid()
+    );
+$$;
+REVOKE ALL ON FUNCTION public.professor_owns_student_cycle(INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.professor_owns_student_cycle(INT) TO authenticated;
 
--- Base policies for new tables (Allows authenticated users to read/write, refine later as needed)
-CREATE POLICY "Auth users can read feedback" ON InternshipFeedback FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Auth users can read evaluation" ON InternshipEvaluation FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Anyone can view place enrollments" ON PlaceEnrolledinSemester FOR SELECT TO public USING (true);
+CREATE POLICY "Professors manage enrollments for their cycles" ON PlaceEnrolledinSemester FOR ALL TO authenticated
+USING (
+    EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.cycle_id = PlaceEnrolledinSemester.Cycle_id
+          AND sp.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.cycle_id = PlaceEnrolledinSemester.Cycle_id
+          AND sp.user_id = auth.uid()
+    )
+);
+
+CREATE POLICY "Anyone can read feedback" ON InternshipFeedback FOR SELECT TO public USING (true);
+CREATE POLICY "Anyone can read evaluations" ON InternshipEvaluation FOR SELECT TO public USING (true);
 CREATE POLICY "Auth users can read documents" ON AcceptanceDocument FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Auth users can read channels" ON CompanyChannel FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Auth users can read logs" ON DailyInternshipLog FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Anyone can read logs" ON DailyInternshipLog FOR SELECT TO public USING (true);
 CREATE POLICY "Auth users can read certificates" ON InternshipCertificate FOR SELECT TO authenticated USING (true);
 
-CREATE POLICY "Auth users can write to new tables" ON InternshipFeedback FOR ALL TO authenticated USING (true);
-CREATE POLICY "Auth users can write to evaluations" ON InternshipEvaluation FOR ALL TO authenticated USING (true);
-CREATE POLICY "Auth users can write to logs" ON DailyInternshipLog FOR ALL TO authenticated USING (true);
+CREATE POLICY "Students submit their own feedback" ON InternshipFeedback FOR INSERT TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipFeedback.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+CREATE POLICY "Students update their own feedback" ON InternshipFeedback FOR UPDATE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipFeedback.student_id
+          AND s.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipFeedback.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+
+CREATE POLICY "Students submit their own evaluations" ON InternshipEvaluation FOR INSERT TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipEvaluation.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+CREATE POLICY "Students update their own evaluations" ON InternshipEvaluation FOR UPDATE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipEvaluation.student_id
+          AND s.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipEvaluation.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+
+CREATE POLICY "Students submit their own daily logs" ON DailyInternshipLog FOR INSERT TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = DailyInternshipLog.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+CREATE POLICY "Students update their own pending logs" ON DailyInternshipLog FOR UPDATE TO authenticated
+USING (
+    approval_status = 'Pending'
+    AND EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = DailyInternshipLog.student_id
+          AND s.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    approval_status = 'Pending'
+    AND EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = DailyInternshipLog.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+CREATE POLICY "Professors review logs for their students" ON DailyInternshipLog FOR UPDATE TO authenticated
+USING (public.professor_owns_student_cycle(DailyInternshipLog.student_id))
+WITH CHECK (public.professor_owns_student_cycle(DailyInternshipLog.student_id));
 
 -- =======================================================================================
 -- 7. AUTOMATED USER SIGNUP TRIGGER

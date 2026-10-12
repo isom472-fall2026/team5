@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Employment places | Field Training</title>
+  <title>Training opportunities | Field Training</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     :root {
       color-scheme: light;
@@ -37,6 +38,10 @@
       border-bottom: 1px solid #d5ddd7;
     }
 
+    .heading-copy { display: grid; gap: 5px; }
+
+    #cycle-label { margin: 0; color: #53635b; font-size: 14px; }
+
     h1 {
       margin: 0;
       font-size: 22px;
@@ -55,6 +60,29 @@
     }
 
     button:disabled { cursor: wait; opacity: 0.7; }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      padding: 16px 24px 8px;
+    }
+
+    .filter-control { display: grid; gap: 6px; min-width: 220px; }
+
+    label { color: #34483f; font-size: 13px; font-weight: 650; }
+
+    select {
+      min-height: 38px;
+      padding: 0 34px 0 10px;
+      border: 1px solid #aab8af;
+      border-radius: 4px;
+      background: white;
+      color: inherit;
+      font: inherit;
+    }
+
+    select:disabled { opacity: 0.65; }
 
     #table-status {
       min-height: 24px;
@@ -92,6 +120,8 @@
     @media (max-width: 600px) {
       main { width: min(100% - 24px, 1120px); margin: 20px auto; }
       .section-heading { padding: 16px; }
+      .filters { padding: 14px 16px 8px; }
+      .filter-control { min-width: 100%; }
       #table-status { padding-right: 16px; padding-left: 16px; }
       .table-wrap { padding: 8px 12px 16px; }
       h1 { font-size: 19px; }
@@ -102,14 +132,27 @@
 </head>
 <body>
   <main>
-    <section aria-labelledby="employment-places-heading">
+    <section class="border rounded bg-white overflow-hidden" aria-labelledby="employment-places-heading">
       <div class="section-heading">
-        <h1 id="employment-places-heading">Employment places</h1>
-        <button id="refresh-button" type="button">Refresh</button>
+        <div class="heading-copy">
+          <h1 id="employment-places-heading">Training opportunities</h1>
+          <p id="cycle-label"></p>
+        </div>
+        <button id="refresh-button" class="btn btn-success" type="button">Refresh</button>
       </div>
-      <p id="table-status" role="status" aria-live="polite">Loading employment places...</p>
+      <div class="filters" aria-label="Filter training opportunities">
+        <div class="filter-control col-12 col-md-auto">
+          <label for="major-filter">Major</label>
+          <select id="major-filter" class="form-select"><option value="">All majors</option></select>
+        </div>
+        <div class="filter-control col-12 col-md-auto">
+          <label for="field-filter">Training field</label>
+          <select id="field-filter" class="form-select"><option value="">All training fields</option></select>
+        </div>
+      </div>
+      <p id="table-status" role="status" aria-live="polite">Loading approved training opportunities...</p>
       <div class="table-wrap">
-        <table>
+        <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
               <th scope="col">Place</th>
@@ -138,6 +181,10 @@
     const tableBody = document.getElementById("employment-places-body");
     const tableStatus = document.getElementById("table-status");
     const refreshButton = document.getElementById("refresh-button");
+    const majorFilter = document.getElementById("major-filter");
+    const fieldFilter = document.getElementById("field-filter");
+    const cycleLabel = document.getElementById("cycle-label");
+    let opportunities = [];
     const columns = [
       "place_name",
       "sector",
@@ -153,6 +200,26 @@
       "company_requirements",
       "last_updated_at"
     ];
+
+    function getCurrentAcademicCycle(date = new Date()) {
+      const month = date.getMonth();
+      const semester = month < 5 ? "Spring" : month < 8 ? "Summer" : "Fall";
+      return { semester, year: date.getFullYear() };
+    }
+
+    function splitTrainingFields(value) {
+      return (value ?? "")
+        .split(/[,;|]/)
+        .map((field) => field.trim())
+        .filter(Boolean);
+    }
+
+    function setFilterOptions(select, defaultLabel, values) {
+      select.replaceChildren(new Option(defaultLabel, ""));
+      for (const value of [...new Set(values)].sort((a, b) => a.localeCompare(b))) {
+        select.add(new Option(value, value));
+      }
+    }
 
     function addTableRow(place) {
       const row = document.createElement("tr");
@@ -174,34 +241,93 @@
       tableBody.append(row);
     }
 
-    async function loadEmploymentPlaces() {
-      refreshButton.disabled = true;
-      tableStatus.textContent = "Loading employment places...";
+    function renderOpportunities() {
+      const selectedMajor = majorFilter.value;
+      const selectedField = fieldFilter.value;
+      const visibleOpportunities = opportunities.filter((place) => {
+        const matchesMajor = !selectedMajor || place.target_major === selectedMajor;
+        const matchesField = !selectedField || splitTrainingFields(place.available_departments).includes(selectedField);
+        return matchesMajor && matchesField;
+      });
+
       tableBody.replaceChildren();
+      for (const place of visibleOpportunities) addTableRow(place);
 
-      const { data, error } = await supabaseClient
-        .from("employmentplace")
-        .select("place_name, sector, target_major, is_approved, phone_number, coordination_office, available_departments, email, opportunity_description, requirements, required_documents, company_requirements, last_updated_at")
-        .order("place_name");
-
-      refreshButton.disabled = false;
-
-      if (error) {
-        tableStatus.textContent = `Could not load employment places: ${error.message}`;
-        return;
+      if (!opportunities.length) {
+        tableStatus.textContent = `No approved opportunities found for ${cycleLabel.textContent}.`;
+      } else if (!visibleOpportunities.length) {
+        tableStatus.textContent = "No opportunities match these filters.";
+      } else {
+        tableStatus.textContent = `${visibleOpportunities.length} of ${opportunities.length} approved opportunit${opportunities.length === 1 ? "y" : "ies"} found.`;
       }
-
-      if (!data.length) {
-        tableStatus.textContent = "No employment places found.";
-        return;
-      }
-
-      for (const place of data) addTableRow(place);
-      tableStatus.textContent = `${data.length} employment place${data.length === 1 ? "" : "s"} found.`;
     }
 
-    refreshButton.addEventListener("click", loadEmploymentPlaces);
-    loadEmploymentPlaces();
+    async function loadApprovedOpportunities() {
+      refreshButton.disabled = true;
+      majorFilter.disabled = true;
+      fieldFilter.disabled = true;
+      tableStatus.textContent = "Loading approved training opportunities...";
+      tableBody.replaceChildren();
+      const cycle = getCurrentAcademicCycle();
+      cycleLabel.textContent = `${cycle.semester} ${cycle.year}`;
+
+      try {
+        const { data: cycles, error: cycleError } = await supabaseClient
+          .from("internshipcycle")
+          .select("cycle_id")
+          .eq("semester", cycle.semester)
+          .eq("year", cycle.year);
+        if (cycleError) throw cycleError;
+
+        if (!cycles.length) {
+          opportunities = [];
+          setFilterOptions(majorFilter, "All majors", []);
+          setFilterOptions(fieldFilter, "All training fields", []);
+          renderOpportunities();
+          return;
+        }
+
+        const { data: enrollments, error: enrollmentError } = await supabaseClient
+          .from("placeenrolledinsemester")
+          .select("place_id")
+          .in("cycle_id", cycles.map((item) => item.cycle_id));
+        if (enrollmentError) throw enrollmentError;
+
+        const placeIds = [...new Set(enrollments.map((item) => item.place_id))];
+        if (!placeIds.length) {
+          opportunities = [];
+          setFilterOptions(majorFilter, "All majors", []);
+          setFilterOptions(fieldFilter, "All training fields", []);
+          renderOpportunities();
+          return;
+        }
+
+        const { data, error } = await supabaseClient
+          .from("employmentplace")
+          .select(columns.join(", "))
+          .eq("is_approved", true)
+          .in("place_id", placeIds)
+          .order("place_name");
+        if (error) throw error;
+
+        opportunities = data;
+        setFilterOptions(majorFilter, "All majors", data.map((place) => place.target_major).filter(Boolean));
+        setFilterOptions(fieldFilter, "All training fields", data.flatMap((place) => splitTrainingFields(place.available_departments)));
+        renderOpportunities();
+      } catch (error) {
+        opportunities = [];
+        tableStatus.textContent = `Could not load approved opportunities: ${error.message}`;
+      } finally {
+        refreshButton.disabled = false;
+        majorFilter.disabled = false;
+        fieldFilter.disabled = false;
+      }
+    }
+
+    majorFilter.addEventListener("change", renderOpportunities);
+    fieldFilter.addEventListener("change", renderOpportunities);
+    refreshButton.addEventListener("click", loadApprovedOpportunities);
+    loadApprovedOpportunities();
   </script>
 </body>
 </html>
