@@ -8,23 +8,30 @@ on how accurate the numbers are. An honest rough figure beats a precise invented
 
 The FinOps Lead keeps it. Every member supplies their own rows.
 
+
 ## The plan — written in Phase 2
 
-We work using the agents feature in vs code + antigravity and record token usage each session and story
+*Which assistant or model you use for which kind of work, and what your limit is. Three or
+four lines. Revisit it in Phase 4 and say whether it held.*
 
 | Kind of work | What we use | Why |
 |---|---|---|
-| Writing stories | VS agents | higher limit and more efficient |
+| <!-- EXAMPLE — delete this row --> writing stories from the proposal | the browser assistant | it is free and no code is involved |
+| <!-- EXAMPLE — delete this row --> building a story | Antigravity | it edits the files directly |
 
-Our limit:  the free education github pack tier. If we hit it we stop and tell the team.
+Our limit: <!-- EXAMPLE — delete --> the free tier. If we hit it we stop and tell the team.
 
 ## Phase 2
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
 |---|---|---|---|---|
- Environment setup & README docs   | Gemini   |1,500 tokens (8 requests)    | ⁠README.md⁠ & setup instructions    |   Be more specific in prompts to save tokens |
- |Issue [#13](https://github.com/isom472-fall2026/team5/issues/13) View Approved Training Opportunities | Antigravity | 111.3k | less token usage by better prompting |
- |Issue [#30](https://github.com/isom472-fall2026/team5/issues/30) Provide student info for sign in | Agents | 20k | more validations on email |
+|  Optionally Define Learning Objectives #35| Claude |~500 tokens  |User story and acceptance criteria  | Provide more specific examples of learning objectives |
+|  Log Daily Internship Hours #34|ChatGPT |~800 tokens |User story and acceptance criteria |Add validation rules for check-in and check-out times |
+| Select Preferred Internship Sites #33 | Gemini | ~600 tokens | User story and acceptance criteria | Provide more details on internship site availability and selection criteria up-front |
+
+We work using the agents feature in vs code + antigravity and record token usage each session and story
+
+
 
 ## Phase 3
 
