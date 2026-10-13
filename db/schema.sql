@@ -203,7 +203,30 @@ CREATE POLICY "Employment places can update own profile" ON EmploymentPlace FOR 
 
 CREATE POLICY "Authenticated users can view internship cycles" ON InternshipCycle FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Professors can manage their own internship cycles" ON InternshipCycle FOR ALL TO authenticated USING (professor_id IN (SELECT professor_id FROM SupervisingProfessor WHERE user_id = auth.uid()));
+CREATE POLICY "Students submit their own feedback" ON InternshipFeedback FOR INSERT TO authenticated
+WITH CHECK (
+EXISTS (
+SELECT 1 FROM Student s
+WHERE s.student_id = InternshipFeedback.student_id
+AND s.user_id = auth.uid()
+)
+);
 
+CREATE POLICY "Students update their own feedback" ON InternshipFeedback FOR UPDATE TO authenticated
+USING (
+EXISTS (
+SELECT 1 FROM Student s
+WHERE s.student_id = InternshipFeedback.student_id
+AND s.user_id = auth.uid()
+)
+)
+WITH CHECK (
+EXISTS (
+SELECT 1 FROM Student s
+WHERE s.student_id = InternshipFeedback.student_id
+AND s.user_id = auth.uid()
+)
+);
 CREATE OR REPLACE FUNCTION public.professor_owns_student_cycle(p_student_id INT)
 RETURNS BOOLEAN
 LANGUAGE SQL
