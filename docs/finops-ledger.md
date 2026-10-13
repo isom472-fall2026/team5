@@ -16,11 +16,8 @@ four lines. Revisit it in Phase 4 and say whether it held.*
 
 | Kind of work | What we use | Why |
 |---|---|---|
-| <!-- EXAMPLE — delete this row --> writing stories from the proposal | the browser assistant | it is free and no code is involved |
-| <!-- EXAMPLE — delete this row --> building a story | Antigravity | it edits the files directly |
-
-Our limit: <!-- EXAMPLE — delete --> the free tier. If we hit it we stop and tell the team.
-
+| Managing backlog and user story requirements | Claude, ChatGPT, and Gemini | To refine user stories, verify acceptance criteria, and track model usage per task. | 
+| Coding and repository maintenance | VS Code agents and Antigravity | To accelerate development, manage merge conflicts, and automate documentation |  
 ## Phase 2
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
