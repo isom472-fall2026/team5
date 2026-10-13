@@ -7,7 +7,7 @@ whoever is free at the end.*
 
 We defined the client requirements and personas for the Academic Field Training Unit system. We established the relational schema supporting users, placements, attendance logs, weekly reports, and evaluation forms with row-level security.
 
-## Who did what
+
 ## Who did what
 - Team Lead / Client Lead: Defined personas, user stories with acceptance criteria, and updated the backlog.
 - Data Lead: Designed `db/schema.sql` with primary/foreign keys and RLS policies, and documented table definitions in `docs/schema.md`.
