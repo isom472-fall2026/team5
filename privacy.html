@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Personal Data Privacy</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        h2 { text-align: center; color: #333; }
+        .section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
+        .toggle-group { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #0056b3; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; text-align: center; }
+        .error { display: block; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .success { display: block; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Manage Privacy Settings</h2>
+        
+        <!-- Section: View Contact Details -->
+        <div class="section">
+            <h3>Your Contact Details</h3>
+            <label>Student ID:</label>
+            <input type="text" id="viewStudentId" placeholder="Enter your Student ID">
+            <label style="margin-top: 10px;">Phone Number:</label>
+            <input type="text" id="viewPhone" placeholder="Enter your Phone Number">
+            <label style="margin-top: 10px;">Email Address:</label>
+            <input type="text" id="viewEmail" placeholder="Enter your Email Address">
+        </div>
+
+        <!-- Section: Toggle Permissions -->
+        <div class="section">
+            <h3>Privacy Permissions</h3>
+            <div class="toggle-group">
+                <label for="shareToggle">Share contact details with training sites:</label>
+                <input type="checkbox" id="shareToggle">
+            </div>
+        </div>
+
+        <!-- Section: Update Settings -->
+        <h3>Update Settings</h3>
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="inputStudentId">Verify Student ID to save changes:</label>
+            <input type="text" id="inputStudentId" placeholder="Enter Student ID to confirm">
+        </div>
+        <button onclick="updatePrivacySettings()">Update Settings</button>
+
+        <!-- Response Messages -->
+        <div id="messageBox" class="message"></div>
+    </div>
+
+    <script>
+        function showMessage(text, isError = true) {
+            const box = document.getElementById('messageBox');
+            box.textContent = text;
+            box.className = 'message ' + (isError ? 'error' : 'success');
+            box.style.display = 'block';
+        }
+
+        function updatePrivacySettings() {
+            const studentId = document.getElementById('inputStudentId').value.trim();
+            const viewStudentId = document.getElementById('viewStudentId').value.trim();
+            const shareToggle = document.getElementById('shareToggle').checked;
+
+            // Simple validation to ensure Student ID is entered in both places
+            if (!studentId || studentId !== viewStudentId) {
+                showMessage('Error: Student ID is missing or does not match. Cannot update settings.');
+                return;
+            }
+
+            showMessage('Privacy settings updated successfully!', false);
+        }
+    </script>
+
+</body>
+</html>
