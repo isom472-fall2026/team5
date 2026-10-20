@@ -1,3 +1,9 @@
+
+INSERT INTO EmploymentPlace (place_name, email, sector, target_major) 
+VALUES 
+('Company A', 'info@companya.com', 'Telecommunications', 'Information Systems'),
+('Company B', 'contact@companyb.com', 'Financial Sector', 'Business Administration'),
+('Company C', 'support@companyc.com', 'Education Sector', 'Accounting');
 INSERT INTO AcceptanceDocument (place_name, document_name, file_path) 
 VALUES 
 ('Company A', 'Job Offer', '/docs/doc1.pdf'), 
@@ -11,4 +17,5 @@ VALUES
 
 INSERT INTO CompanyChannel (channel_name, place_name)
 VALUES ('General Inquiries Channel', 'Company A');
+
 
