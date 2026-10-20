@@ -1,0 +1,5 @@
+INSERT INTO Student (name, age, GPA, major) 
+VALUES 
+('Sarah Mohammed', 20, 3.5, 'Information Systems'),
+('Ali Khaled', 22, 3.2, 'Business Administration'),
+('Noor Ahmed', 21, 3.8, 'Accounting');
