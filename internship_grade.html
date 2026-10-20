@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Internship Grade and Evaluation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        h2 { text-align: center; color: #333; }
+        .info-group { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        label { font-weight: bold; color: #555; display: block; }
+        span { color: #333; font-size: 18px; }
+        .status-completed { color: green; font-weight: bold; }
+        .status-pending { color: orange; font-weight: bold; }
+        .error { color: red; text-align: center; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Internship Evaluation</h2>
+        <div id="errorBox" class="error">Error: Invalid or missing evaluation data.</div>
+        <div id="evaluationDetails">
+            <div class="info-group">
+                <label>Evaluation Score:</label>
+                <span id="evalScore">--</span>
+            </div>
+            <div class="info-group">
+                <label>Final Grade Status:</label>
+                <span id="gradeStatus">--</span>
+            </div>
+            <div class="info-group">
+                <label>Academic Performance:</label>
+                <span id="performanceDetails">--</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Simulated evaluation data
+        const evaluationData = {
+            score: 95,
+            status: 'Completed',
+            performance: 'Excellent - Met all internship objectives successfully.'
+        };
+
+        function loadEvaluation() {
+            const errorBox = document.getElementById('errorBox');
+            const evalScore = document.getElementById('evalScore');
+            const gradeStatus = document.getElementById('gradeStatus');
+            const performanceDetails = document.getElementById('performanceDetails');
+
+            // Validate data
+            if (!evaluationData.score || !evaluationData.status || !evaluationData.performance) {
+                errorBox.style.display = 'block';
+                return;
+            }
+
+            evalScore.textContent = evaluationData.score + '/100';
+            gradeStatus.textContent = evaluationData.status;
+            gradeStatus.className = 'status-' + evaluationData.status.toLowerCase();
+            performanceDetails.textContent = evaluationData.performance;
+        }
+
+        window.onload = loadEvaluation;
+    </script>
+</body>
+</html>
