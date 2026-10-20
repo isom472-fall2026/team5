@@ -1,4 +1,10 @@
 
+INSERT INTO SupervisingProfessor (name, email, department)
+VALUES
+('Dr. Ahmed', 'ahmed@university.edu', 'Computer Science'),
+('Dr. Sara', 'sara@university.edu', 'Business Administration'),
+('Prof. Lee', 'lee@university.edu', 'Engineering');
+
 INSERT INTO EmploymentPlace (place_name, email, sector, target_major) 
 VALUES 
 ('Company A', 'info@companya.com', 'Telecommunications', 'Information Systems'),
@@ -17,5 +23,6 @@ VALUES
 
 INSERT INTO CompanyChannel (channel_name, place_name)
 VALUES ('General Inquiries Channel', 'Company A');
+
 
 
