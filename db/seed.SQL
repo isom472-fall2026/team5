@@ -1,3 +1,8 @@
+INSERT INTO InternshipEvaluation (student_id, place_name, professor_id, site_rating, supervisor_rating, feedback_comments) 
+VALUES 
+(1, 'Company A', 1, 4, 5, 'Excellent work environment'), 
+(2, 'Company B', 2, 5, 4, 'The supervisor was very helpful'), 
+(3, 'Company C', 3, 3, 3, 'Good training, but needs more organization');
 
 INSERT INTO SupervisingProfessor (name, email, department)
 VALUES
