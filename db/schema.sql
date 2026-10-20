@@ -190,7 +190,132 @@ ALTER TABLE InternshipCertificate ENABLE ROW LEVEL SECURITY;
 
 -- =======================================================================================
 -- 6. CREATE RLS POLICIES
--- =======================================================================================
+-- ================================================================
+
+-- ---------------------------------------------------------------------------------------
+-- 1. AcceptanceDocument (Managed by the associated Employment Place)
+-- ---------------------------------------------------------------------------------------
+
+-- Employment places can upload acceptance documents for their own company
+CREATE POLICY "Employment places can upload their acceptance documents" 
+ON AcceptanceDocument FOR INSERT TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = AcceptanceDocument.place_name
+          AND ep.user_id = auth.uid()
+    )
+);
+
+-- Employment places can update their own acceptance documents
+CREATE POLICY "Employment places can update their acceptance documents" 
+ON AcceptanceDocument FOR UPDATE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = AcceptanceDocument.place_name
+          AND ep.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = AcceptanceDocument.place_name
+          AND ep.user_id = auth.uid()
+    )
+);
+
+-- Employment places can delete their own acceptance documents
+CREATE POLICY "Employment places can delete their acceptance documents" 
+ON AcceptanceDocument FOR DELETE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = AcceptanceDocument.place_name
+          AND ep.user_id = auth.uid()
+    )
+);
+
+
+-- ---------------------------------------------------------------------------------------
+-- 2. CompanyChannel (Managed by the associated Employment Place)
+-- ---------------------------------------------------------------------------------------
+
+-- Employment places can create channels for their own organization
+CREATE POLICY "Employment places can create channels" 
+ON CompanyChannel FOR INSERT TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = CompanyChannel.place_name
+          AND ep.user_id = auth.uid()
+    )
+);
+
+-- Employment places can update channels for their own organization
+CREATE POLICY "Employment places can update their channels" 
+ON CompanyChannel FOR UPDATE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = CompanyChannel.place_name
+          AND ep.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = CompanyChannel.place_name
+          AND ep.user_id = auth.uid()
+    )
+);
+
+-- Employment places can delete channels for their own organization
+CREATE POLICY "Employment places can delete their channels" 
+ON CompanyChannel FOR DELETE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = CompanyChannel.place_name
+          AND ep.user_id = auth.uid()
+    )
+);
+
+
+-- ---------------------------------------------------------------------------------------
+-- 3. InternshipCertificate (Requested by Student, Approved/Updated by Professor)
+-- ---------------------------------------------------------------------------------------
+
+-- Students can submit certificate requests only for themselves with pending status
+CREATE POLICY "Students can request their own certificate" 
+ON InternshipCertificate FOR INSERT TO authenticated
+WITH CHECK (
+    verification_status = 'Pending Approval'
+    AND EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipCertificate.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+
+-- Students can withdraw/cancel their own pending certificate request
+CREATE POLICY "Students can cancel their pending certificate request" 
+ON InternshipCertificate FOR DELETE TO authenticated
+USING (
+    verification_status = 'Pending Approval'
+    AND EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipCertificate.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+
+-- Supervising professors can update certificate status, file path, and issue date
+CREATE POLICY "Professors can review and issue certificates" 
+ON InternshipCertificate FOR UPDATE TO authenticated
+USING (public.professor_owns_student_cycle(InternshipCertificate.student_id))
+WITH CHECK (public.professor_owns_student_cycle(InternshipCertificate.student_id));
+
 -- (Standard permissive authenticated access for standard reads, restricted writes for core tables)
 CREATE POLICY "Students can view own profile" ON Student FOR SELECT TO authenticated USING (auth.uid() = user_id);
 CREATE POLICY "Students can update own profile" ON Student FOR UPDATE TO authenticated USING (auth.uid() = user_id);
@@ -357,7 +482,7 @@ WITH CHECK (public.professor_owns_student_cycle(DailyInternshipLog.student_id));
 -- Note: Dummy civil_id added since NOT NULL unique is required by Issue #23. 
 -- In production, the user must provide civil_id during auth sign up meta data.
 CREATE OR REPLACE FUNCTION public.handle_new_student()
-RETURNS TRIGGER AS \$\$
+RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.Student (user_id, name, student_email, civil_id)
   VALUES (
@@ -368,7 +493,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-\$\$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
