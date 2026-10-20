@@ -1,3 +1,8 @@
+
+INSERT INTO InternshipFeedback (student_id, rating, comments)
+VALUES
+(1, 4, 'Excellent and very useful training'),
+(2, 5, 'Great experience and my skills improved');
 INSERT INTO InternshipEvaluation (student_id, place_name, professor_id, site_rating, supervisor_rating, feedback_comments) 
 VALUES 
 (1, 'Company A', 1, 4, 5, 'Excellent work environment'), 
@@ -28,6 +33,5 @@ VALUES
 
 INSERT INTO CompanyChannel (channel_name, place_name)
 VALUES ('General Inquiries Channel', 'Company A');
-
 
 
