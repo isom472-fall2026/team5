@@ -20,10 +20,11 @@ Grade approvals for training completion are finalized within forty-eight hours o
 * Submit placement applications online.
 * Log daily attendance hours and submit weekly training summary reports.
 * Review submitted attendance entries and approve completed student hours.
+*  Mark a day as sick leave in the attendance log and attach a medical certificate (PDF) for review.
 * Fill and submit milestone evaluation forms with scoring rubrics for trainees.
 * Broadcast automated reminder notifications for approaching report and evaluation deadlines.
 * Export cohort attendance records and final performance summaries for academic grading.
-  
+
 
 ## 5. What it records
 
@@ -31,7 +32,7 @@ Grade approvals for training completion are finalized within forty-eight hours o
 |---|---|---|
 | User Profile | User ID, full name, role (student, coordinator, mentor), email, phone | Associated with placements, reports, and evaluations |
 | Training Opportunity | Placement ID, organization name, address, available capacity, description | Linked to approved student applicants |
-| Attendance Record | Record ID, date, check-in time, check-out time, hours logged | Created by student; validated by company mentor |
+| Attendance Record | Record ID, date, check-in time, check-out time, hours logged, attendance status (present / sick leave), medical certificate file | Created  by student; reviewed by supervising professor |
 | Training Report | Report ID, week number, task summary, submission timestamp | Submitted by student; reviewed by academic coordinator |
 | Evaluation Submission | Evaluation ID, rubric ratings, mentor feedback, completion date | Authored by mentor; attached to student training record |
 
@@ -39,10 +40,10 @@ Grade approvals for training completion are finalized within forty-eight hours o
 
 **In scope by the final week:**
 * Web interface for students to browse organizations and submit training applications.
-* Daily attendance logging module with workplace supervisor approval actions.
 * Weekly progress report submission and coordinator review view.
 * Supervisor evaluation submission form based on standard evaluation criteria.
 * Automated notification triggers for pending report submissions and overdue evaluations.
+* Daily attendance logging module, including sick-leave entries with an attached medical certificate, with approval actions.
 
 **Deliberately leaving out:**
 * Native mobile applications for iOS or Android.
