@@ -219,6 +219,7 @@
         </div>
       </div>
       <p id="table-status" role="status" aria-live="polite">Loading approved training opportunities...</p>
+      <div id="data-errors" style="padding: 8px 24px 0;"></div>
       <div class="table-wrap">
         <table class="table table-hover align-middle mb-0">
           <thead>
@@ -266,6 +267,22 @@
     const signedInLabel = document.getElementById("signed-in-label");
     const signoutButton = document.getElementById("signout-button");
     const accountStatus = document.getElementById("account-status");
+    const dataErrors = document.getElementById("data-errors");
+    const requiredColumns = ["place_name", "sector", "target_major", "opportunity_description", "requirements"];
+
+    function checkRequiredColumns(places) {
+      dataErrors.replaceChildren();
+      for (const place of places) {
+        const missing = requiredColumns.filter((column) =>
+          place[column] === null || place[column] === undefined || String(place[column]).trim() === "");
+        if (missing.length) {
+          const message = document.createElement("p");
+          message.className = "alert alert-warning mb-2";
+          message.textContent = `${place.place_name || "Unnamed place"}: missing or invalid value in ${missing.join(", ")}`;
+          dataErrors.append(message);
+        }
+      }
+    }
     let opportunities = [];
     let authStateReady = false;
     let activeUserId = null;
@@ -453,6 +470,7 @@
         if (error) throw error;
 
         opportunities = data;
+        checkRequiredColumns(data);
         setFilterOptions(majorFilter, "All majors", data.map((place) => place.target_major).filter(Boolean));
         setFilterOptions(fieldFilter, "All training fields", data.flatMap((place) => splitTrainingFields(place.available_departments)));
         renderOpportunities();
