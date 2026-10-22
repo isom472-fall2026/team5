@@ -20,10 +20,14 @@ Grade approvals for training completion are finalized within forty-eight hours o
 * Submit placement applications online.
 * Log daily attendance hours and submit weekly training summary reports.
 * Review submitted attendance entries and approve completed student hours.
-*  Mark a day as sick leave in the attendance log and attach a medical certificate (PDF) for review.
+* Mark a day as sick leave in the attendance log and attach a medical certificate (PDF) for review.
 * Fill and submit milestone evaluation forms with scoring rubrics for trainees.
 * Broadcast automated reminder notifications for approaching report and evaluation deadlines.
 * Export cohort attendance records and final performance summaries for academic grading.
+* Request an internship completion certificate once required hours are approved.
+* Group students by employment place into company channels.
+* View past interns' ratings and comments for each training site.
+* Switch the interface language between Arabic and English.
 
 
 ## 5. What it records
@@ -40,11 +44,16 @@ Grade approvals for training completion are finalized within forty-eight hours o
 
 **In scope by the final week:**
 * Web interface for students to browse organizations and submit training applications.
+* Daily attendance logging module, including sick-leave entries with an attached medical certificate (PDF), with supervisor review and approval actions.
 * Weekly progress report submission and coordinator review view.
 * Supervisor evaluation submission form based on standard evaluation criteria.
 * Automated notification triggers for pending report submissions and overdue evaluations.
-* Daily attendance logging module, including sick-leave entries with an attached medical certificate, with approval actions.
+* Internship completion certificate requests once required hours are approved.
+* Company-specific channels that group students by employment place.
+* Training site reviews page showing past interns' ratings and comments.
+* Arabic and English language toggle across all pages.
 
+  
 **Deliberately leaving out:**
 * Native mobile applications for iOS or Android.
 * Bi-directional synchronization with university student information systems (SIS).
