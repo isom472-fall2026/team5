@@ -1,0 +1,1 @@
+These stories, including creating company-specific internship channels, prompting for notification permissions, and viewing internship site reviews, were added post-Phase 2 to enhance communication, user engagement, and feedback mechanisms within the internship management system
