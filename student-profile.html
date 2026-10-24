@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My profile | Field Training</title>
+  <style>
+    :root {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #0f1f3d;
+      color: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header {
+      background: #0a1630;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    header h1 { margin: 0; font-size: 22px; }
+    a { color: #8fb3ff; }
+    main { width: min(900px, calc(100% - 32px)); margin: 28px auto; display: grid; gap: 18px; }
+    .card { background: #1a2d52; border-radius: 8px; padding: 20px 22px; }
+    .card h2 { margin: 0 0 14px; font-size: 18px; }
+    .hint { color: #b8c4dd; font-size: 14px; margin: 0 0 12px; }
+    .top { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+    .photo {
+      width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+      background: #0a1630; border: 2px solid #8fb3ff;
+      display: flex; align-items: center; justify-content: center;
+      color: #b8c4dd; font-size: 13px; text-align: center;
+    }
+    dl { display: grid; grid-template-columns: max-content 1fr; gap: 10px 18px; margin: 0; }
+    dt { color: #b8c4dd; }
+    dd { margin: 0; word-break: break-word; }
+    textarea {
+      width: 100%; min-height: 110px; padding: 10px; border-radius: 6px;
+      border: 1px solid #8fb3ff; background: #0f1f3d; color: #ffffff; font: inherit;
+    }
+    button {
+      margin-top: 10px; padding: 9px 18px; border: 0; border-radius: 6px;
+      background: #8fb3ff; color: #0a1630; font: inherit; font-weight: 600; cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    .error { background: #5a1a1a; color: #ffd6d6; border-radius: 8px; padding: 14px 18px; }
+    .success { color: #9be7b0; margin: 8px 0 0; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <h1>My profile</h1>
+    <a href="navigation-menu.html">Back to menu</a>
+  </header>
+
+  <main>
+    <p id="status" class="hint">Loading your profile...</p>
+
+    <div id="profile-errors" class="error" role="alert" hidden></div>
+
+    <div id="profile-view" hidden>
+      <section class="card">
+        <h2>Personal details</h2>
+        <div class="top">
+          <div id="photo-box" class="photo">No photo</div>
+          <dl>
+            <dt>Name</dt><dd id="name">-</dd>
+            <dt>Student ID</dt><dd id="student-id">-</dd>
+            <dt>Civil ID</dt><dd id="civil-id">-</dd>
+            <dt>Email</dt><dd id="email">-</dd>
+            <dt>Major</dt><dd id="major">-</dd>
+          </dl>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top: 18px;">
+        <h2>Documents and units</h2>
+        <dl>
+          <dt>CV</dt><dd id="cv">No CV uploaded</dd>
+          <dt>Completed units</dt><dd id="units">-</dd>
+        </dl>
+      </section>
+
+      <section class="card" style="margin-top: 18px;">
+        <h2>Skills (optional)</h2>
+        <p class="hint">List your skills, separated by commas. You can leave this empty.</p>
+        <label for="skills" hidden>Skills</label>
+        <textarea id="skills" placeholder="For example: Excel, SQL, presentation skills"></textarea>
+        <button id="save-skills" type="button">Save skills</button>
+        <p id="skills-status" class="success" role="status" hidden></p>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const statusText = document.getElementById("status");
+    const profileErrors = document.getElementById("profile-errors");
+    const profileView = document.getElementById("profile-view");
+    const skillsBox = document.getElementById("skills");
+    const saveButton = document.getElementById("save-skills");
+    const skillsStatus = document.getElementById("skills-status");
+
+    const requiredColumns = ["student_id", "name", "student_email", "civil_id", "profile_picture"];
+    let currentUserId = null;
+
+    function isEmpty(value) {
+      return value === null || value === undefined || String(value).trim() === "";
+    }
+
+    function isValidUrl(value) {
+      return /^https?:\/\/\S+$/i.test(String(value).trim());
+    }
+
+    function findProblemColumns(student) {
+      return requiredColumns.filter((column) => {
+        const value = student[column];
+        if (isEmpty(value)) return true;
+        if (column === "student_email") return !/^\S+@\S+\.\S+$/.test(value);
+        if (column === "civil_id") return !/^\d{12}$/.test(String(value).trim());
+        if (column === "profile_picture") return !isValidUrl(value);
+        return false;
+      });
+    }
+
+    function showErrors(columns) {
+      if (!columns.length) {
+        profileErrors.hidden = true;
+        return;
+      }
+      profileErrors.textContent =
+        `Your profile data is incomplete or invalid. Check these columns: ${columns.join(", ")}.`;
+      profileErrors.hidden = false;
+    }
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = isEmpty(value) ? "-" : value;
+    }
+
+    function showProfile(student) {
+      setText("name", student.name);
+      setText("student-id", student.student_id);
+      setText("civil-id", student.civil_id);
+      setText("email", student.student_email);
+      setText("major", student.major);
+      setText("units", isEmpty(student.credits_passed) ? null : `${student.credits_passed} units completed`);
+
+      const photoBox = document.getElementById("photo-box");
+      if (!isEmpty(student.profile_picture) && isValidUrl(student.profile_picture)) {
+        const img = document.createElement("img");
+        img.className = "photo";
+        img.alt = "Profile picture";
+        img.src = student.profile_picture.trim();
+        photoBox.replaceWith(img);
+      }
+
+      const cvCell = document.getElementById("cv");
+      if (!isEmpty(student.cv_url) && isValidUrl(student.cv_url)) {
+        const link = document.createElement("a");
+        link.href = student.cv_url.trim();
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = "Open my CV";
+        cvCell.replaceChildren(link);
+      }
+
+      skillsBox.value = student.skills ?? "";
+      showErrors(findProblemColumns(student));
+      profileView.hidden = false;
+    }
+
+    async function loadProfile() {
+      const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+      const user = sessionData?.session?.user;
+
+      if (sessionError || !user) {
+        statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to see your profile.';
+        return;
+      }
+      currentUserId = user.id;
+
+      const { data, error } = await supabaseClient
+        .from("student")
+        .select("student_id, name, student_email, civil_id, profile_picture, cv_url, credits_passed, skills, major")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        statusText.hidden = true;
+        profileErrors.textContent = `Could not load your profile: ${error.message}`;
+        profileErrors.hidden = false;
+        return;
+      }
+
+      if (!data) {
+        statusText.hidden = true;
+        showErrors(requiredColumns);
+        return;
+      }
+
+      statusText.hidden = true;
+      showProfile(data);
+    }
+
+    saveButton.addEventListener("click", async () => {
+      saveButton.disabled = true;
+      skillsStatus.hidden = true;
+
+      const { error } = await supabaseClient
+        .from("student")
+        .update({ skills: skillsBox.value.trim() || null })
+        .eq("user_id", currentUserId);
+
+      saveButton.disabled = false;
+      skillsStatus.textContent = error ? `Could not save skills: ${error.message}` : "Skills saved.";
+      skillsStatus.style.color = error ? "#ffd6d6" : "#9be7b0";
+      skillsStatus.hidden = false;
+    });
+
+    loadProfile();
+  </script>
+</body>
+</html>

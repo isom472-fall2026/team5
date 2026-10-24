@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Internship Site Reviews</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        h2 { text-align: center; color: #333; }
+        .review-section { margin-top: 20px; }
+        .review-item { padding: 15px; border-bottom: 1px solid #eee; }
+        .rating { color: #f39c12; font-weight: bold; }
+        .student { font-weight: bold; color: #333; }
+        .comment { color: #666; margin-top: 5px; }
+        .error { color: red; text-align: center; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Internship Site Reviews</h2>
+        <div id="errorBox" class="error">Error: Invalid feedback data.</div>
+        <div id="reviewList" class="review-section">
+            <!-- Reviews will be injected here -->
+        </div>
+    </div>
+    <script>
+        const reviews = [
+            { id: 1, studentId: 'S1', rating: 5, comment: 'Great experience, learned a lot about system analysis.' },
+            { id: 2, studentId: 'S2', rating: 4, comment: 'Friendly team, but the tasks were sometimes repetitive.' }
+        ];
+
+        function loadReviews() {
+            const listDisplay = document.getElementById('reviewList');
+            const errorBox = document.getElementById('errorBox');
+
+            if (reviews.some(r => !r.rating || !r.comment)) {
+                errorBox.style.display = 'block';
+                return;
+            }
+
+            listDisplay.innerHTML = reviews.map(r => `
+                <div class="review-item">
+                    <div class="student">Student: ${r.studentId}</div>
+                    <div class="rating">Rating: ${r.rating}/5</div>
+                    <div class="comment">"${r.comment}"</div>
+                </div>
+            `).join('');
+        }
+
+        window.onload = loadReviews;
+    </script>
+</body>
+</html>
