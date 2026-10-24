@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Placement Details</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #0f1f3d; color: #fff; }
+  header { background: #0a1630; color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+  #menuToggle { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+  .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: #0a1630; padding: 20px; transition: left .3s; z-index: 20; }
+  .sidebar.open { left: 0; }
+  .sidebar a { display: block; padding: 10px 0; color: #fff; text-decoration: none; }
+  .sidebar a.current { font-weight: bold; color: #8fb3ff; }
+  #closeSidebar { background: none; border: none; color: #fff; font-size: 22px; float: right; cursor: pointer; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 10; }
+  .overlay.active { display: block; }
+  main { max-width: 700px; margin: 24px auto; padding: 0 16px; }
+  h1 { margin-bottom: 6px; }
+  .sub { color: #b8c4dd; margin-bottom: 20px; }
+  .card { background: #1a2d52; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  .card h2 { font-size: 17px; margin-bottom: 10px; color: #8fb3ff; }
+  .row { margin-bottom: 8px; }
+  .row span { color: #b8c4dd; display: inline-block; min-width: 110px; }
+  .card a { color: #8fb3ff; font-weight: bold; text-decoration: none; }
+  .error { background: #5a1a1a; color: #ffd6d6; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .pending { background: #4a3b10; color: #ffe8a8; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .updated { color: #b8c4dd; font-size: 13px; margin-top: 4px; }
+  .demo { margin-top: 24px; border-top: 1px solid #2b4170; padding-top: 14px; color: #b8c4dd; font-size: 14px; }
+  .demo button { margin-top: 8px; background: #3b6fd8; color: #fff; border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="menuToggle">&#9776;</button>
+  <strong>Internship Platform</strong>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <button id="closeSidebar">&times;</button>
+  <a href="navigation-menu.html">Home</a>
+  <a href="placement-details.html" class="current">Placement Details</a>
+  <a href="company-requirements.html">Company Requirements</a>
+  <a href="evaluation-criteria.html">Evaluation Criteria</a>
+  <a href="contact-support.html">Contact Support</a>
+</nav>
+<div class="overlay" id="overlay"></div>
+
+<main>
+  <h1>My Placement</h1>
+  <p class="sub">Details of your assigned training placement.</p>
+  <div id="content"></div>
+
+  <div class="demo">
+    Prototype test: simulate the coordinator's final assignment.<br>
+    <button id="assignBtn">Coordinator: assign placement</button>
+  </div>
+</main>
+
+<script>
+  let placement = {
+    status: "pending",
+    place_id: null,
+    place_name: "",
+    target_major: "",
+    sector: "",
+    location: "",
+    mentor_name: "",
+    mentor_email: "",
+    mentor_phone: "",
+    last_updated: null
+  };
+
+  function validate(p) {
+    const missing = [];
+    if (!p.place_id) missing.push("place_id");
+    if (!p.place_name || p.place_name.trim() === "") missing.push("place_name");
+    if (!p.target_major || p.target_major.trim() === "") missing.push("target_major");
+    if (!p.sector || p.sector.trim() === "") missing.push("sector");
+    return missing;
+  }
+
+  function render() {
+    const content = document.getElementById("content");
+
+    if (placement.status !== "final") {
+      content.innerHTML = `<div class="pending">Your placement has not been assigned yet. It will appear here automatically once the coordinator makes the final assignment.</div>`;
+      return;
+    }
+
+    const missing = validate(placement);
+    if (missing.length) {
+      content.innerHTML = `<div class="error"><strong>Placement information is unavailable or incorrect.</strong><br>Missing or invalid: ${missing.join(", ")}</div>`;
+      return;
+    }
+
+    content.innerHTML = `
+      <div class="card">
+        <h2>Company</h2>
+        <div class="row"><span>Name:</span> ${placement.place_name}</div>
+        <div class="row"><span>Sector:</span> ${placement.sector}</div>
+        <div class="row"><span>Target major:</span> ${placement.target_major}</div>
+        <div class="row"><span>Location:</span> ${placement.location || "Not provided"}</div>
+      </div>
+      <div class="card">
+        <h2>Mentor</h2>
+        <div class="row"><span>Name:</span> ${placement.mentor_name || "Not provided"}</div>
+        <div class="row"><span>Email:</span> ${placement.mentor_email ? `<a href="mailto:${placement.mentor_email}">${placement.mentor_email}</a>` : "Not provided"}</div>
+        <div class="row"><span>Phone:</span> ${placement.mentor_phone ? `<a href="tel:+965${placement.mentor_phone}">+965 ${placement.mentor_phone}</a>` : "Not provided"}</div>
+      </div>
+      <div class="updated">Last updated: ${placement.last_updated}</div>`;
+  }
+
+  function coordinatorAssign() {
+    placement = {
+      status: "final",
+      place_id: 101,
+      place_name: "[Company name]",
+      target_major: "[Major]",
+      sector: "[Sector]",
+      location: "[Company address]",
+      mentor_name: "[Mentor name]",
+      mentor_email: "mentor@example.com",
+      mentor_phone: "00000000",
+      last_updated: new Date().toLocaleString()
+    };
+    render();
+  }
+
+  document.getElementById("assignBtn").addEventListener("click", coordinatorAssign);
+  render();
+
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+  function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+  document.getElementById("menuToggle").addEventListener("click", openSidebar);
+  document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+  overlay.addEventListener("click", hideSidebar);
+</script>
+
+</body>
+</html>
