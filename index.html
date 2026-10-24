@@ -225,6 +225,7 @@
         </div>
       </div>
       <p id="table-status" role="status" aria-live="polite">Loading approved training opportunities...</p>
+      <div id="data-errors" style="padding: 8px 24px 0;"></div>
       <div class="table-wrap">
         <table class="table table-hover align-middle mb-0">
           <thead>
@@ -898,6 +899,7 @@
         if (error) throw error;
 
         opportunities = data;
+        checkRequiredColumns(data);
         setFilterOptions(majorFilter, "All majors", data.map((place) => place.target_major).filter(Boolean));
         setFilterOptions(fieldFilter, "All training fields", data.flatMap((place) => splitTrainingFields(place.available_departments)));
         renderOpportunities();
