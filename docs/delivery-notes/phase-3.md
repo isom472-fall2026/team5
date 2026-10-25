@@ -22,9 +22,9 @@ whoever is free at the end.*
 
 | Name | Stories |
 |---|---|
-| nouf | #13, #14, #15, #17, #18, #20, #21, #23, #24, #26, #31, #32, #46, #140, #141 |
+| nouf | #13, #15, #18, #20, #21, #23, #26, #31, #32, #46, #140, #141 |
 | manar | #34, #35, #36, #37, #38, #39, #40, #41, #42, #43, #44 |
-| esraa | #12, #16, #19, #22, #25, #33, #47 |
+| esraa | #12, #16, #19, #22, #25, #33, #47,#30 |
 | heba | #49, #54 |
 ## Links to the stories
 
@@ -36,17 +36,14 @@ _The full story list at this tag is saved in ../backlog.md — do not repeat it 
 
 - #12 — Submit Weekly Progress Report
 - #13 — View Approved Training Opportunities
-- #14 — Apply for a Training Opportunity
 - #15 — View Placement Details
 - #16 — Submit Final Internship Report
-- #17 — Track Internship Hours
 - #18 — View Available Internship Cycles
 - #19 — Report Internship Issues
 - #20 — View Company Requirements
 - #21 — View Evaluation Criteria
 - #22 — View Internship Attendance Logs
 - #23 — View Student Profile Information
-- #24 — Contact Internship Coordinator
 - #25 — Evaluate Training Site
 - #26 — Request Internship Certificate
 - #31 — View Contact Information for Support
@@ -78,5 +75,5 @@ _The full story list at this tag is saved in ../backlog.md — do not repeat it 
      count for this phase. -->
 
 ## Anything not finished, and where it went
-
+Some user stories are still open at the phase-3 tag. They were not finished in this sprint and move to Phase 4.
 
