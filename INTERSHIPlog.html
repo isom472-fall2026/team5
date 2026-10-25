@@ -1,0 +1,203 @@
+from datetime import datetime, date, timedelta
+import re
+
+
+# Issue #34: Log Daily Internship Hours
+class InternshipLog:
+
+    def _init_(self, student_id, work_date):
+        self.student_id = student_id
+        self.work_date = work_date
+        self.check_in_time = None
+        self.check_out_time = None
+        self.total_hours = 0.0
+        self.status = "Pending"
+
+    def record_times(self, check_in_str, check_out_str):
+        try:
+            check_in = datetime.strptime(check_in_str, "%H:%M").time()
+            check_out = datetime.strptime(check_out_str, "%H:%M").time()
+
+            if check_out <= check_in:
+                return False, "Check-out must be after check-in."
+
+            self.check_in_time = check_in
+            self.check_out_time = check_out
+
+            self._calculate_total_hours()
+            return True, "Times recorded successfully."
+
+        except ValueError:
+            return False, "Invalid time. Use HH:MM format."
+
+    def _calculate_total_hours(self):
+        check_in = (
+            self.check_in_time.hour
+            + self.check_in_time.minute / 60
+        )
+        check_out = (
+            self.check_out_time.hour
+            + self.check_out_time.minute / 60
+        )
+        self.total_hours = check_out - check_in
+
+    def set_status(self, supervisor_decision):
+        if supervisor_decision in ["Approved", "Rejected"]:
+            self.status = supervisor_decision
+            return True, f"Log marked as {self.status}"
+
+        return False, "Invalid supervisor decision."
+
+
+def calculate_weekly_hours(logs, week_start):
+    """Calculate total hours for a seven-day period."""
+    start = datetime.strptime(week_start, "%Y-%m-%d").date()
+    end = start + timedelta(days=7)
+
+    return sum(
+        log.total_hours
+        for log in logs
+        if start <= date.fromisoformat(log.work_date) < end
+    )
+
+
+def submit_log(student_id, work_date, check_in_str, check_out_str):
+    if not all([
+        student_id,
+        work_date,
+        check_in_str,
+        check_out_str
+    ]):
+        return False, "Error: All fields are required."
+
+    try:
+        date.fromisoformat(work_date)
+    except (ValueError, TypeError):
+        return False, "Error: Date must use YYYY-MM-DD format."
+
+    log = InternshipLog(student_id, work_date)
+    success, message = log.record_times(
+        check_in_str, check_out_str
+    )
+
+    if not success:
+        return False, message
+
+    print(f"Log submitted for Student {student_id}.")
+    print(f"Work date: {work_date}")
+    print(f"Total hours: {log.total_hours:.2f}")
+    print(f"Status: {log.status}")
+
+    return True, log
+
+
+# Issue #35: Optional Learning Objectives
+class LearningObjective:
+
+    def _init_(self, student_id, objective=""):
+        self.student_id = student_id
+        self.objective = objective
+        self.status = "Pending"
+
+    def validate(self):
+        # Validate the student ID.
+        if not isinstance(self.student_id, str):
+            return False, "Error: Invalid student ID."
+
+        if not re.fullmatch(
+            r"[A-Za-z0-9_-]{3,30}", self.student_id
+        ):
+            return False, "Error: Invalid student ID."
+
+        # The learning objective is optional.
+        if self.objective is None:
+            self.objective = ""
+
+        if not isinstance(self.objective, str):
+            return False, "Error: Objective must be text."
+
+        self.objective = self.objective.strip()
+
+        # An empty objective is allowed.
+        if not self.objective:
+            return True, "No learning objective provided."
+
+        # Validate text and prohibit unsupported characters.
+        if len(self.objective) > 500:
+            return False, "Error: Objective must not exceed 500 characters."
+
+        if not re.fullmatch(
+            r"[\w\s.,!?'-]+", self.objective
+        ):
+            return False, "Error: Invalid characters in objective."
+
+        return True, "Learning objective is valid."
+
+    def review(self, supervisor_decision):
+        if supervisor_decision in [
+            "Approved",
+            "Revision Suggested"
+        ]:
+            self.status = supervisor_decision
+            return True, f"Objective status: {self.status}"
+
+        return False, "Invalid supervisor decision."
+
+
+def submit_learning_objective(student_id, objective=""):
+    learning_objective = LearningObjective(
+        student_id, objective
+    )
+
+    success, message = learning_objective.validate()
+
+    if not success:
+        print(message)
+        return False, None
+
+    # Save only after validation succeeds.
+    # Database saving must be connected separately.
+    print("Learning objective submitted successfully.")
+    print(f"Student ID: {student_id}")
+    print(
+        f"Objective: {objective.strip() if objective and objective.strip() else 'Not provided'}"
+    )
+    print(f"Status: {learning_objective.status}")
+
+    return True, learning_objective
+
+
+# Example 1: Submit daily internship hours.
+if _name_ == "_main_":
+    print("=== Internship Hours ===")
+
+    success, log_entry = submit_log(
+        "S12345",
+        "2026-10-18",
+        "09:00",
+        "17:30"
+    )
+
+    if success:
+        print(log_entry.set_status("Approved")[1])
+
+    print("\n=== Learning Objective ===")
+
+    # Example 2: Submit an optional learning objective.
+    success, objective_entry = submit_learning_objective(
+        "S12345",
+        "Improve my communication and technical skills."
+    )
+
+    if success:
+        print(objective_entry.review("Approved")[1])
+
+    print("\n=== Optional Objective Test ===")
+
+    # Example 3: The student can submit without an objective.
+    success, empty_entry = submit_learning_objective("S12345")
+
+    print("\n=== Invalid Student ID Test ===")
+
+    # Example 4: Invalid IDs must be rejected.
+    submit_learning_objective("!!", "Improve my skills.")
