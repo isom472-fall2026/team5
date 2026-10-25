@@ -1,0 +1,75 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+class InternshipSite {
+    String name;
+    String sector;
+    String major;
+    List<String> positions;
+
+    public InternshipSite(String name, String sector, String major, List<String> positions) {
+        this.name = name;
+        this.sector = sector;
+        this.major = major;
+        this.positions = positions;
+    }
+
+    @Override
+    public String toString() {
+        return "{name='" + name + "', sector='" + sector + "', major='" + major + "', positions=" + positions + "}";
+    }
+}
+
+class InternshipSiteSelection {
+    List<InternshipSite> sites;
+
+    public InternshipSiteSelection() {
+        sites = new ArrayList<>();
+        sites.add(new InternshipSite("Tech Corp", "Private", "Computer Science", Arrays.asList("Software Engineer", "Data Analyst")));
+        sites.add(new InternshipSite("Gov Agency", "Government", "Information Systems", Arrays.asList("IT Support", "Systems Analyst")));
+        sites.add(new InternshipSite("Public Health", "Public", "Health Informatics", Arrays.asList("Database Administrator")));
+    }
+
+    public List<InternshipSite> filterSites(String sector) {
+        if (sector != null && !sector.isEmpty()) {
+            List<InternshipSite> filtered = new ArrayList<>();
+            for (InternshipSite site : sites) {
+                if (site.sector.equals(sector)) {
+                    filtered.add(site);
+                }
+            }
+            return filtered;
+        }
+        return sites;
+    }
+
+    // Overload for when sector is not provided (None)
+    public List<InternshipSite> filterSites() {
+        return filterSites(null);
+    }
+
+    public List<InternshipSite> matchStudentMajor(String studentMajor, String sector) {
+        List<InternshipSite> availableSites = filterSites(sector);
+        List<InternshipSite> matched = new ArrayList<>();
+        for (InternshipSite site : availableSites) {
+            if (site.major.equals(studentMajor)) {
+                matched.add(site);
+            }
+        }
+        return matched;
+    }
+
+    // Overload for when sector is not provided (None)
+    public List<InternshipSite> matchStudentMajor(String studentMajor) {
+        return matchStudentMajor(studentMajor, null);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        InternshipSiteSelection selectionSystem = new InternshipSiteSelection();
+        List<InternshipSite> isSites = selectionSystem.matchStudentMajor("Information Systems");
+        System.out.println("Information Systems: " + isSites);
+    }
+}

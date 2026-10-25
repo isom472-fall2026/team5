@@ -1,4 +1,5 @@
- the system's name : FIELD TRAINING
+ the system's name :
+ FIELD TRAINING
 
 **Client:**  College of Business Administration at Kuwait Universit 'CBA'
 who the client is — Office of Student Training and Alumni 'OSTA'
@@ -9,7 +10,7 @@ TODO: This system addresses the frequent loss of daily evaluation forms
 > Update this line at the start of every phase. It is the first thing your team sees.
 
 - **Proposal page:** TODO: link to the published page (`https://<owner>.github.io/<repo>/docs/`)
-- **Running system:** TODO: link to the deployed system once it exists
+- **Running system:** [https://isom472-fall2026.github.io/team5/](https://isom472-fall2026.github.io/team5/)
 - **Board:** TODO: link to your Project board
 
 ## Where do I go?
