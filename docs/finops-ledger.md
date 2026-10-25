@@ -16,6 +16,7 @@ four lines. Revisit it in Phase 4 and say whether it held.*
 
 | Kind of work | What we use | Why |
 |---|---|---|
+| Managing backlog and user story requirements | Claude, ChatGPT, and Gemini | To refine user stories, verify acceptance criteria, and track model usage per task. | 
 | Managing backlog and user story requirements | Claude, ChatGPT, and Gemini |To refine user stories, verify acceptance criteria, and track model usage per task| 
 | Coding and repository maintenance | VS Code agents and Antigravity | To accelerate development, manage merge conflicts, and automate documentation |  
 ## Phase 2
