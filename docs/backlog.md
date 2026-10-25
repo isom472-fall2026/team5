@@ -26,8 +26,14 @@ the story ID, the title, who built it, and what happened to it.
 
 | Story | Title | Who | State at the tag |
 |---|---|---|---|
+|#13 | View Approved Training Opportunities| nouf |  done|
+|#15 | View Placement Details |  nouf|  |
+|#18 | View Available Internship Cycles| nouf | done |
+|#20| View Company Requirements| nouf |  done|
+|#31|  View Contact Information for Support| nouf |  done|
 |  |  |  |  |
-
+|  |  |  |  |
+|  |  |  |  |
 ## Phase 4 — saved 4 November
 
 | Story | Title | Who | State at the tag |
