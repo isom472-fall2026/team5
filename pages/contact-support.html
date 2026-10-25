@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact Support</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #0f1f3d; color: #fff; }
+  header { background: #0a1630; color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+  #menuToggle { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+  .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: #0a1630; padding: 20px; transition: left .3s; z-index: 20; }
+  .sidebar.open { left: 0; }
+  .sidebar a { display: block; padding: 10px 0; color: #fff; text-decoration: none; }
+  .sidebar a.current { font-weight: bold; color: #8fb3ff; }
+  #closeSidebar { background: none; border: none; color: #fff; font-size: 22px; float: right; cursor: pointer; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 10; }
+  .overlay.active { display: block; }
+  main { max-width: 700px; margin: 24px auto; padding: 0 16px; }
+  h1 { margin-bottom: 6px; }
+  .sub { color: #b8c4dd; margin-bottom: 20px; }
+  .card { background: #1a2d52; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .card h3 { font-size: 15px; color: #b8c4dd; margin-bottom: 6px; }
+  .card a { color: #8fb3ff; font-weight: bold; text-decoration: none; }
+  .error { background: #5a1a1a; color: #ffd6d6; border-radius: 10px; padding: 14px; margin-bottom: 16px; display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="menuToggle">&#9776;</button>
+  <strong>Internship Platform</strong>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <button id="closeSidebar">&times;</button>
+  <a href="navigation-menu.html">Home</a>
+  <a href="evaluation-criteria.html">Evaluation Criteria</a>
+  <a href="contact-support.html" class="current">Contact Support</a>
+</nav>
+<div class="overlay" id="overlay"></div>
+
+<main>
+  <h1>Contact Support</h1>
+  <p class="sub">Office of Student Training and Alumni (OSTA) – College of Business Administration</p>
+  <div class="error" id="errorBox"></div>
+  <div id="contactList"></div>
+</main>
+
+<script>
+  const support = {
+    coordinator: "Dr. Asma Alfadhel",
+    coordinator_email: "asmaa.alfadhel@ku.edu.kw",
+    email: "osta@ku.edu.kw",
+    phone_number: "24988399",
+    phone_number_2: "24985619",
+    coordination_office: "OSTA Office – 2nd Floor",
+    office_hours: "By appointment",
+    instagram: "osta_cba",
+    whatsapp: ""
+  };
+
+  // Acceptance criterion 4: check required columns
+  function validate(data) {
+    const errors = [];
+    if (!data.phone_number || !/^\d{8}$/.test(data.phone_number))
+      errors.push("phone_number is missing or invalid");
+    if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
+      errors.push("email is missing or invalid");
+    if (!data.coordination_office || data.coordination_office.trim() === "")
+      errors.push("coordination_office is missing");
+    return errors;
+  }
+
+  function card(title, html) {
+    return `<div class="card"><h3>${title}</h3>${html}</div>`;
+  }
+
+  // Acceptance criteria 2 & 3: show all channels as clickable links
+  function render(data) {
+    const errors = validate(data);
+    const box = document.getElementById("errorBox");
+    if (errors.length) {
+      box.style.display = "block";
+      box.innerHTML = "<strong>Support contact information is incomplete.</strong><br>" + errors.join("<br>");
+    }
+
+    let html = "";
+    if (data.email) html += card("Email", `<a href="mailto:${data.email}">${data.email}</a>`);
+    if (data.coordinator_email) html += card("Internship Coordinator – " + data.coordinator,
+      `<a href="mailto:${data.coordinator_email}">${data.coordinator_email}</a>`);
+    if (data.phone_number) html += card("Phone",
+      `<a href="tel:+965${data.phone_number}">+965 ${data.phone_number}</a>` +
+      (data.phone_number_2 ? ` / <a href="tel:+965${data.phone_number_2}">${data.phone_number_2}</a>` : ""));
+    if (data.instagram) html += card("Instagram",
+      `<a href="https://instagram.com/${data.instagram}" target="_blank">@${data.instagram}</a>`);
+    if (data.whatsapp) html += card("WhatsApp",
+      `<a href="https://wa.me/965${data.whatsapp}" target="_blank">+965 ${data.whatsapp}</a>`);
+    if (data.coordination_office) html += card("Office",
+      `${data.coordination_office}<br>Office hours: ${data.office_hours}`);
+    document.getElementById("contactList").innerHTML = html;
+  }
+
+  render(support);
+
+  // Acceptance criterion 1: side menu
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+  function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+  document.getElementById("menuToggle").addEventListener("click", openSidebar);
+  document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+  overlay.addEventListener("click", hideSidebar);
+</script>
+
+</body>
+</html>
