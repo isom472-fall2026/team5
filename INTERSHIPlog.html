@@ -1,203 +1,143 @@
-from datetime import datetime, date, timedelta
-import re
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.regex.Pattern;
 
+// Issue #34: Log Daily Internship Hours
+class InternshipLog {
+    String studentId;
+    String workDate;
+    LocalTime checkInTime;
+    LocalTime checkOutTime;
+    double totalHours;
+    String status;
 
-# Issue #34: Log Daily Internship Hours
-class InternshipLog:
+    public InternshipLog(String studentId, String workDate) {
+        this.studentId = studentId;
+        this.workDate = workDate;
+        this.checkInTime = null;
+        this.checkOutTime = null;
+        this.totalHours = 0.0;
+        this.status = "Pending";
+    }
 
-    def _init_(self, student_id, work_date):
-        self.student_id = student_id
-        self.work_date = work_date
-        self.check_in_time = None
-        self.check_out_time = None
-        self.total_hours = 0.0
-        self.status = "Pending"
+    public Response recordTimes(String checkInStr, String checkOutStr) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            LocalTime checkIn = LocalTime.parse(checkInStr, formatter);
+            LocalTime checkOut = LocalTime.parse(checkOutStr, formatter);
 
-    def record_times(self, check_in_str, check_out_str):
-        try:
-            check_in = datetime.strptime(check_in_str, "%H:%M").time()
-            check_out = datetime.strptime(check_out_str, "%H:%M").time()
+            if (!checkOut.isAfter(checkIn)) {
+                return new Response(false, "Check-out must be after check-in.");
+            }
 
-            if check_out <= check_in:
-                return False, "Check-out must be after check-in."
+            this.checkInTime = checkIn;
+            this.checkOutTime = checkOut;
+            calculateTotalHours();
+            return new Response(true, "Times recorded successfully.");
+        } catch (DateTimeParseException e) {
+            return new Response(false, "Invalid time. Use HH:MM format.");
+        }
+    }
 
-            self.check_in_time = check_in
-            self.check_out_time = check_out
+    private void calculateTotalHours() {
+        double checkIn = this.checkInTime.getHour() + (double) this.checkInTime.getMinute() / 60.0;
+        double checkOut = this.checkOutTime.getHour() + (double) this.checkOutTime.getMinute() / 60.0;
+        this.totalHours = checkOut - checkIn;
+    }
 
-            self._calculate_total_hours()
-            return True, "Times recorded successfully."
+    public Response setStatus(String supervisorDecision) {
+        if ("Approved".equals(supervisorDecision) || "Rejected".equals(supervisorDecision)) {
+            this.status = supervisorDecision;
+            return new Response(true, "Log marked as " + this.status);
+        }
+        return new Response(false, "Invalid supervisor decision.");
+    }
+}
 
-        except ValueError:
-            return False, "Invalid time. Use HH:MM format."
+// Issue #35: Optional Learning Objectives
+class LearningObjective {
+    String studentId;
+    String objective;
+    String status;
 
-    def _calculate_total_hours(self):
-        check_in = (
-            self.check_in_time.hour
-            + self.check_in_time.minute / 60
-        )
-        check_out = (
-            self.check_out_time.hour
-            + self.check_out_time.minute / 60
-        )
-        self.total_hours = check_out - check_in
+    public LearningObjective(String studentId, String objective) {
+        this.studentId = studentId;
+        this.objective = objective != null ? objective : "";
+        this.status = "Pending";
+    }
 
-    def set_status(self, supervisor_decision):
-        if supervisor_decision in ["Approved", "Rejected"]:
-            self.status = supervisor_decision
-            return True, f"Log marked as {self.status}"
+    public Response validate() {
+        // Validate the student ID.
+        if (this.studentId == null) {
+            return new Response(false, "Error: Invalid student ID.");
+        }
 
-        return False, "Invalid supervisor decision."
+        if (!Pattern.matches("[A-Za-z0-9_-]{3,30}", this.studentId)) {
+            return new Response(false, "Error: Invalid student ID.");
+        }
 
+        // The learning objective is optional.
+        if (this.objective == null) {
+            this.objective = "";
+        }
 
-def calculate_weekly_hours(logs, week_start):
-    """Calculate total hours for a seven-day period."""
-    start = datetime.strptime(week_start, "%Y-%m-%d").date()
-    end = start + timedelta(days=7)
+        this.objective = this.objective.trim();
 
-    return sum(
-        log.total_hours
-        for log in logs
-        if start <= date.fromisoformat(log.work_date) < end
-    )
+        // An empty objective is allowed.
+        if (this.objective.isEmpty()) {
+            return new Response(true, "No learning objective provided.");
+        }
 
+        // Validate text and prohibit unsupported characters.
+        if (this.objective.length() > 500) {
+            return new Response(false, "Error: Objective must not exceed 500 characters.");
+        }
 
-def submit_log(student_id, work_date, check_in_str, check_out_str):
-    if not all([
-        student_id,
-        work_date,
-        check_in_str,
-        check_out_str
-    ]):
-        return False, "Error: All fields are required."
+        if (!Pattern.matches("[\\w\\s.,!?'-]+", this.objective)) {
+            return new Response(false, "Error: Invalid characters in objective.");
+        }
 
-    try:
-        date.fromisoformat(work_date)
-    except (ValueError, TypeError):
-        return False, "Error: Date must use YYYY-MM-DD format."
+        return new Response(true, "Learning objective is valid.");
+    }
 
-    log = InternshipLog(student_id, work_date)
-    success, message = log.record_times(
-        check_in_str, check_out_str
-    )
+    public Response review(String supervisorDecision) {
+        if ("Approved".equals(supervisorDecision) || "Revision Suggested".equals(supervisorDecision)) {
+            this.status = supervisorDecision;
+            return new Response(true, "Objective status: " + this.status);
+        }
+        return new Response(false, "Invalid supervisor decision.");
+    }
+}
 
-    if not success:
-        return False, message
+// Helper class to handle method return tuples
+class Response {
+    boolean success;
+    String message;
+    InternshipLog log;
+    LearningObjective objective;
 
-    print(f"Log submitted for Student {student_id}.")
-    print(f"Work date: {work_date}")
-    print(f"Total hours: {log.total_hours:.2f}")
-    print(f"Status: {log.status}")
+    public Response(boolean success, String message) {
+        this.success = success;
+        this.message = message;
+    }
 
-    return True, log
+    public Response(boolean success, InternshipLog log) {
+        this.success = success;
+        this.log = log;
+    }
 
+    public Response(boolean success, LearningObjective objective) {
+        this.success = success;
+        this.objective = objective;
+    }
+}
 
-# Issue #35: Optional Learning Objectives
-class LearningObjective:
+public class MainApp {
 
-    def _init_(self, student_id, objective=""):
-        self.student_id = student_id
-        self.objective = objective
-        self.status = "Pending"
-
-    def validate(self):
-        # Validate the student ID.
-        if not isinstance(self.student_id, str):
-            return False, "Error: Invalid student ID."
-
-        if not re.fullmatch(
-            r"[A-Za-z0-9_-]{3,30}", self.student_id
-        ):
-            return False, "Error: Invalid student ID."
-
-        # The learning objective is optional.
-        if self.objective is None:
-            self.objective = ""
-
-        if not isinstance(self.objective, str):
-            return False, "Error: Objective must be text."
-
-        self.objective = self.objective.strip()
-
-        # An empty objective is allowed.
-        if not self.objective:
-            return True, "No learning objective provided."
-
-        # Validate text and prohibit unsupported characters.
-        if len(self.objective) > 500:
-            return False, "Error: Objective must not exceed 500 characters."
-
-        if not re.fullmatch(
-            r"[\w\s.,!?'-]+", self.objective
-        ):
-            return False, "Error: Invalid characters in objective."
-
-        return True, "Learning objective is valid."
-
-    def review(self, supervisor_decision):
-        if supervisor_decision in [
-            "Approved",
-            "Revision Suggested"
-        ]:
-            self.status = supervisor_decision
-            return True, f"Objective status: {self.status}"
-
-        return False, "Invalid supervisor decision."
-
-
-def submit_learning_objective(student_id, objective=""):
-    learning_objective = LearningObjective(
-        student_id, objective
-    )
-
-    success, message = learning_objective.validate()
-
-    if not success:
-        print(message)
-        return False, None
-
-    # Save only after validation succeeds.
-    # Database saving must be connected separately.
-    print("Learning objective submitted successfully.")
-    print(f"Student ID: {student_id}")
-    print(
-        f"Objective: {objective.strip() if objective and objective.strip() else 'Not provided'}"
-    )
-    print(f"Status: {learning_objective.status}")
-
-    return True, learning_objective
-
-
-# Example 1: Submit daily internship hours.
-if _name_ == "_main_":
-    print("=== Internship Hours ===")
-
-    success, log_entry = submit_log(
-        "S12345",
-        "2026-10-18",
-        "09:00",
-        "17:30"
-    )
-
-    if success:
-        print(log_entry.set_status("Approved")[1])
-
-    print("\n=== Learning Objective ===")
-
-    # Example 2: Submit an optional learning objective.
-    success, objective_entry = submit_learning_objective(
-        "S12345",
-        "Improve my communication and technical skills."
-    )
-
-    if success:
-        print(objective_entry.review("Approved")[1])
-
-    print("\n=== Optional Objective Test ===")
-
-    # Example 3: The student can submit without an objective.
-    success, empty_entry = submit_learning_objective("S12345")
-
-    print("\n=== Invalid Student ID Test ===")
-
-    # Example 4: Invalid IDs must be rejected.
-    submit_learning_objective("!!", "Improve my skills.")
+    public static double calculateWeeklyHours(List<InternshipLog> logs, String weekStart) {
+        """Calculate total hours for a seven-day period."""
+        LocalDate start = LocalDate.parse(weekStart);
+        LocalDate end = start.plusDays(7);
