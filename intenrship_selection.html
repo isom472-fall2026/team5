@@ -1,21 +1,75 @@
-class InternshipSiteSelection:
-    def __init__(self):
-     self.sites = [
-            {"name": "Tech Corp", "sector": "Private", "major": "Computer Science", "positions": ["Software Engineer", "Data Analyst"]},
-            {"name": "Gov Agency", "sector": "Government", "major": "Information Systems", "positions": ["IT Support", "Systems Analyst"]},
-            {"name": "Public Health", "sector": "Public", "major": "Health Informatics", "positions": ["Database Administrator"]}
-        ]
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-    def filter_sites(self, sector=None):
-        if sector:
-            return [site for site in self.sites if site['sector'] == sector]
-        return self.sites
+class InternshipSite {
+    String name;
+    String sector;
+    String major;
+    List<String> positions;
 
-    def match_student_major(self, student_major, sector=None):
-        available_sites = self.filter_sites(sector)
-        return [site for site in available_sites if site['major'] == student_major]
+    public InternshipSite(String name, String sector, String major, List<String> positions) {
+        this.name = name;
+        this.sector = sector;
+        this.major = major;
+        this.positions = positions;
+    }
 
+    @Override
+    public String toString() {
+        return "{name='" + name + "', sector='" + sector + "', major='" + major + "', positions=" + positions + "}";
+    }
+}
 
-selection_system = InternshipSiteSelection()
-is_sites = selection_system.match_student_major("Information Systems")
-print(f"Information Systems: {is_sites}")
+class InternshipSiteSelection {
+    List<InternshipSite> sites;
+
+    public InternshipSiteSelection() {
+        sites = new ArrayList<>();
+        sites.add(new InternshipSite("Tech Corp", "Private", "Computer Science", Arrays.asList("Software Engineer", "Data Analyst")));
+        sites.add(new InternshipSite("Gov Agency", "Government", "Information Systems", Arrays.asList("IT Support", "Systems Analyst")));
+        sites.add(new InternshipSite("Public Health", "Public", "Health Informatics", Arrays.asList("Database Administrator")));
+    }
+
+    public List<InternshipSite> filterSites(String sector) {
+        if (sector != null && !sector.isEmpty()) {
+            List<InternshipSite> filtered = new ArrayList<>();
+            for (InternshipSite site : sites) {
+                if (site.sector.equals(sector)) {
+                    filtered.add(site);
+                }
+            }
+            return filtered;
+        }
+        return sites;
+    }
+
+    // Overload for when sector is not provided (None)
+    public List<InternshipSite> filterSites() {
+        return filterSites(null);
+    }
+
+    public List<InternshipSite> matchStudentMajor(String studentMajor, String sector) {
+        List<InternshipSite> availableSites = filterSites(sector);
+        List<InternshipSite> matched = new ArrayList<>();
+        for (InternshipSite site : availableSites) {
+            if (site.major.equals(studentMajor)) {
+                matched.add(site);
+            }
+        }
+        return matched;
+    }
+
+    // Overload for when sector is not provided (None)
+    public List<InternshipSite> matchStudentMajor(String studentMajor) {
+        return matchStudentMajor(studentMajor, null);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        InternshipSiteSelection selectionSystem = new InternshipSiteSelection();
+        List<InternshipSite> isSites = selectionSystem.matchStudentMajor("Information Systems");
+        System.out.println("Information Systems: " + isSites);
+    }
+}
