@@ -26,13 +26,16 @@ the story ID, the title, who built it, and what happened to it.
 
 | Story | Title | Who | State at the tag |
 |---|---|---|---|
-|#13 | View Approved Training Opportunities| nouf |  done|
-|#15 | View Placement Details |  nouf|  |
-|#18 | View Available Internship Cycles| nouf | done |
-|#20| View Company Requirements| nouf |  done|
-|#31|  View Contact Information for Support| nouf |  done|
-| #32  | Mark Sick Leave with Medical Certificate in Attendance Log| nouf |  moved phase 3|
-|#26|Request Internship Certificate| nouf |  moved phase 3  |
+| #13 | View Approved Training Opportunities | Nouf | done |
+| #15 | View Placement Details | Nouf | done |
+| #18 | View Available Internship Cycles | Nouf | done |
+| #20 | View Company Requirements | Nouf | done |
+| #21 | View Evaluation Criteria | Nouf | done |
+| #23 | View Student Profile Information | Nouf | done |
+| #31 | View Contact Information for Support | Nouf | done |
+| #46 | Access Main Navigation Menu | Nouf | done |
+| #26 | Request Internship Certificate | Nouf | moved to phase 4 |
+| #32 | Mark Sick Leave with Medical Certificate in Attendance Log | Nouf | moved to phase 4 |
 | #12 | Submit Weekly Progress Report | Esraa | done |
 | #19 | Report Internship Issues | Esraa | done |
 | #30 | Provide Student Information for Sign In | Esraa | done |
