@@ -193,7 +193,9 @@
           </div>
           <button class="btn btn-success w-100" type="submit">Create account</button>
         </form>
-      </div>
+     <div class="mt-3">
+  <a href="#contact-section" class="btn btn-outline-success btn-sm">Contact Support</a>
+</div>
     </section>
     <div id="account-bar" class="account-bar" hidden>
       <button id="nav-toggle">☰</button>
@@ -244,12 +246,43 @@
               <th scope="col">Required documents</th>
               <th scope="col">Company requirements</th>
               <th scope="col">Last updated</th>
+              <th scope="col">Upload Documents</th>
             </tr>
           </thead>
           <tbody id="employment-places-body"></tbody>
         </table>
       </div>
     </section>
+<!-- Student Profile Section -->
+<section id="student-profile" class="mb-4 border rounded bg-white p-4">
+  <h2 class="h5 mb-3">Student Profile</h2>
+  <div id="profile-details" class="row g-2">
+    <div class="col-md-6"><strong>Name:</strong> <span id="profile-name">-</span></div>
+    <div class="col-md-6"><strong>Student ID:</strong> <span id="profile-id">-</span></div>
+    <div class="col-md-6"><strong>Civil ID:</strong> <span id="profile-civil-id">-</span></div>
+    <div class="col-md-6"><strong>Completed Units:</strong> <span id="profile-units">-</span></div>
+  </div>
+  <p id="profile-error" class="alert alert-danger mt-3 mb-0" hidden></p>
+</section>
+<!-- Support Contact Information Section -->
+<section id="contact-section" class="mt-4 border rounded bg-white p-4" aria-labelledby="contact-heading">
+  <div class="section-heading p-0 mb-3 border-0">
+    <h2 id="contact-heading" class="h5 m-0">Support Contact Information (OSTA)</h2>
+  </div>
+  <div class="row g-3 fs-6">
+    <div class="col-md-4">
+      <strong>Office / Department:</strong> <span id="coordination-office">Office of Student Training and Alumni (OSTA) - CBA</span>
+    </div>
+    <div class="col-md-4">
+      <strong>Instagram Support:</strong> <a id="support-instagram" href="https://instagram.com/osta_cba" target="_blank">@osta_cba</a>
+    </div>
+    <div class="col-md-4">
+      <strong>Email / Portal:</strong> <a id="support-email" href="mailto:cba@ku.edu.kw">cba@ku.edu.kw</a>
+    </div>
+  </div>
+  <p id="contact-error" class="alert alert-danger mt-3 mb-0" role="alert" hidden></p>
+</section>
+   </main>
     <section id="weekly-report-view" class="border rounded bg-white overflow-hidden" aria-labelledby="weekly-report-heading" hidden>
       <div class="section-heading">
         <div class="heading-copy">
@@ -332,6 +365,22 @@
     </section>
   </main>
   <script>
+    function checkSupportContactInfo() {
+    const office = document.getElementById("coordination-office")?.textContent;
+    const instagram = document.getElementById("support-instagram")?.textContent;
+    const email = document.getElementById("support-email")?.textContent;
+    const errorElement = document.getElementById("contact-error");
+
+    if (!office || !instagram || !email) {
+      errorElement.textContent = "Error: Support contact information is incomplete.";
+      errorElement.hidden = false;
+    } else {
+      errorElement.hidden = true;
+    }
+  }
+
+  checkSupportContactInfo();
+
     const { createClient } = window.supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const tableBody = document.getElementById("employment-places-body");
@@ -825,12 +874,17 @@
           cell.textContent = value ?? "-";
         }
         row.append(cell);
-      }
+  }
 
-      tableBody.append(row);
+  const uploadCell = document.createElement("td");
+  uploadCell.innerHTML = `<input type="file" accept=".pdf,.png,.jpg" class="form-control form-control-sm" />`;
+  row.append(uploadCell);
+
+  tableBody.append(row);
+}
     }
 
-    function renderOpportunities() {
+    function renderOpportunities() 
       const selectedMajor = majorFilter.value;
       const selectedField = fieldFilter.value;
       const visibleOpportunities = opportunities.filter((place) => {
