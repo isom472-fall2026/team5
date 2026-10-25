@@ -1,0 +1,35 @@
+<div class="reviews-container">
+  <h3>Internship Site Reviews</h3>
+  <form id="reviewForm" onsubmit="handleReviewSubmit(event)">
+    <div>
+      <label for="siteId">Site ID:</label>
+      <input type="number" id="siteId" required placeholder="Enter Site ID" />
+    </div>
+    <div>
+      <label for="studentId">Student ID:</label>
+      <input type="text" id="studentId" required placeholder="Enter Student ID" />
+    </div>
+    <div>
+      <label for="rating">Rating:</label>
+      <select id="rating" required>
+        <option value="">Select Rating</option>
+        <option value="5">5 - Excellent</option>
+        <option value="4">4 - Good</option>
+        <option value="3">3 - Average</option>
+        <option value="2">2 - Poor</option>
+        <option value="1">1 - Terrible</option>
+      </select>
+    </div>
+    <div>
+      <label for="comments">Comments:</label>
+      <textarea id="comments" required placeholder="Write your review comments..."></textarea>
+    </div>
+    <button type="submit">Submit Review</button>
+  </form>
+  <div id="feedbackMessage"></div>
+  <hr />
+  <h4>Approved Student Reviews</h4>
+  <div id="reviewsContainer">
+    <p>Loading reviews...</p>
+  </div>
+</div>

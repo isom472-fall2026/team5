@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My reported issues | Field Training</title>
+  <style>
+    :root {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #0f1f3d;
+      color: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header {
+      background: #0a1630;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    header h1 { margin: 0; font-size: 22px; }
+    a { color: #8fb3ff; }
+    main { width: min(900px, calc(100% - 32px)); margin: 28px auto; display: grid; gap: 14px; }
+    .hint { color: #b8c4dd; font-size: 14px; margin: 0; }
+    .error { background: #5a1a1a; color: #ffd6d6; border-radius: 8px; padding: 14px 18px; margin: 0; }
+    .empty { background: #1a2d52; border-radius: 8px; padding: 22px; text-align: center; color: #b8c4dd; margin: 0; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    .issue { background: #1a2d52; border-radius: 8px; padding: 16px 20px; display: grid; gap: 8px; }
+    .issue-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .category { font-weight: 600; font-size: 16px; }
+    .description { color: #dbe3f3; margin: 0; }
+    .date { color: #b8c4dd; font-size: 13px; }
+    .status { padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+    .status-submitted { background: #2c4a80; color: #d6e4ff; }
+    .status-under-review { background: #6b5317; color: #ffe9b0; }
+    .status-resolved { background: #1d5a36; color: #c8f5d8; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <h1>My reported issues</h1>
+    <a href="navigation-menu.html">Back to menu</a>
+  </header>
+
+  <main>
+    <p id="status-text" class="hint" role="status">Loading your reported issues...</p>
+    <p id="error-box" class="error" role="alert" hidden></p>
+    <p id="empty-box" class="empty" hidden>You have not reported any issues yet</p>
+    <ul id="issue-list"></ul>
+  </main>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const statusText = document.getElementById("status-text");
+    const errorBox = document.getElementById("error-box");
+    const emptyBox = document.getElementById("empty-box");
+    const issueList = document.getElementById("issue-list");
+
+    const requiredColumns = ["issue_report_id", "category", "status", "submitted_at"];
+    const allowedStatuses = ["Submitted", "Under review", "Resolved"];
+
+    function isEmpty(value) {
+      return value === null || value === undefined || String(value).trim() === "";
+    }
+
+    function showError(message) {
+      statusText.hidden = true;
+      issueList.replaceChildren();
+      emptyBox.hidden = true;
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    }
+
+    function findProblemColumns(issue) {
+      return requiredColumns.filter((column) => {
+        const value = issue[column];
+        if (isEmpty(value)) return true;
+        if (column === "status") return !allowedStatuses.includes(value);
+        if (column === "submitted_at") return Number.isNaN(new Date(value).getTime());
+        return false;
+      });
+    }
+
+    function shortText(text, max = 120) {
+      if (isEmpty(text)) return "No description";
+      const clean = String(text).trim();
+      return clean.length > max ? clean.slice(0, max) + "..." : clean;
+    }
+
+    function addIssue(issue) {
+      const item = document.createElement("li");
+      item.className = "issue";
+
+      const top = document.createElement("div");
+      top.className = "issue-top";
+
+      const category = document.createElement("span");
+      category.className = "category";
+      category.textContent = issue.category;
+
+      const status = document.createElement("span");
+      status.className = "status status-" + issue.status.toLowerCase().replace(" ", "-");
+      status.textContent = issue.status;
+
+      top.append(category, status);
+
+      const description = document.createElement("p");
+      description.className = "description";
+      description.textContent = shortText(issue.description);
+
+      const date = document.createElement("span");
+      date.className = "date";
+      date.textContent = "Submitted on " + new Date(issue.submitted_at).toLocaleDateString();
+
+      item.append(top, description, date);
+      issueList.append(item);
+    }
+
+    async function loadIssues() {
+      const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+      const user = sessionData?.session?.user;
+
+      if (sessionError || !user) {
+        statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to see your reported issues.';
+        return;
+      }
+
+      const { data: student, error: studentError } = await supabaseClient
+        .from("student")
+        .select("student_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (studentError) {
+        showError(`Could not check your student record: ${studentError.message}`);
+        return;
+      }
+      if (!student || isEmpty(student.student_id) || !Number.isInteger(Number(student.student_id))) {
+        showError("Your student_id is missing or invalid, so your reported issues cannot be shown.");
+        return;
+      }
+
+      const { data: issues, error } = await supabaseClient
+        .from("internshipissuereport")
+        .select("issue_report_id, category, description, status, submitted_at")
+        .eq("student_id", student.student_id)
+        .order("submitted_at", { ascending: false });
+
+      if (error) {
+        showError(`Could not load issues from the InternshipIssueReport table: ${error.message}`);
+        return;
+      }
+
+      const problems = [];
+      issues.forEach((issue, index) => {
+        const columns = findProblemColumns(issue);
+        if (columns.length) {
+          const label = isEmpty(issue.issue_report_id) ? `Issue #${index + 1}` : `Issue ${issue.issue_report_id}`;
+          problems.push(`${label}: ${columns.join(", ")}`);
+        }
+      });
+
+      if (problems.length) {
+        showError("Some reported issues have missing or invalid data in the InternshipIssueReport table. " + problems.join(" | "));
+        return;
+      }
+
+      statusText.hidden = true;
+      if (!issues.length) {
+        emptyBox.hidden = false;
+        return;
+      }
+
+      for (const issue of issues) addIssue(issue);
+    }
+
+    loadIssues();
+  </script>
+</body>
+</html>

@@ -193,9 +193,12 @@
           </div>
           <button class="btn btn-success w-100" type="submit">Create account</button>
         </form>
-      </div>
+     <div class="mt-3">
+  <a href="#contact-section" class="btn btn-outline-success btn-sm">Contact Support</a>
+</div>
     </section>
     <div id="account-bar" class="account-bar" hidden>
+      <button id="nav-toggle">☰</button>
       <span id="signed-in-label"></span>
       <button id="signout-button" class="btn btn-outline-secondary btn-sm" type="button">Sign out</button>
     </div>
@@ -203,10 +206,16 @@
     <section id="opportunities-view" class="border rounded bg-white overflow-hidden" aria-labelledby="employment-places-heading" hidden>
       <div class="section-heading">
         <div class="heading-copy">
-          <h1 id="employment-places-heading">Training opportunities</h1>
+          <h1 id="employment-places-heading" tabindex="-1">Training opportunities</h1>
           <p id="cycle-label"></p>
         </div>
-        <button id="refresh-button" class="btn btn-success" type="button">Refresh</button>
+        <div class="d-flex flex-wrap gap-2">
+          <button id="open-weekly-report" class="btn btn-success" type="button">Submit weekly report</button>
+          <button id="open-internship-issue" class="btn btn-outline-success" type="button">Report an internship issue</button>
+          <button id="open-supervisor-notifications" class="btn btn-outline-success" type="button" hidden>Supervisor notifications</button>
+          <button id="open-internship-issues" class="btn btn-outline-success" type="button" hidden>Review internship issues</button>
+          <button id="refresh-button" class="btn btn-success" type="button">Refresh</button>
+        </div>
       </div>
       <div class="filters" aria-label="Filter training opportunities">
         <div class="filter-control col-12 col-md-auto">
@@ -219,6 +228,7 @@
         </div>
       </div>
       <p id="table-status" role="status" aria-live="polite">Loading approved training opportunities...</p>
+      <div id="data-errors" style="padding: 8px 24px 0;"></div>
       <div class="table-wrap">
         <table class="table table-hover align-middle mb-0">
           <thead>
@@ -236,14 +246,141 @@
               <th scope="col">Required documents</th>
               <th scope="col">Company requirements</th>
               <th scope="col">Last updated</th>
+              <th scope="col">Upload Documents</th>
             </tr>
           </thead>
           <tbody id="employment-places-body"></tbody>
         </table>
       </div>
     </section>
+<!-- Student Profile Section -->
+<section id="student-profile" class="mb-4 border rounded bg-white p-4">
+  <h2 class="h5 mb-3">Student Profile</h2>
+  <div id="profile-details" class="row g-2">
+    <div class="col-md-6"><strong>Name:</strong> <span id="profile-name">-</span></div>
+    <div class="col-md-6"><strong>Student ID:</strong> <span id="profile-id">-</span></div>
+    <div class="col-md-6"><strong>Civil ID:</strong> <span id="profile-civil-id">-</span></div>
+    <div class="col-md-6"><strong>Completed Units:</strong> <span id="profile-units">-</span></div>
+  </div>
+  <p id="profile-error" class="alert alert-danger mt-3 mb-0" hidden></p>
+</section>
+<!-- Support Contact Information Section -->
+<section id="contact-section" class="mt-4 border rounded bg-white p-4" aria-labelledby="contact-heading">
+  <div class="section-heading p-0 mb-3 border-0">
+    <h2 id="contact-heading" class="h5 m-0">Support Contact Information (OSTA)</h2>
+  </div>
+  <div class="row g-3 fs-6">
+    <div class="col-md-4">
+      <strong>Office / Department:</strong> <span id="coordination-office">Office of Student Training and Alumni (OSTA) - CBA</span>
+    </div>
+    <div class="col-md-4">
+      <strong>Instagram Support:</strong> <a id="support-instagram" href="https://instagram.com/osta_cba" target="_blank">@osta_cba</a>
+    </div>
+    <div class="col-md-4">
+      <strong>Email / Portal:</strong> <a id="support-email" href="mailto:cba@ku.edu.kw">cba@ku.edu.kw</a>
+    </div>
+  </div>
+  <p id="contact-error" class="alert alert-danger mt-3 mb-0" role="alert" hidden></p>
+</section>
+   </main>
+    <section id="weekly-report-view" class="border rounded bg-white overflow-hidden" aria-labelledby="weekly-report-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="weekly-report-heading" tabindex="-1">Weekly progress report</h1>
+          <p id="report-week-label"></p>
+        </div>
+        <button id="back-from-report" class="btn btn-outline-secondary" type="button">Back to opportunities</button>
+      </div>
+      <div class="auth-body">
+        <p id="report-deadline" class="alert alert-info" role="status"></p>
+        <p id="report-status" class="alert alert-danger" role="alert" hidden></p>
+        <form id="weekly-report-form">
+          <div class="mb-3">
+            <label class="form-label" for="weekly-hours">Hours this week</label>
+            <input class="form-control" id="weekly-hours" name="weekly-hours" type="number" min="0" max="168" step="0.25" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="progress-details">Progress and completed work</label>
+            <textarea class="form-control" id="progress-details" name="progress-details" rows="5" maxlength="5000" required></textarea>
+          </div>
+          <button id="submit-weekly-report" class="btn btn-success" type="submit">Submit report</button>
+        </form>
+      </div>
+    </section>
+    <section id="internship-issue-view" class="border rounded bg-white overflow-hidden" aria-labelledby="internship-issue-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="internship-issue-heading" tabindex="-1">Report an internship issue</h1>
+          <p>Only your supervising professor can view this report.</p>
+        </div>
+        <button id="back-from-internship-issue" class="btn btn-outline-secondary" type="button">Back to opportunities</button>
+      </div>
+      <div class="auth-body">
+        <p id="internship-issue-status" class="alert alert-danger" role="alert" hidden></p>
+        <form id="internship-issue-form">
+          <div class="mb-3">
+            <label class="form-label" for="internship-issue-category">Issue category</label>
+            <select class="form-select" id="internship-issue-category" name="category" required>
+              <option value="">Choose a category</option>
+              <option value="Workplace">Workplace</option>
+              <option value="Supervision">Supervision</option>
+              <option value="Workload">Workload</option>
+              <option value="Safety">Safety</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="internship-issue-description">Describe the issue</label>
+            <textarea class="form-control" id="internship-issue-description" name="description" rows="5" maxlength="5000" required></textarea>
+          </div>
+          <button id="submit-internship-issue" class="btn btn-success" type="submit">Submit issue report</button>
+        </form>
+      </div>
+    </section>
+    <section id="supervisor-notifications-view" class="border rounded bg-white overflow-hidden" aria-labelledby="supervisor-notifications-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="supervisor-notifications-heading" tabindex="-1">Supervisor notifications</h1>
+          <p>Weekly progress report submissions</p>
+        </div>
+        <button id="back-from-notifications" class="btn btn-outline-secondary" type="button">Back to opportunities</button>
+      </div>
+      <div class="auth-body">
+        <p id="notification-status" role="status" aria-live="polite">Loading notifications...</p>
+        <ul id="notification-list" class="list-group"></ul>
+      </div>
+    </section>
+    <section id="internship-issues-view" class="border rounded bg-white overflow-hidden" aria-labelledby="internship-issues-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="internship-issues-heading" tabindex="-1">Internship issue reports</h1>
+          <p>Review reports from students in your assigned cycles.</p>
+        </div>
+        <button id="back-from-internship-issues" class="btn btn-outline-secondary" type="button">Back to opportunities</button>
+      </div>
+      <div class="auth-body">
+        <p id="internship-issues-list-status" role="status" aria-live="polite">Loading issue reports...</p>
+        <div id="internship-issues-list" class="list-group"></div>
+      </div>
+    </section>
   </main>
   <script>
+    function checkSupportContactInfo() {
+    const office = document.getElementById("coordination-office")?.textContent;
+    const instagram = document.getElementById("support-instagram")?.textContent;
+    const email = document.getElementById("support-email")?.textContent;
+    const errorElement = document.getElementById("contact-error");
+
+    if (!office || !instagram || !email) {
+      errorElement.textContent = "Error: Support contact information is incomplete.";
+      errorElement.hidden = false;
+    } else {
+      errorElement.hidden = true;
+    }
+  }
+
+  checkSupportContactInfo();
+
     const { createClient } = window.supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const tableBody = document.getElementById("employment-places-body");
@@ -266,6 +403,24 @@
     const signedInLabel = document.getElementById("signed-in-label");
     const signoutButton = document.getElementById("signout-button");
     const accountStatus = document.getElementById("account-status");
+    const weeklyReportView = document.getElementById("weekly-report-view");
+    const weeklyReportForm = document.getElementById("weekly-report-form");
+    const internshipIssueView = document.getElementById("internship-issue-view");
+    const internshipIssueForm = document.getElementById("internship-issue-form");
+    const internshipIssueStatus = document.getElementById("internship-issue-status");
+    const submitInternshipIssueButton = document.getElementById("submit-internship-issue");
+    const reportWeekLabel = document.getElementById("report-week-label");
+    const reportDeadline = document.getElementById("report-deadline");
+    const reportStatus = document.getElementById("report-status");
+    const submitWeeklyReportButton = document.getElementById("submit-weekly-report");
+    const openSupervisorNotificationsButton = document.getElementById("open-supervisor-notifications");
+    const openInternshipIssuesButton = document.getElementById("open-internship-issues");
+    const supervisorNotificationsView = document.getElementById("supervisor-notifications-view");
+    const notificationStatus = document.getElementById("notification-status");
+    const notificationList = document.getElementById("notification-list");
+    const internshipIssuesView = document.getElementById("internship-issues-view");
+    const internshipIssuesListStatus = document.getElementById("internship-issues-list-status");
+    const internshipIssuesList = document.getElementById("internship-issues-list");
     let opportunities = [];
     let authStateReady = false;
     let activeUserId = null;
@@ -348,18 +503,359 @@
       if (!user) {
         authSection.hidden = false;
         opportunitiesView.hidden = true;
+        weeklyReportView.hidden = true;
+        internshipIssueView.hidden = true;
+        supervisorNotificationsView.hidden = true;
+        internshipIssuesView.hidden = true;
         accountBar.hidden = true;
+        openSupervisorNotificationsButton.hidden = true;
+        openInternshipIssuesButton.hidden = true;
         return;
       }
 
       authSection.hidden = true;
       opportunitiesView.hidden = false;
+      weeklyReportView.hidden = true;
+      internshipIssueView.hidden = true;
+      supervisorNotificationsView.hidden = true;
+      internshipIssuesView.hidden = true;
       accountBar.hidden = false;
       signedInLabel.textContent = `Signed in as ${user.email ?? "student"}`;
       if (shouldLoadOpportunities) {
         setTimeout(() => {
-          if (activeUserId === userId) loadApprovedOpportunities();
+          if (activeUserId === userId) {
+            loadApprovedOpportunities();
+            loadSupervisorAccess(userId);
+          }
         }, 0);
+      }
+    }
+
+    function getCurrentWeekStartInKuwait() {
+      const dateParts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Kuwait",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(new Date());
+      const parts = Object.fromEntries(dateParts.map(({ type, value }) => [type, value]));
+      const date = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)));
+      const daysSinceMonday = (date.getUTCDay() + 6) % 7;
+      date.setUTCDate(date.getUTCDate() - daysSinceMonday);
+      return date.toISOString().slice(0, 10);
+    }
+
+    function isWeeklyReportSubmissionOpen(weekStart) {
+      const deadline = Date.parse(`${weekStart}T00:00:00+03:00`) + 5 * 24 * 60 * 60 * 1000;
+      return Date.now() < deadline;
+    }
+
+    function openWeeklyReport() {
+      const weekStart = getCurrentWeekStartInKuwait();
+      const formattedWeek = new Date(`${weekStart}T00:00:00Z`).toLocaleDateString("en-US", {
+        timeZone: "UTC",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+      reportWeekLabel.textContent = `Week beginning ${formattedWeek}`;
+      const isOpen = isWeeklyReportSubmissionOpen(weekStart);
+      reportDeadline.textContent = isOpen
+        ? "Submit by Friday at 23:59 Kuwait time."
+        : "The submission deadline for this week has passed.";
+      submitWeeklyReportButton.disabled = !isOpen;
+      reportStatus.hidden = true;
+      opportunitiesView.hidden = true;
+      supervisorNotificationsView.hidden = true;
+      weeklyReportView.hidden = false;
+      document.getElementById("weekly-report-heading").focus();
+    }
+
+    async function loadSupervisorAccess(userId) {
+      const { data, error } = await supabaseClient
+        .from("supervisingprofessor")
+        .select("professor_id")
+        .eq("user_id", userId)
+        .limit(1);
+
+      if (activeUserId !== userId) return;
+      if (error) {
+        openSupervisorNotificationsButton.hidden = true;
+        openInternshipIssuesButton.hidden = true;
+        accountStatus.textContent = "Could not check supervisor access.";
+        accountStatus.hidden = false;
+        return;
+      }
+
+      openSupervisorNotificationsButton.hidden = data.length === 0;
+      openInternshipIssuesButton.hidden = data.length === 0;
+    }
+
+    function showInternshipIssueFeedback(message, type = "error") {
+      internshipIssueStatus.className = type === "success" ? "alert alert-success" : "alert alert-danger";
+      internshipIssueStatus.textContent = message;
+      internshipIssueStatus.hidden = false;
+    }
+
+    document.getElementById("internship-issue-category").addEventListener("invalid", (event) => {
+      event.target.setCustomValidity("Select an issue category.");
+    });
+    document.getElementById("internship-issue-category").addEventListener("change", (event) => {
+      event.target.setCustomValidity("");
+    });
+    document.getElementById("internship-issue-description").addEventListener("invalid", (event) => {
+      event.target.setCustomValidity("Describe the internship issue before submitting.");
+    });
+    document.getElementById("internship-issue-description").addEventListener("input", (event) => {
+      event.target.setCustomValidity("");
+    });
+
+    async function submitInternshipIssue(event) {
+      event.preventDefault();
+      internshipIssueStatus.hidden = true;
+      const formData = new FormData(internshipIssueForm);
+      const category = formData.get("category");
+      const description = formData.get("description").trim();
+      if (!category || !description) {
+        showInternshipIssueFeedback("Choose a category and describe the issue before submitting.");
+        return;
+      }
+
+      submitInternshipIssueButton.disabled = true;
+      submitInternshipIssueButton.textContent = "Submitting...";
+      try {
+        const { data: student, error: studentError } = await supabaseClient
+          .from("student")
+          .select("student_id, internship_cycle_id")
+          .eq("user_id", activeUserId)
+          .maybeSingle();
+        if (studentError) throw studentError;
+        if (!student || !student.internship_cycle_id) {
+          throw new Error("Your student profile must be linked to an internship cycle before reporting an issue.");
+        }
+
+        const { error } = await supabaseClient
+          .from("internshipissuereport")
+          .insert({
+            student_id: student.student_id,
+            category,
+            description,
+            status: "Submitted"
+          });
+        if (error) throw error;
+
+        internshipIssueForm.reset();
+        showInternshipIssueFeedback("Issue report submitted. Your supervising professor was notified.", "success");
+      } catch (error) {
+        const message = error?.code === "23503"
+          ? "Your student profile or supervising professor could not be verified."
+          : error?.code === "42501"
+            ? "You can submit an issue report only for your own student profile."
+            : error?.code === "23514"
+              ? "Select a valid issue category and enter a description."
+              : error.message || "Could not submit the issue report. Please try again.";
+        showInternshipIssueFeedback(message);
+      } finally {
+        submitInternshipIssueButton.disabled = false;
+        submitInternshipIssueButton.textContent = "Submit issue report";
+      }
+    }
+
+    async function updateInternshipIssueStatus(reportId, status, button, feedback) {
+      button.disabled = true;
+      feedback.textContent = "";
+      const { data, error } = await supabaseClient
+        .from("internshipissuereport")
+        .update({ status })
+        .eq("issue_report_id", reportId)
+        .select("issue_report_id")
+        .maybeSingle();
+
+      if (error) {
+        feedback.textContent = error.message || "Could not update the issue status.";
+      } else if (!data) {
+        feedback.textContent = "The issue report was not found or you are not its supervising professor.";
+      } else {
+        feedback.textContent = "Issue status updated.";
+      }
+      button.disabled = false;
+    }
+
+    async function loadInternshipIssueReports() {
+      internshipIssuesListStatus.textContent = "Loading issue reports...";
+      internshipIssuesList.replaceChildren();
+      const { data: notifications, error: notificationError } = await supabaseClient
+        .from("internshipissuenotification")
+        .select("issue_report_id, message, created_at")
+        .order("created_at", { ascending: false });
+      if (notificationError) {
+        internshipIssuesListStatus.textContent = "Could not load issue notifications. Please try again.";
+        return;
+      }
+      if (!notifications.length) {
+        internshipIssuesListStatus.textContent = "There are no internship issue reports yet.";
+        return;
+      }
+
+      const reportIds = notifications.map((notification) => notification.issue_report_id);
+      const { data: reports, error: reportError } = await supabaseClient
+        .from("internshipissuereport")
+        .select("issue_report_id, student_id, category, description, status, submitted_at")
+        .in("issue_report_id", reportIds);
+      if (reportError) {
+        internshipIssuesListStatus.textContent = "Could not load internship issue reports. Please try again.";
+        return;
+      }
+
+      const studentIds = [...new Set(reports.map((report) => report.student_id))];
+      const { data: students, error: studentError } = await supabaseClient
+        .from("student")
+        .select("student_id, name, student_email")
+        .in("student_id", studentIds);
+      if (studentError) {
+        internshipIssuesListStatus.textContent = "Could not load the reporting student details. Please try again.";
+        return;
+      }
+
+      const studentsById = new Map(students.map((student) => [student.student_id, student]));
+      const reportsById = new Map(reports.map((report) => [report.issue_report_id, report]));
+      let renderedCount = 0;
+      for (const notification of notifications) {
+        const report = reportsById.get(notification.issue_report_id);
+        if (!report) continue;
+        const student = studentsById.get(report.student_id);
+        const card = document.createElement("article");
+        card.className = "list-group-item";
+        const heading = document.createElement("h2");
+        heading.className = "h5";
+        heading.textContent = `${report.category} issue — ${student?.name ?? "Student"}`;
+        const email = document.createElement("p");
+        email.className = "mb-1";
+        email.textContent = student?.student_email ?? "Student email unavailable";
+        const description = document.createElement("p");
+        description.className = "mb-2";
+        description.textContent = report.description;
+        const submitted = document.createElement("small");
+        submitted.className = "d-block text-secondary mb-2";
+        submitted.textContent = `Submitted ${new Date(report.submitted_at).toLocaleString()}`;
+        const notificationMessage = document.createElement("p");
+        notificationMessage.className = "small text-secondary";
+        notificationMessage.textContent = notification.message;
+        const label = document.createElement("label");
+        label.className = "form-label";
+        label.textContent = "Status";
+        const select = document.createElement("select");
+        select.className = "form-select mb-2";
+        select.setAttribute("aria-label", `Status for ${report.category} report from ${student?.name ?? "student"}`);
+        for (const value of ["Submitted", "Under review", "Resolved"]) {
+          select.add(new Option(value, value, value === report.status, value === report.status));
+        }
+        const feedback = document.createElement("p");
+        feedback.className = "small mb-2";
+        feedback.setAttribute("role", "status");
+        const updateButton = document.createElement("button");
+        updateButton.className = "btn btn-success btn-sm";
+        updateButton.type = "button";
+        updateButton.textContent = "Update status";
+        updateButton.addEventListener("click", () => {
+          updateInternshipIssueStatus(report.issue_report_id, select.value, updateButton, feedback);
+        });
+        label.htmlFor = `issue-status-${report.issue_report_id}`;
+        select.id = label.htmlFor;
+        card.append(heading, email, description, submitted, notificationMessage, label, select, updateButton, feedback);
+        internshipIssuesList.append(card);
+        renderedCount += 1;
+      }
+      internshipIssuesListStatus.textContent = `${renderedCount} internship issue report${renderedCount === 1 ? "" : "s"}.`;
+    }
+
+    async function loadSupervisorNotifications() {
+      notificationStatus.textContent = "Loading notifications...";
+      notificationList.replaceChildren();
+      const { data, error } = await supabaseClient
+        .from("supervisornotification")
+        .select("notification_id, message, created_at")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        notificationStatus.textContent = "Could not load supervisor notifications. Please try again.";
+        return;
+      }
+
+      if (!data.length) {
+        notificationStatus.textContent = "There are no weekly report notifications yet.";
+        return;
+      }
+
+      notificationStatus.textContent = `${data.length} notification${data.length === 1 ? "" : "s"}.`;
+      for (const notification of data) {
+        const item = document.createElement("li");
+        item.className = "list-group-item";
+        const message = document.createElement("p");
+        message.className = "mb-1";
+        message.textContent = notification.message;
+        const timestamp = document.createElement("small");
+        timestamp.className = "text-secondary";
+        timestamp.textContent = new Date(notification.created_at).toLocaleString();
+        item.append(message, timestamp);
+        notificationList.append(item);
+      }
+    }
+
+    async function submitWeeklyReport(event) {
+      event.preventDefault();
+      reportStatus.hidden = true;
+      const weekStart = getCurrentWeekStartInKuwait();
+      if (!isWeeklyReportSubmissionOpen(weekStart)) {
+        reportDeadline.textContent = "The submission deadline for this week has passed.";
+        submitWeeklyReportButton.disabled = true;
+        return;
+      }
+
+      submitWeeklyReportButton.disabled = true;
+      submitWeeklyReportButton.textContent = "Submitting...";
+      try {
+        const { data: student, error: studentError } = await supabaseClient
+          .from("student")
+          .select("student_id, internship_cycle_id")
+          .eq("user_id", activeUserId)
+          .maybeSingle();
+        if (studentError) throw studentError;
+        if (!student || !student.internship_cycle_id) {
+          throw new Error("Your student profile must be linked to an internship cycle before submitting a report.");
+        }
+
+        const formData = new FormData(weeklyReportForm);
+        const { error } = await supabaseClient
+          .from("weeklyprogressreport")
+          .insert({
+            student_id: student.student_id,
+            week_start: weekStart,
+            weekly_hours: Number(formData.get("weekly-hours")),
+            progress_details: formData.get("progress-details").trim()
+          });
+        if (error?.code === "23505") {
+          throw new Error("A weekly report has already been submitted for this week.");
+        }
+        if (error) throw error;
+
+        reportStatus.className = "alert alert-success";
+        reportStatus.textContent = "Weekly report submitted. Your supervising professor was notified.";
+        reportStatus.hidden = false;
+        weeklyReportForm.reset();
+      } catch (error) {
+        reportStatus.className = "alert alert-danger";
+        reportStatus.textContent = error?.code === "42501"
+          ? "You cannot submit this report after the deadline or for another student."
+          : error?.code === "23503"
+            ? "The student profile or internship cycle could not be verified."
+            : error?.code === "23514"
+              ? "Enter valid weekly hours and non-empty progress details."
+              : error.message || "Could not submit the weekly report. Please try again.";
+        reportStatus.hidden = false;
+      } finally {
+        submitWeeklyReportButton.disabled = !isWeeklyReportSubmissionOpen(weekStart);
+        submitWeeklyReportButton.textContent = "Submit report";
       }
     }
 
@@ -378,12 +874,17 @@
           cell.textContent = value ?? "-";
         }
         row.append(cell);
-      }
+  }
 
-      tableBody.append(row);
+  const uploadCell = document.createElement("td");
+  uploadCell.innerHTML = `<input type="file" accept=".pdf,.png,.jpg" class="form-control form-control-sm" />`;
+  row.append(uploadCell);
+
+  tableBody.append(row);
+}
     }
 
-    function renderOpportunities() {
+    function renderOpportunities() 
       const selectedMajor = majorFilter.value;
       const selectedField = fieldFilter.value;
       const visibleOpportunities = opportunities.filter((place) => {
@@ -453,6 +954,7 @@
         if (error) throw error;
 
         opportunities = data;
+        checkRequiredColumns(data);
         setFilterOptions(majorFilter, "All majors", data.map((place) => place.target_major).filter(Boolean));
         setFilterOptions(fieldFilter, "All training fields", data.flatMap((place) => splitTrainingFields(place.available_departments)));
         renderOpportunities();
@@ -545,6 +1047,56 @@
     majorFilter.addEventListener("change", renderOpportunities);
     fieldFilter.addEventListener("change", renderOpportunities);
     refreshButton.addEventListener("click", loadApprovedOpportunities);
+    document.getElementById("open-weekly-report").addEventListener("click", openWeeklyReport);
+    document.getElementById("back-from-report").addEventListener("click", () => {
+      weeklyReportView.hidden = true;
+      opportunitiesView.hidden = false;
+      document.getElementById("employment-places-heading").focus();
+    });
+    document.getElementById("open-internship-issue").addEventListener("click", () => {
+      opportunitiesView.hidden = true;
+      weeklyReportView.hidden = true;
+      supervisorNotificationsView.hidden = true;
+      internshipIssuesView.hidden = true;
+      internshipIssueView.hidden = false;
+      internshipIssueStatus.hidden = true;
+      document.getElementById("internship-issue-heading").focus();
+    });
+    document.getElementById("back-from-internship-issue").addEventListener("click", () => {
+      internshipIssueView.hidden = true;
+      opportunitiesView.hidden = false;
+      document.getElementById("employment-places-heading").focus();
+    });
+    openSupervisorNotificationsButton.addEventListener("click", () => {
+      opportunitiesView.hidden = true;
+      weeklyReportView.hidden = true;
+      internshipIssueView.hidden = true;
+      internshipIssuesView.hidden = true;
+      supervisorNotificationsView.hidden = false;
+      loadSupervisorNotifications();
+      document.getElementById("supervisor-notifications-heading").focus();
+    });
+    document.getElementById("back-from-notifications").addEventListener("click", () => {
+      supervisorNotificationsView.hidden = true;
+      opportunitiesView.hidden = false;
+      document.getElementById("employment-places-heading").focus();
+    });
+    openInternshipIssuesButton.addEventListener("click", () => {
+      opportunitiesView.hidden = true;
+      weeklyReportView.hidden = true;
+      internshipIssueView.hidden = true;
+      supervisorNotificationsView.hidden = true;
+      internshipIssuesView.hidden = false;
+      loadInternshipIssueReports();
+      document.getElementById("internship-issues-heading").focus();
+    });
+    document.getElementById("back-from-internship-issues").addEventListener("click", () => {
+      internshipIssuesView.hidden = true;
+      opportunitiesView.hidden = false;
+      document.getElementById("employment-places-heading").focus();
+    });
+    weeklyReportForm.addEventListener("submit", submitWeeklyReport);
+    internshipIssueForm.addEventListener("submit", submitInternshipIssue);
     loadApprovedOpportunities();
   </script>
 </body>

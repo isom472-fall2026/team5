@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation Criteria</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 800px; margin: 24px auto; padding: 0 16px; color: #222; }
+  h1 { margin-bottom: 4px; }
+  .category { margin-top: 24px; }
+  .category h2 { border-bottom: 2px solid #2b6cb0; padding-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+  button { background: #2b6cb0; color: #fff; border: 0; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
+  #error { background: #fde8e8; color: #9b1c1c; padding: 12px; border-radius: 6px; margin-top: 16px; }
+  @media print { button { display: none; } }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #0f1f3d; color: #fff; }
+  header { background: #0a1630; color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+  #menuToggle { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+  .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: #0a1630; padding: 20px; transition: left .3s; z-index: 20; }
+  .sidebar.open { left: 0; }
+  .sidebar a { display: block; padding: 10px 0; color: #fff; text-decoration: none; }
+  .sidebar a.current { font-weight: bold; color: #8fb3ff; }
+  #closeSidebar { background: none; border: none; color: #fff; font-size: 22px; float: right; cursor: pointer; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 10; }
+  .overlay.active { display: block; }
+  main { max-width: 700px; margin: 24px auto; padding: 0 16px; }
+  h1 { margin-bottom: 6px; }
+  .sub { color: #b8c4dd; margin-bottom: 20px; }
+  .card { background: #1a2d52; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .card h3 { font-size: 15px; color: #b8c4dd; margin-bottom: 6px; }
+  .card a { color: #8fb3ff; font-weight: bold; text-decoration: none; }
+  .error { background: #5a1a1a; color: #ffd6d6; border-radius: 10px; padding: 14px; margin-bottom: 16px; display: none; }
+</style>
+</head>
+<body>
+  <h1>Internship Evaluation Criteria</h1>
+  <p>This is how your performance will be assessed.</p>
+  <button id="printBtn">Print / Export as PDF</button>
+
+  <div id="error" hidden></div>
+  <div id="rubric"></div>
+
+<script>
+  // Columns every evaluation row must have (acceptance criterion 4)
+  const REQUIRED = ["evaluation_id", "student_id", "site_rating", "supervisor_comment"];
+
+  // Sample data. Later, replace this with data from your database (Supabase).
+  const evaluations = [
+    { evaluation_id: 1, student_id: 101, category: "Technical skills",
+      indicator: "Applies course knowledge to real tasks", site_rating: 5,supervisor_comment:"Strong understanding"},
+    { evaluation_id: 2, student_id: 101, category: "Technical skills",
+      indicator: "Uses required tools correctly", site_rating: 4, supervisor_comment: "Good" },
+    { evaluation_id: 3, student_id: 101, category: "Reporting",
+      indicator: "Submits clear weekly reports", site_rating: 4, supervisor_comment: "On time" },
+    { evaluation_id: 4, student_id: 101, category: "Reporting",
+      indicator: "Documents work with evidence", site_rating: 3, supervisor_comment: "Add more detail" }
+  ];
+
+  function showError(message) {
+    const box = document.getElementById("error");
+    box.textContent = message;
+    box.hidden = false;
+  }
+
+  function render() {
+    // Criterion 4: show an explicit error instead of an empty view
+    if (!evaluations || evaluations.length === 0) {
+      showError("Error: no evaluation data was found.");
+      return;
+    }
+    for (const row of evaluations) {
+      const missing = REQUIRED.filter(col => row[col] === undefined || row[col] === null || row[col] === "");
+      if (missing.length > 0) {
+        showError("Error: missing or invalid column(s): " + missing.join(", "));
+        return;
+      }
+    }
+
+    // Criterion 2: group the rows by category
+    const groups = {};
+    for (const row of evaluations) {
+      (groups[row.category] = groups[row.category] || []).push(row);
+    }
+
+    // Criterion 1: display the rubric with performance indicators
+    const container = document.getElementById("rubric");
+    for (const category in groups) {
+      const section = document.createElement("div");
+      section.className = "category";
+      section.innerHTML = "<h2>" + category + "</h2>" +
+        "<table><tr><th>Indicator</th><th>Rating</th><th>Supervisor comment</th></tr>" +
+        groups[category].map(r =>
+          "<tr><td>" + r.indicator + "</td><td>" + r.site_rating + "/5</td><td>" + r.supervisor_comment + "</td></tr>"
+        ).join("") + "</table>";
+      container.appendChild(section);
+    }
+  }
+
+  // Criterion 3: print / export
+  document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+  render();
+</script>
+</body>
+</html>
+
