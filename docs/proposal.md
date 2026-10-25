@@ -28,6 +28,8 @@ Grade approvals for training completion are finalized within forty-eight hours o
 * Group students by employment place into company channels.
 * View past interns' ratings and comments for each training site.
 * Switch the interface language between Arabic and English.
+* Request an internship completion certificate once required hours are approved
+* Group students by employment place into company channels.
 
 
 ## 5. What it records
@@ -39,6 +41,7 @@ Grade approvals for training completion are finalized within forty-eight hours o
 | Attendance Record | Record ID, date, check-in time, check-out time, hours logged, attendance status (present / sick leave), medical certificate file | Created  by student; reviewed by supervising professor |
 | Training Report | Report ID, week number, task summary, submission timestamp | Submitted by student; reviewed by academic coordinator |
 | Evaluation Submission | Evaluation ID, rubric ratings, mentor feedback, completion date | Authored by mentor; attached to student training record |
+|Internship Certificate | Certificate ID, student, request date, verification status, issue date, certificate file | Requested by student; reviewed by supervising professor |
 
 ## 6. In scope by the final week — and what is not
 
