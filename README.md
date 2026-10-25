@@ -9,8 +9,8 @@ TODO: This system addresses the frequent loss of daily evaluation forms
 > Update this line at the start of every phase. It is the first thing your team sees.
 
 - **Proposal page:** TODO: link to the published page (https://isom472-fall2026.github.io/team5/)
-- **Running system:** TODO: link to the deployed system once it exists
-- **Board:** TODO: link to your Project board
+- **Running system:** TODO: link to the deployed system once it exists(https://isom472-fall2026.github.io/team5/)
+- **Board:** TODO: link to your Project board(https://github.com/isom472-fall2026/team5)
 
 ## Where do I go?
 
