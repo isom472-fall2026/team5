@@ -31,9 +31,22 @@ the story ID, the title, who built it, and what happened to it.
 |#18 | View Available Internship Cycles| nouf | done |
 |#20| View Company Requirements| nouf |  done|
 |#31|  View Contact Information for Support| nouf |  done|
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
+| #32  | Mark Sick Leave with Medical Certificate in Attendance Log| nouf |  moved phase 3|
+|#26|Request Internship Certificate| nouf |  moved phase 3  |
+|  |  |  | |
+|  |  |  | |
+|  |  |  | |
+|  |  |  | |
+|  |  |  | |
+|  |  |  | |
+|  |  |  | |
+|  |  |  | |
+
+
+
+
+
+
 ## Phase 4 — saved 4 November
 
 | Story | Title | Who | State at the tag |
