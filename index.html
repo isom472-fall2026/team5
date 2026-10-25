@@ -214,6 +214,7 @@
           <button id="open-internship-issue" class="btn btn-outline-success" type="button">Report an internship issue</button>
           <button id="open-supervisor-notifications" class="btn btn-outline-success" type="button" hidden>Supervisor notifications</button>
           <button id="open-internship-issues" class="btn btn-outline-success" type="button" hidden>Review internship issues</button>
+          <a href="pages/contact-support.html" class="btn btn-outline-success">Contact support</a>
           <button id="refresh-button" class="btn btn-success" type="button">Refresh</button>
         </div>
       </div>
@@ -874,17 +875,16 @@
           cell.textContent = value ?? "-";
         }
         row.append(cell);
-  }
+      }
 
-  const uploadCell = document.createElement("td");
-  uploadCell.innerHTML = `<input type="file" accept=".pdf,.png,.jpg" class="form-control form-control-sm" />`;
-  row.append(uploadCell);
+      const uploadCell = document.createElement("td");
+      uploadCell.innerHTML = `<input type="file" accept=".pdf,.png,.jpg" class="form-control form-control-sm" />`;
+      row.append(uploadCell);
 
-  tableBody.append(row);
-}
+      tableBody.append(row);
     }
 
-    function renderOpportunities() 
+    function renderOpportunities() {
       const selectedMajor = majorFilter.value;
       const selectedField = fieldFilter.value;
       const visibleOpportunities = opportunities.filter((place) => {
@@ -903,6 +903,14 @@
       } else {
         tableStatus.textContent = `${visibleOpportunities.length} of ${opportunities.length} approved opportunit${opportunities.length === 1 ? "y" : "ies"} found.`;
       }
+    }
+
+    function checkRequiredColumns(rows) {
+      const errorBox = document.getElementById("data-errors");
+      const missing = rows.length ? columns.filter((column) => !(column in rows[0])) : [];
+      errorBox.textContent = missing.length
+        ? `Missing required columns: ${missing.join(", ")}`
+        : "";
     }
 
     async function loadApprovedOpportunities() {
