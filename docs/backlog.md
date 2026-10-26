@@ -21,7 +21,7 @@ the story ID, the title, who built it, and what happened to it.
 | #48 | Manage Internship Company Requirements | Heba | moved to phase 3 |
 | #39| Create Company-Specific Internship Channels | Manar | moved to phase 3 |
 | #32 | Mark Sick Leave with Medical Certificate in Attendance Log | Nouf | moved to phase 3 |
-```
+
 ## Phase 3 — saved 21 October
 
 | Story | Title | Who | State at the tag |
