@@ -5,30 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Placement Details</title>
 <style>
+  :root {
+    --navy: #0f1f3d;
+    --navy-soft: #33415c;
+    --gold: #f2c230;
+    --white: #ffffff;
+    --line: #e3e8f0;
+    --muted: #5a6785;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, sans-serif; background: #0f1f3d; color: #fff; }
-  header { background: #0a1630; color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
-  #menuToggle { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
-  .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: #0a1630; padding: 20px; transition: left .3s; z-index: 20; }
+  body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+  header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+  #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+  .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; }
   .sidebar.open { left: 0; }
-  .sidebar a { display: block; padding: 10px 0; color: #fff; text-decoration: none; }
-  .sidebar a.current { font-weight: bold; color: #8fb3ff; }
-  #closeSidebar { background: none; border: none; color: #fff; font-size: 22px; float: right; cursor: pointer; }
-  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 10; }
+  .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+  .sidebar a:hover { color: var(--gold); }
+  .sidebar a.current { font-weight: bold; color: var(--gold); }
+  #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
   .overlay.active { display: block; }
-  main { max-width: 700px; margin: 24px auto; padding: 0 16px; }
-  h1 { margin-bottom: 6px; }
-  .sub { color: #b8c4dd; margin-bottom: 20px; }
-  .card { background: #1a2d52; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
-  .card h2 { font-size: 17px; margin-bottom: 10px; color: #8fb3ff; }
-  .row { margin-bottom: 8px; }
-  .row span { color: #b8c4dd; display: inline-block; min-width: 110px; }
-  .card a { color: #8fb3ff; font-weight: bold; text-decoration: none; }
-  .error { background: #5a1a1a; color: #ffd6d6; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
-  .pending { background: #4a3b10; color: #ffe8a8; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
-  .updated { color: #b8c4dd; font-size: 13px; margin-top: 4px; }
-  .demo { margin-top: 24px; border-top: 1px solid #2b4170; padding-top: 14px; color: #b8c4dd; font-size: 14px; }
-  .demo button { margin-top: 8px; background: #3b6fd8; color: #fff; border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; }
+  main { max-width: 700px; margin: 28px auto; padding: 0 16px; }
+  h1 { margin-bottom: 6px; color: var(--navy); }
+  .sub { color: var(--muted); margin-bottom: 20px; }
+  .card { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+  .card h2 { font-size: 17px; margin-bottom: 10px; color: var(--navy); }
+  .row { margin-bottom: 8px; color: var(--navy-soft); }
+  .row span { color: var(--muted); display: inline-block; min-width: 110px; }
+  .card a { color: var(--navy); font-weight: bold; text-decoration: underline; }
+  .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .pending { background: #fff7da; color: #6b5317; border-left: 4px solid var(--gold); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .updated { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .demo { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 14px; color: var(--muted); font-size: 14px; }
+  .demo button { margin-top: 8px; background: var(--navy); color: var(--white); border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; font-weight: bold; }
+  .demo button:hover { background: var(--gold); color: var(--navy); }
 </style>
 </head>
 <body>
