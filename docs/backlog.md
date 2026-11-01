@@ -34,6 +34,8 @@ the story ID, the title, who built it, and what happened to it.
 | #23 | View Student Profile Information | Nouf | done |
 | #31 | View Contact Information for Support | Nouf | done |
 | #46 | Access Main Navigation Menu | Nouf | done |
+| #140 |View reported issues and their status  | nouf | done |
+| #141 | view intership prograess summary |nouf  |done  |
 | #26 | Request Internship Certificate | Nouf | moved to phase 4 |
 | #32 | Mark Sick Leave with Medical Certificate in Attendance Log | Nouf | moved to phase 4 |
 | #12 | Submit Weekly Progress Report | Esraa | done |
@@ -71,7 +73,7 @@ the story ID, the title, who built it, and what happened to it.
 | Story | Title | Who | State at the tag |
 |---|---|---|---|
 |  |  |  |  |
-
+|  |  |  |  |
 ## Phase 5 — saved 18 November
 
 | Story | Title | Who | State at the tag |
