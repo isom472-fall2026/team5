@@ -17,11 +17,13 @@
   body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
   header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
   #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
-  .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; }
+  .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
   .sidebar.open { left: 0; }
   .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
   .sidebar a:hover { color: var(--gold); }
   .sidebar a.current { font-weight: bold; color: var(--gold); }
+  .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar .nav-section + a { margin-top: 4px; }
   #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
   .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
   .overlay.active { display: block; }
@@ -51,11 +53,19 @@
 <nav class="sidebar" id="sidebar">
   <button id="closeSidebar">&times;</button>
   <a href="../index.html">Home</a>
+
+  <p class="nav-section">Placement</p>
   <a href="placement-details.html" class="current">Placement Details</a>
   <a href="company-requirements.html">Company Requirements</a>
-  <a href="evaluation-criteria.html">Evaluation Criteria</a>
+
+  <p class="nav-section">Reports</p>
   <a href="progress-summary.html">Progress Summary</a>
   <a href="reported-issues.html">Reported Issues</a>
+
+  <p class="nav-section">Evaluation</p>
+  <a href="evaluation-criteria.html">Evaluation Criteria</a>
+
+  <p class="nav-section">Help</p>
   <a href="contact-support.html">Contact Support</a>
 </nav>
 <div class="overlay" id="overlay"></div>
