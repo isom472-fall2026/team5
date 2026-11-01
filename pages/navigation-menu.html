@@ -2,136 +2,67 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Main Navigation Menu</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: #f4f6f8;
+  :root {
+    --navy: #0f1f3d;
+    --navy-soft: #33415c;
+    --gold: #f2c230;
+    --white: #ffffff;
+    --line: #e3e8f0;
+    --muted: #5a6785;
   }
-
-  /* Top dashboard bar */
-  .dashboard-header {
-    background: #2c3e50;
-    color: white;
-    padding: 15px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .dashboard-header h1 {
-    font-size: 20px;
-    margin: 0;
-  }
-
-  /* Criterion 1: navigation icon shown on dashboard after login */
-  .nav-icon {
-    cursor: pointer;
-    font-size: 28px;
-    background: none;
-    border: none;
-    color: white;
-  }
-
-  .nav-icon:hover {
-    color: #1abc9c;
-  }
-
-  /* Criterion 2: side panel with key modules */
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 260px;
-    background: #34495e;
-    color: white;
-    transition: transform 0.3s ease;
-    transform: translateX(-100%);
-    padding-top: 60px;
-    z-index: 1000;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  .sidebar ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .sidebar ul li {
-    padding: 15px 25px;
-    border-bottom: 1px solid #3f5468;
-    cursor: pointer;
-  }
-
-  .sidebar ul li:hover {
-    background: #1abc9c;
-  }
-
-  /* Criterion 3: collapsible, does not affect current page state */
-  .close-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 22px;
-    cursor: pointer;
-  }
-
-  .overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.3);
-    z-index: 900;
-  }
-
-  .overlay.active {
-    display: block;
-  }
-
-  .main-content {
-    padding: 30px;
-  }
-
-  .main-content p {
-    color: #555;
-  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+  header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+  #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+  .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+  .sidebar.open { left: 0; }
+  .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+  .sidebar a:hover { color: var(--gold); }
+  .sidebar a.current { font-weight: bold; color: var(--gold); }
+  .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar .nav-section + a { margin-top: 4px; }
+  #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+  .overlay.active { display: block; }
+  main { max-width: 800px; margin: 28px auto; padding: 0 16px; }
+  h1 { margin-bottom: 6px; color: var(--navy); }
+  .sub { color: var(--muted); margin-bottom: 16px; }
 </style>
 </head>
 <body>
 
-  <div class="dashboard-header">
-    <h1>Student Dashboard</h1>
-    <button class="nav-icon" id="menuToggle" title="Open navigation menu">&#9776;</button>
-  </div>
+<header>
+  <button id="menuToggle">&#9776;</button>
+  <strong>Internship Platform</strong>
+</header>
 
-  <div class="overlay" id="overlay"></div>
+<nav class="sidebar" id="sidebar">
+  <button id="closeSidebar">&times;</button>
+  <a href="navigation-menu.html" class="current">Home</a>
 
-  <div class="sidebar" id="sidebar">
-    <button class="close-btn" id="closeSidebar">&times;</button>
-    <ul>
-      <li>Profile</li>
-      <li>Training Site Selection</li>
-      <li>Internship Hours</li>
-      <li>Reports</li>
-    </ul>
-  </div>
+  <p class="nav-section">Placement</p>
+  <a href="placement-details.html">Placement Details</a>
+  <a href="company-requirements.html">Company Requirements</a>
 
-  <div class="main-content">
-    <p>Welcome back! This is your current page content, and it stays exactly as it is whether the side menu is open or closed.</p>
-  </div>
+  <p class="nav-section">Reports</p>
+  <a href="progress-summary.html">Progress Summary</a>
+  <a href="reported-issues.html">Reported Issues</a>
+
+  <p class="nav-section">Evaluation</p>
+  <a href="evaluation-criteria.html">Evaluation Criteria</a>
+
+  <p class="nav-section">Help</p>
+  <a href="contact-support.html">Contact Support</a>
+</nav>
+<div class="overlay" id="overlay"></div>
+
+<main>
+  <h1>Student Dashboard</h1>
+  <p class="sub">Welcome back! This is your current page content, and it stays exactly as it is whether the side menu is open or closed.</p>
+</main>
 
 <script>
   const menuToggle = document.getElementById("menuToggle");
@@ -155,165 +86,4 @@
 </script>
 
 </body>
-</html>
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Main Navigation Menu</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: #f4f6f8;
-        }
-
-        /* Top dashboard bar */
-        .dashboard-header {
-            background: #2c3e50;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .dashboard-header h1 {
-            font-size: 20px;
-            margin: 0;
-        }
-
-        /* Criterion 1: navigation icon shown on dashboard after login */
-        .nav-icon {
-            cursor: pointer;
-            font-size: 28px;
-            background: none;
-            border: none;
-            color: white;
-        }
-
-        .nav-icon:hover {
-            color: #1abc9c;
-        }
-
-        /* Criterion 2: side panel with key modules */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 260px;
-            background: #34495e;
-            color: white;
-            transition: transform 0.3s ease;
-            transform: translateX(-100%);
-            padding-top: 60px;
-            z-index: 1000;
-        }
-
-        .sidebar.open {
-            transform: translateX(0);
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .sidebar ul li {
-            padding: 15px 25px;
-            border-bottom: 1px solid #3f5468;
-            cursor: pointer;
-        }
-
-        .sidebar ul li:hover {
-            background: #1abc9c;
-        }
-
-        /* Criterion 3: collapsible, does not affect current page state */
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 22px;
-            cursor: pointer;
-        }
-
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 900;
-        }
-
-        .overlay.active {
-            display: block;
-        }
-
-        .main-content {
-            padding: 30px;
-        }
-
-        .main-content p {
-            color: #555;
-        }
-    </style>
-</head>
-
-<body>
-
-    <div class="dashboard-header">
-        <h1>Student Dashboard</h1>
-        <button class="nav-icon" id="menuToggle" title="Open navigation menu">&#9776;</button>
-    </div>
-
-    <div class="overlay" id="overlay"></div>
-
-    <div class="sidebar" id="sidebar">
-        <button class="close-btn" id="closeSidebar">&times;</button>
-        <ul>
-            <li>Profile</li>
-            <li>Training Site Selection</li>
-            <li>Internship Hours</li>
-            <li>Reports</li>
-            <li><a href="contact-support.html">Contact Support</a></li>
-        </ul>
-    </div>
-
-    <div class="main-content">
-        <p>Welcome back! This is your current page content, and it stays exactly as it is whether the side menu is open
-            or closed.</p>
-    </div>
-
-    <script>
-        const menuToggle = document.getElementById("menuToggle");
-        const sidebar = document.getElementById("sidebar");
-        const closeSidebar = document.getElementById("closeSidebar");
-        const overlay = document.getElementById("overlay");
-
-        function openSidebar() {
-            sidebar.classList.add("open");
-            overlay.classList.add("active");
-        }
-
-        function hideSidebar() {
-            sidebar.classList.remove("open");
-            overlay.classList.remove("active");
-        }
-
-        menuToggle.addEventListener("click", openSidebar);
-        closeSidebar.addEventListener("click", hideSidebar);
-        overlay.addEventListener("click", hideSidebar);
-    </script>
-
-</body>
-
 </html>
