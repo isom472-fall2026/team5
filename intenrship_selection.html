@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Select internship site | Field Training</title>
+  <style>
+    :root {
+      --navy: #0f1f3d;
+      --navy-soft: #33415c;
+      --gold: #f2c230;
+      --white: #ffffff;
+      --line: #e3e8f0;
+      --muted: #5a6785;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+    .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+    .sidebar.open { left: 0; }
+    .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+    .sidebar a:hover { color: var(--gold); }
+    .sidebar a.current { font-weight: bold; color: var(--gold); }
+    .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar .nav-section + a { margin-top: 4px; }
+    #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+    .overlay.active { display: block; }
+    main { max-width: 800px; margin: 28px auto; padding: 0 16px; display: grid; gap: 14px; }
+    h1 { margin-bottom: 6px; color: var(--navy); }
+    h2 { font-size: 18px; color: var(--navy); }
+    .hint { color: var(--muted); font-size: 14px; margin: 0; }
+    .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px 18px; margin: 0; }
+    .success { background: #e6f4ea; color: #137333; border-radius: 10px; padding: 14px 18px; margin: 0; }
+    .empty { background: #fff7da; border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 20px; text-align: center; color: #6b5317; margin: 0; }
+    .filter { display: grid; gap: 6px; max-width: 320px; }
+    label { font-weight: 600; color: var(--navy-soft); }
+    select { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; color: var(--navy); background: var(--white); }
+    select:focus, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    .site { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px 20px; display: grid; gap: 10px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .site-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .site-name { font-weight: 600; font-size: 17px; }
+    .badge { padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: #e8eef8; color: #1e3a6c; }
+    .badge-selected { background: #e6f4ea; color: #137333; }
+    .meta { color: var(--navy-soft); margin: 0; }
+    .positions-title { font-weight: 600; font-size: 14px; color: var(--navy-soft); }
+    .positions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .position { background: #fff3cd; color: #7a5c00; border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+    .select-btn { background: var(--navy); color: var(--white); border: none; border-radius: 8px; padding: 10px 18px; font-weight: 600; font-size: 14px; cursor: pointer; justify-self: start; }
+    .select-btn:disabled { opacity: .6; cursor: not-allowed; }
+    a { color: var(--navy); font-weight: bold; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menuToggle">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <button id="closeSidebar">&times;</button>
+    <a href="../index.html">Home</a>
+
+    <p class="nav-section">Placement</p>
+    <a href="placement-details.html">Placement Details</a>
+    <a href="select-site.html" class="current">Select a Site</a>
+    <a href="company-requirements.html">Company Requirements</a>
+
+    <p class="nav-section">Reports</p>
+    <a href="progress-summary.html">Progress Summary</a>
+    <a href="reported-issues.html">Reported Issues</a>
+
+    <p class="nav-section">Evaluation</p>
+    <a href="evaluation-criteria.html">Evaluation Criteria</a>
+
+    <p class="nav-section">Help</p>
+    <a href="contact-support.html">Contact Support</a>
+  </nav>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <h1>Select an Internship Site</h1>
+    <p id="status-text" class="hint" role="status">Loading sites...</p>
+    <p id="error-box" class="error" role="alert" hidden></p>
+    <p id="feedback" role="status" hidden></p>
+
+    <div class="filter" id="filter-box" hidden>
+      <label for="sector-filter">Sector</label>
+      <select id="sector-filter">
+        <option value="">All sectors</option>
+      </select>
+    </div>
+
+    <p id="count-text" class="hint" hidden></p>
+    <p id="empty-box" class="empty" hidden></p>
+    <ul id="site-list"></ul>
+  </main>
+
+  <script>
+    // Names used in the database. Change these if docs/schema.md uses different names.
+    const EP = {
+      id: "employment_id",
+      name: "place_name",
+      sector: "sector",
+      major: "target_major",
+      specialization: "target_specialization",
+      positions: "positions",
+      approved: "is_approved"
+    };
+    const ST = { major: "major", specialization: "specialization", place: "employment_place" };
+    const ALLOWED_SECTORS = ["public", "private", "government"];
+
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const statusText = document.getElementById("status-text");
+    const errorBox = document.getElementById("error-box");
+    const feedback = document.getElementById("feedback");
+    const filterBox = document.getElementById("filter-box");
+    const sectorFilter = document.getElementById("sector-filter");
+    const countText = document.getElementById("count-text");
+    const emptyBox = document.getElementById("empty-box");
+    const siteList = document.getElementById("site-list");
+
+    let student = null;
+    let suitableSites = [];
+
+    function isEmpty(value) {
+      return value === null || value === undefined || String(value).trim() === "";
+    }
+
+    function norm(value) {
+      return String(value).trim().toLowerCase();
+    }
+
+    function showError(message) {
+      statusText.hidden = true;
+      filterBox.hidden = true;
+      countText.hidden = true;
+      emptyBox.hidden = true;
+      siteList.replaceChildren();
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    }
+
+    function showFeedback(message, ok) {
+      feedback.textContent = message;
+      feedback.className = ok ? "success" : "error";
+      feedback.hidden = false;
+    }
+
+    function validStudentId(value) {
+      return !isEmpty(value) && Number.isInteger(Number(value)) && Number(value) > 0;
+    }
+
+    function positionsOf(site) {
+      const raw = site[EP.positions];
+      if (Array.isArray(raw)) return raw.map((p) => String(p).trim()).filter(Boolean);
+      if (isEmpty(raw)) return [];
+      return String(raw).split(/[,;\n]/).map((p) => p.trim()).filter(Boolean);
+    }
+
+    function siteKey(site) {
+      return isEmpty(site[EP.id]) ? site[EP.name] : site[EP.id];
+    }
+
+    // The site must match the student's major, and their specialization when both are set
+    function matchesStudent(site) {
+      if (isEmpty(site[EP.major]) || norm(site[EP.major]) !== norm(student[ST.major])) return false;
+      if (!isEmpty(site[EP.specialization]) && !isEmpty(student[ST.specialization])) {
+        return norm(site[EP.specialization]) === norm(student[ST.specialization]);
+      }
+      return true;
+    }
+
+    function render() {
+      const sector = sectorFilter.value;
+      const shown = suitableSites.filter((s) => !sector || (!isEmpty(s[EP.sector]) && norm(s[EP.sector]) === norm(sector)));
+
+      siteList.replaceChildren();
+      countText.textContent = shown.length + " of " + suitableSites.length + " suitable sites";
+      countText.hidden = false;
+      emptyBox.hidden = shown.length > 0;
+      emptyBox.textContent = suitableSites.length === 0
+        ? "No approved sites match your major and specialization yet"
+        : "No suitable sites in this sector";
+
+      shown.forEach((site) => {
+        const item = document.createElement("li");
+        item.className = "site";
+
+        const top = document.createElement("div");
+        top.className = "site-top";
+        const name = document.createElement("span");
+        name.className = "site-name";
+        name.textContent = String(site[EP.name]).trim();
+        const badge = document.createElement("span");
+        const isSelected = !isEmpty(student[ST.place]) && norm(student[ST.place]) === norm(site[EP.name]);
+        badge.className = "badge" + (isSelected ? " badge-selected" : "");
+        badge.textContent = isSelected ? "Your site" : (isEmpty(site[EP.sector]) ? "Sector unknown" : String(site[EP.sector]).trim());
+        top.append(name, badge);
+
+        const meta = document.createElement("p");
+        meta.className = "meta";
+        meta.textContent = "Target major: " + String(site[EP.major]).trim();
+
+        item.append(top, meta);
+
+        const positions = positionsOf(site);
+        const posTitle = document.createElement("span");
+        posTitle.className = "positions-title";
+        posTitle.textContent = "Available positions";
+        const posBox = document.createElement("div");
+        posBox.className = "positions";
+        if (positions.length) {
+          positions.forEach((p) => {
+            const tag = document.createElement("span");
+            tag.className = "position";
+            tag.textContent = p;
+            posBox.append(tag);
+          });
+        } else {
+          const none = document.createElement("span");
+          none.className = "meta";
+          none.textContent = "No positions listed";
+          posBox.append(none);
+        }
+        item.append(posTitle, posBox);
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "select-btn";
+        btn.textContent = isSelected ? "Selected" : "Select this site";
+        btn.disabled = isSelected;
+        btn.addEventListener("click", () => selectSite(site, btn));
+        item.append(btn);
+
+        siteList.append(item);
+      });
+    }
+
+    async function selectSite(site, btn) {
+      feedback.hidden = true;
+
+      // Explicit errors, and nothing is saved when a value is missing or wrong
+      if (!student || !validStudentId(student.student_id)) {
+        showFeedback("Your student_id is invalid, so the site was not selected.", false);
+        return;
+      }
+      if (isEmpty(siteKey(site))) {
+        showFeedback("The site's employment_id is missing, so the site was not selected.", false);
+        return;
+      }
+      if (isEmpty(site[EP.sector]) || !ALLOWED_SECTORS.includes(norm(site[EP.sector]))) {
+        showFeedback("The site's sector is missing or wrong (it must be public, private or government), so the site was not selected.", false);
+        return;
+      }
+      if (!matchesStudent(site)) {
+        showFeedback("This site does not match your major and specialization, so it was not selected.", false);
+        return;
+      }
+
+      btn.disabled = true;
+      const { data, error } = await supabaseClient
+        .from("student")
+        .update({ [ST.place]: String(site[EP.name]).trim() })
+        .eq("student_id", Number(student.student_id))
+        .select("student_id");
+
+      if (error) {
+        btn.disabled = false;
+        showFeedback("Your site was not saved: " + error.message, false);
+        return;
+      }
+      if (!data || data.length !== 1) {
+        btn.disabled = false;
+        showFeedback("Your site was not saved. You may not have permission to update your record.", false);
+        return;
+      }
+
+      student[ST.place] = String(site[EP.name]).trim();
+      showFeedback("You selected " + String(site[EP.name]).trim() + ".", true);
+      render();
+    }
+
+    async function init() {
+      const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+      const user = sessionData?.session?.user;
+
+      if (sessionError || !user) {
+        statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to select a site.';
+        return;
+      }
+
+      const { data: studentRow, error: studentError } = await supabaseClient
+        .from("student")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (studentError) {
+        showError("Could not load your student record: " + studentError.message);
+        return;
+      }
+      if (!studentRow || !validStudentId(studentRow.student_id)) {
+        showError("Your student_id is missing or invalid, so you cannot select a site.");
+        return;
+      }
+      if (isEmpty(studentRow[ST.major])) {
+        showError("Your major is missing from your student record, so suitable sites cannot be found.");
+        return;
+      }
+      student = studentRow;
+
+      const { data: sites, error: sitesError } = await supabaseClient
+        .from("employmentplace")
+        .select("*")
+        .eq(EP.approved, true);
+
+      if (sitesError) {
+        showError("Could not load sites from the EMPLOYMENTPLACE table: " + sitesError.message);
+        return;
+      }
+
+      suitableSites = sites.filter((s) => !isEmpty(s[EP.name]) && matchesStudent(s));
+
+      const sectors = [...new Set(suitableSites.map((s) => s[EP.sector]).filter((v) => !isEmpty(v)).map((v) => String(v).trim()))].sort();
+      sectors.forEach((s) => {
+        const option = document.createElement("option");
+        option.value = s;
+        option.textContent = s;
+        sectorFilter.append(option);
+      });
+
+      statusText.hidden = true;
+      filterBox.hidden = false;
+      render();
+    }
+
+    sectorFilter.addEventListener("change", render);
+    init();
+
+    // Side menu
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+    function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+    overlay.addEventListener("click", hideSidebar);
+  </script>
+</body>
+</html>
