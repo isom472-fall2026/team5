@@ -1,5 +1,5 @@
 class InternshipSiteSelection:
-    def __init__(self):
+    def _init_(self):
      self.sites = [
             {"name": "Tech Corp", "sector": "Private", "major": "Computer Science", "positions": ["Software Engineer", "Data Analyst"]},
             {"name": "Gov Agency", "sector": "Government", "major": "Information Systems", "positions": ["IT Support", "Systems Analyst"]},
