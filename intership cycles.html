@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Available Internship Cycles</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    <script src="js/config.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #ffffff; }
+        .container { background: #ffffff; padding: 20px; border: 1px solid #dde3ec; border-radius: 8px; max-width: 600px; margin: auto; }
+        h2 { text-align: center; color: #0a1f44; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background-color: #0a1f44; color: white; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #eef1f6; color: #333; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 4px; text-align: center; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .empty { background-color: #f4f6fa; color: #0a1f44; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Available Internship Cycles</h2>
+        <div id="result">Loading cycles...</div>
+    </div>
+
+    <script>
+        // Uses SUPABASE_URL and SUPABASE_ANON_KEY from js/config.js
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Order inside the same year: Fall, Summer, Spring
+        const semesterOrder = { 'Fall': 1, 'Summer': 2, 'Spring': 3 };
+
+        function showMessage(text, type) {
+            const result = document.getElementById('result');
+            result.innerHTML = '';
+            const box = document.createElement('div');
+            box.className = 'message ' + type;
+            box.textContent = text;
+            result.appendChild(box);
+        }
+
+        async function loadCycles() {
+            // Read all cycles from InternshipCycle
+            const { data: cycles, error: cycleError } = await db
+                .from('internshipcycle')
+                .select('cycle_id, semester, year, professor_id');
+
+            if (cycleError) {
+                showMessage('Could not load internship cycles. Please try again.', 'error');
+                return;
+            }
+
+            if (!cycles || cycles.length === 0) {
+                showMessage('No internship cycles are available yet.', 'empty');
+                return;
+            }
+
+            // Read professor names from SupervisingProfessor
+            const { data: professors, error: profError } = await db
+                .from('supervisingprofessor')
+                .select('professor_id, name');
+
+            if (profError) {
+                showMessage('Could not load internship cycles. Please try again.', 'error');
+                return;
+            }
+
+            const professorNames = {};
+            professors.forEach(p => { professorNames[p.professor_id] = p.name; });
+
+            // Sort: newest year first, then Fall, Summer, Spring
+            cycles.sort((a, b) => {
+                if (b.year !== a.year) return b.year - a.year;
+                return (semesterOrder[a.semester] || 9) - (semesterOrder[b.semester] || 9);
+            });
+
+            // Build the table
+            const table = document.createElement('table');
+            const header = table.insertRow();
+            ['Semester', 'Year', 'Supervising professor'].forEach(text => {
+                const th = document.createElement('th');
+                th.textContent = text;
+                header.appendChild(th);
+            });
+
+            cycles.forEach(cycle => {
+                const row = table.insertRow();
+                row.insertCell().textContent = cycle.semester;
+                row.insertCell().textContent = cycle.year;
+                row.insertCell().textContent = professorNames[cycle.professor_id] || 'Not assigned';
+            });
+
+            const result = document.getElementById('result');
+            result.innerHTML = '';
+            result.appendChild(table);
+        }
+
+        loadCycles();
+    </script>
+</body>
+</html>

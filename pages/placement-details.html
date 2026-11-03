@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Placement Details</title>
+<style>
+  :root {
+    --navy: #0f1f3d;
+    --navy-soft: #33415c;
+    --gold: #f2c230;
+    --white: #ffffff;
+    --line: #e3e8f0;
+    --muted: #5a6785;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+  header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+  #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+  .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+  .sidebar.open { left: 0; }
+  .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+  .sidebar a:hover { color: var(--gold); }
+  .sidebar a.current { font-weight: bold; color: var(--gold); }
+  .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar .nav-section + a { margin-top: 4px; }
+  #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+  .overlay.active { display: block; }
+  main { max-width: 700px; margin: 28px auto; padding: 0 16px; }
+  h1 { margin-bottom: 6px; color: var(--navy); }
+  .sub { color: var(--muted); margin-bottom: 20px; }
+  .card { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+  .card h2 { font-size: 17px; margin-bottom: 10px; color: var(--navy); }
+  .row { margin-bottom: 8px; color: var(--navy-soft); }
+  .row span { color: var(--muted); display: inline-block; min-width: 110px; }
+  .card a { color: var(--navy); font-weight: bold; text-decoration: underline; }
+  .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .pending { background: #fff7da; color: #6b5317; border-left: 4px solid var(--gold); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .updated { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .demo { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 14px; color: var(--muted); font-size: 14px; }
+  .demo button { margin-top: 8px; background: var(--navy); color: var(--white); border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; font-weight: bold; }
+  .demo button:hover { background: var(--gold); color: var(--navy); }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="menuToggle">&#9776;</button>
+  <strong>Internship Platform</strong>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <button id="closeSidebar">&times;</button>
+  <a href="../index.html">Home</a>
+
+  <p class="nav-section">Placement</p>
+  <a href="placement-details.html" class="current">Placement Details</a>
+  <a href="company-requirements.html">Company Requirements</a>
+
+  <p class="nav-section">Reports</p>
+  <a href="progress-summary.html">Progress Summary</a>
+  <a href="reported-issues.html">Reported Issues</a>
+
+  <p class="nav-section">Evaluation</p>
+  <a href="evaluation-criteria.html">Evaluation Criteria</a>
+
+  <p class="nav-section">Help</p>
+  <a href="contact-support.html">Contact Support</a>
+</nav>
+<div class="overlay" id="overlay"></div>
+
+<main>
+  <h1>My Placement</h1>
+  <p class="sub">Details of your assigned training placement.</p>
+  <div id="content"></div>
+
+  <div class="demo">
+    Prototype test: simulate the coordinator's final assignment.<br>
+    <button id="assignBtn">Coordinator: assign placement</button>
+  </div>
+</main>
+
+<script>
+  let placement = {
+    status: "pending",
+    place_id: null,
+    place_name: "",
+    target_major: "",
+    sector: "",
+    location: "",
+    mentor_name: "",
+    mentor_email: "",
+    mentor_phone: "",
+    last_updated: null
+  };
+
+  function validate(p) {
+    const missing = [];
+    if (!p.place_id) missing.push("place_id");
+    if (!p.place_name || p.place_name.trim() === "") missing.push("place_name");
+    if (!p.target_major || p.target_major.trim() === "") missing.push("target_major");
+    if (!p.sector || p.sector.trim() === "") missing.push("sector");
+    return missing;
+  }
+
+  function render() {
+    const content = document.getElementById("content");
+
+    if (placement.status !== "final") {
+      content.innerHTML = `<div class="pending">Your placement has not been assigned yet. It will appear here automatically once the coordinator makes the final assignment.</div>`;
+      return;
+    }
+
+    const missing = validate(placement);
+    if (missing.length) {
+      content.innerHTML = `<div class="error"><strong>Placement information is unavailable or incorrect.</strong><br>Missing or invalid: ${missing.join(", ")}</div>`;
+      return;
+    }
+
+    content.innerHTML = `
+      <div class="card">
+        <h2>Company</h2>
+        <div class="row"><span>Name:</span> ${placement.place_name}</div>
+        <div class="row"><span>Sector:</span> ${placement.sector}</div>
+        <div class="row"><span>Target major:</span> ${placement.target_major}</div>
+        <div class="row"><span>Location:</span> ${placement.location || "Not provided"}</div>
+      </div>
+      <div class="card">
+        <h2>Mentor</h2>
+        <div class="row"><span>Name:</span> ${placement.mentor_name || "Not provided"}</div>
+        <div class="row"><span>Email:</span> ${placement.mentor_email ? `<a href="mailto:${placement.mentor_email}">${placement.mentor_email}</a>` : "Not provided"}</div>
+        <div class="row"><span>Phone:</span> ${placement.mentor_phone ? `<a href="tel:+965${placement.mentor_phone}">+965 ${placement.mentor_phone}</a>` : "Not provided"}</div>
+      </div>
+      <div class="updated">Last updated: ${placement.last_updated}</div>`;
+  }
+
+  function coordinatorAssign() {
+    placement = {
+      status: "final",
+      place_id: 101,
+      place_name: "[Company name]",
+      target_major: "[Major]",
+      sector: "[Sector]",
+      location: "[Company address]",
+      mentor_name: "[Mentor name]",
+      mentor_email: "mentor@example.com",
+      mentor_phone: "00000000",
+      last_updated: new Date().toLocaleString()
+    };
+    render();
+  }
+
+  document.getElementById("assignBtn").addEventListener("click", coordinatorAssign);
+  render();
+
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+  function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+  document.getElementById("menuToggle").addEventListener("click", openSidebar);
+  document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+  overlay.addEventListener("click", hideSidebar);
+</script>
+
+</body>

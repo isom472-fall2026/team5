@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Application Status Notifications</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        h2 { text-align: center; color: #333; }
+        .notification-list { margin-top: 20px; }
+        .notification-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .status-approved { color: green; font-weight: bold; }
+        .status-rejected { color: red; font-weight: bold; }
+        .timestamp { font-size: 0.85em; color: #999; }
+        .empty-msg { text-align: center; color: #666; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Application Status Notifications</h2>
+        <div id="notificationList" class="notification-list">
+            <!-- Notifications will be injected here -->
+        </div>
+    </div>
+    <script>
+        // Simulated notifications data
+        const notifications = [
+            { id: 1, message: 'Your internship application at TechCorp has been approved.', status: 'approved', timestamp: '2026-10-19 10:30 AM' },
+            { id: 2, message: 'Your application at BuildIt has been rejected.', status: 'rejected', timestamp: '2026-10-18 02:15 PM' }
+        ];
+
+        function loadNotifications() {
+            const listDisplay = document.getElementById('notificationList');
+            if (notifications.length === 0) {
+                listDisplay.innerHTML = '<div class="empty-msg">No new notifications.</div>';
+                return;
+            }
+            listDisplay.innerHTML = notifications.map(n => `
+                <div class="notification-item">
+                    <div>
+                        <div>${n.message}</div>
+                        <div class="timestamp">${n.timestamp}</div>
+                    </div>
+                    <div class="status-${n.status}">${n.status.toUpperCase()}</div>
+                </div>
+            `).join('');
+        }
+
+        // Load notifications on page load
+        window.onload = loadNotifications;
+    </script>
+</body>
+</html>

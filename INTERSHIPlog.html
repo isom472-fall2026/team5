@@ -1,0 +1,143 @@
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.regex.Pattern;
+
+// Issue #34: Log Daily Internship Hours
+class InternshipLog {
+    String studentId;
+    String workDate;
+    LocalTime checkInTime;
+    LocalTime checkOutTime;
+    double totalHours;
+    String status;
+
+    public InternshipLog(String studentId, String workDate) {
+        this.studentId = studentId;
+        this.workDate = workDate;
+        this.checkInTime = null;
+        this.checkOutTime = null;
+        this.totalHours = 0.0;
+        this.status = "Pending";
+    }
+
+    public Response recordTimes(String checkInStr, String checkOutStr) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            LocalTime checkIn = LocalTime.parse(checkInStr, formatter);
+            LocalTime checkOut = LocalTime.parse(checkOutStr, formatter);
+
+            if (!checkOut.isAfter(checkIn)) {
+                return new Response(false, "Check-out must be after check-in.");
+            }
+
+            this.checkInTime = checkIn;
+            this.checkOutTime = checkOut;
+            calculateTotalHours();
+            return new Response(true, "Times recorded successfully.");
+        } catch (DateTimeParseException e) {
+            return new Response(false, "Invalid time. Use HH:MM format.");
+        }
+    }
+
+    private void calculateTotalHours() {
+        double checkIn = this.checkInTime.getHour() + (double) this.checkInTime.getMinute() / 60.0;
+        double checkOut = this.checkOutTime.getHour() + (double) this.checkOutTime.getMinute() / 60.0;
+        this.totalHours = checkOut - checkIn;
+    }
+
+    public Response setStatus(String supervisorDecision) {
+        if ("Approved".equals(supervisorDecision) || "Rejected".equals(supervisorDecision)) {
+            this.status = supervisorDecision;
+            return new Response(true, "Log marked as " + this.status);
+        }
+        return new Response(false, "Invalid supervisor decision.");
+    }
+}
+
+// Issue #35: Optional Learning Objectives
+class LearningObjective {
+    String studentId;
+    String objective;
+    String status;
+
+    public LearningObjective(String studentId, String objective) {
+        this.studentId = studentId;
+        this.objective = objective != null ? objective : "";
+        this.status = "Pending";
+    }
+
+    public Response validate() {
+        // Validate the student ID.
+        if (this.studentId == null) {
+            return new Response(false, "Error: Invalid student ID.");
+        }
+
+        if (!Pattern.matches("[A-Za-z0-9_-]{3,30}", this.studentId)) {
+            return new Response(false, "Error: Invalid student ID.");
+        }
+
+        // The learning objective is optional.
+        if (this.objective == null) {
+            this.objective = "";
+        }
+
+        this.objective = this.objective.trim();
+
+        // An empty objective is allowed.
+        if (this.objective.isEmpty()) {
+            return new Response(true, "No learning objective provided.");
+        }
+
+        // Validate text and prohibit unsupported characters.
+        if (this.objective.length() > 500) {
+            return new Response(false, "Error: Objective must not exceed 500 characters.");
+        }
+
+        if (!Pattern.matches("[\\w\\s.,!?'-]+", this.objective)) {
+            return new Response(false, "Error: Invalid characters in objective.");
+        }
+
+        return new Response(true, "Learning objective is valid.");
+    }
+
+    public Response review(String supervisorDecision) {
+        if ("Approved".equals(supervisorDecision) || "Revision Suggested".equals(supervisorDecision)) {
+            this.status = supervisorDecision;
+            return new Response(true, "Objective status: " + this.status);
+        }
+        return new Response(false, "Invalid supervisor decision.");
+    }
+}
+
+// Helper class to handle method return tuples
+class Response {
+    boolean success;
+    String message;
+    InternshipLog log;
+    LearningObjective objective;
+
+    public Response(boolean success, String message) {
+        this.success = success;
+        this.message = message;
+    }
+
+    public Response(boolean success, InternshipLog log) {
+        this.success = success;
+        this.log = log;
+    }
+
+    public Response(boolean success, LearningObjective objective) {
+        this.success = success;
+        this.objective = objective;
+    }
+}
+
+public class MainApp {
+
+    public static double calculateWeeklyHours(List<InternshipLog> logs, String weekStart) {
+        """Calculate total hours for a seven-day period."""
+        LocalDate start = LocalDate.parse(weekStart);
+        LocalDate end = start.plusDays(7);
