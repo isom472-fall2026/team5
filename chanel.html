@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manage Company Internship Channels</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    <script src="js/config.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #ffffff; }
+        .container { background: #ffffff; padding: 20px; border: 1px solid #dde3ec; border-radius: 8px; max-width: 500px; margin: auto; }
+        h2, h3, label { color: #0a1f44; }
+        h2 { text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccd3df; border-radius: 4px; font-size: 14px; }
+        button { width: 100%; padding: 10px; background-color: #0a1f44; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #14306a; }
+        button:disabled { background-color: #8a94a6; cursor: default; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; text-align: center; }
+        .error { display: block; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .success { display: block; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .channel-list { margin-top: 20px; border-top: 1px solid #dde3ec; padding-top: 10px; }
+        .channel-item { padding: 8px; border-bottom: 1px solid #eef1f6; }
+        .channel-item strong { color: #0a1f44; }
+        .channel-item span { color: #666; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Company Internship Channels</h2>
+
+        <div class="form-group">
+            <label for="placeName">Company:</label>
+            <select id="placeName">
+                <option value="">Loading companies...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="channelName">Channel name:</label>
+            <input type="text" id="channelName" placeholder="e.g. Company A Channel">
+        </div>
+
+        <button id="createBtn" onclick="createChannel()">Create channel</button>
+
+        <div id="messageBox" class="message"></div>
+
+        <div class="channel-list">
+            <h3>Active channels</h3>
+            <div id="channelListDisplay"></div>
+        </div>
+    </div>
+
+    <script>
+        // Uses SUPABASE_URL and SUPABASE_ANON_KEY from js/config.js
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function showMessage(text, isError = true) {
+            const box = document.getElementById('messageBox');
+            box.textContent = text;
+            box.className = 'message ' + (isError ? 'error' : 'success');
+        }
+
+        // Fill the company list from EmploymentPlace
+        async function loadCompanies() {
+            const select = document.getElementById('placeName');
+            const { data, error } = await db
+                .from('employmentplace')
+                .select('place_name')
+                .order('place_name');
+
+            if (error) {
+                select.innerHTML = '<option value="">Could not load companies</option>';
+                showMessage('Error loading companies: ' + error.message);
+                return;
+            }
+
+            select.innerHTML = '<option value="">Select a company</option>';
+            data.forEach(row => {
+                const option = document.createElement('option');
+                option.value = row.place_name;
+                option.textContent = row.place_name;
+                select.appendChild(option);
+            });
+        }
+
+        // Show all channels saved in CompanyChannel
+        async function loadChannels() {
+            const display = document.getElementById('channelListDisplay');
+            const { data, error } = await db
+                .from('companychannel')
+                .select('channel_name, place_name, created_at')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                display.textContent = 'Could not load channels.';
+                return;
+            }
+
+            display.innerHTML = '';
+            if (data.length === 0) {
+                display.textContent = 'No channels yet. Create the first one above.';
+                return;
+            }
+
+            data.forEach(row => {
+                const item = document.createElement('div');
+                item.className = 'channel-item';
+                const name = document.createElement('strong');
+                name.textContent = row.channel_name;
+                const place = document.createElement('span');
+                place.textContent = ' (' + row.place_name + ')';
+                item.appendChild(name);
+                item.appendChild(place);
+                display.appendChild(item);
+            });
+        }
+
+        async function createChannel() {
+            const channelName = document.getElementById('channelName').value.trim();
+            const placeName = document.getElementById('placeName').value;
+            const btn = document.getElementById('createBtn');
+
+            // Criterion: channel_name is empty
+            if (!channelName) {
+                showMessage('Please enter a channel name.');
+                return;
+            }
+
+            // Criterion: place_name must exist in EmploymentPlace
+            if (!placeName) {
+                showMessage('Please select a valid company.');
+                return;
+            }
+            const { data: place, error: placeError } = await db
+                .from('employmentplace')
+                .select('place_name')
+                .eq('place_name', placeName)
+                .maybeSingle();
+            if (placeError || !place) {
+                showMessage('Please select a valid company.');
+                return;
+            }
+
+            // Criterion: one channel per company
+            const { data: existing, error: existingError } = await db
+                .from('companychannel')
+                .select('channel_id')
+                .eq('place_name', placeName);
+            if (existingError) {
+                showMessage('Error: ' + existingError.message);
+                return;
+            }
+            if (existing.length > 0) {
+                showMessage('This company already has a channel.');
+                return;
+            }
+
+            // Save the new row in CompanyChannel
+            btn.disabled = true;
+            const { error } = await db
+                .from('companychannel')
+                .insert({ channel_name: channelName, place_name: placeName });
+            btn.disabled = false;
+
+            if (error) {
+                showMessage('Error: ' + error.message);
+                return;
+            }
+
+            showMessage('Channel "' + channelName + '" created.', false);
+            document.getElementById('channelName').value = '';
+            document.getElementById('placeName').value = '';
+            loadChannels();
+        }
+
+        loadCompanies();
+        loadChannels();
+    </script>
+</body>
+</html>

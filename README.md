@@ -1,4 +1,5 @@
- the system's name : FIELD TRAINING
+ the system's name :
+ FIELD TRAINING
 
 **Client:**  College of Business Administration at Kuwait Universit 'CBA'
 who the client is — Office of Student Training and Alumni 'OSTA'
@@ -8,8 +9,11 @@ TODO: This system addresses the frequent loss of daily evaluation forms
 > Write it in `docs/proposal.md`, then publish it. Steps: [docs/how-we-work.md](docs/how-we-work.md#phase-1--the-proposal)
 > Update this line at the start of every phase. It is the first thing your team sees.
 
+- **Proposal page:** TODO: link to the published page (https://isom472-fall2026.github.io/team5/)
+- **Running system:** TODO: link to the deployed system once it exists(https://isom472-fall2026.github.io/team5/)
+- **Board:** TODO: link to your Project board(https://github.com/isom472-fall2026/team5)
 - **Proposal page:** TODO: link to the published page (`https://<owner>.github.io/<repo>/docs/`)
-- **Running system:** TODO: link to the deployed system once it exists
+- **Running system:** [https://isom472-fall2026.github.io/team5/](https://isom472-fall2026.github.io/team5/)
 - **Board:** TODO: link to your Project board
 
 ## Where do I go?
