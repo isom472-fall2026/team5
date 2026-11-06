@@ -182,7 +182,7 @@
         .maybeSingle();
 
       if (studentError) {
-        showError(Could not check your student record: ${studentError.message});
+        showError("Could not check your student record: " + studentError.message);
         return;
       }
       if (!student || isEmpty(student.student_id) || !Number.isInteger(Number(student.student_id))) {
@@ -198,7 +198,7 @@
         .limit(1);
 
       if (error) {
-        showError(Could not load your evaluation: ${error.message});
+        showError("Could not load your evaluation: " + error.message);
         return;
       }
 
