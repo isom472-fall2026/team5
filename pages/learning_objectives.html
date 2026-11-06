@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learning objectives | Field Training</title>
+  <style>
+    :root {
+      --navy: #0f1f3d;
+      --navy-soft: #33415c;
+      --gold: #f2c230;
+      --white: #ffffff;
+      --line: #e3e8f0;
+      --muted: #5a6785;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+    .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+    .sidebar.open { left: 0; }
+    .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+    .sidebar a:hover { color: var(--gold); }
+    .sidebar a.current { font-weight: bold; color: var(--gold); }
+    .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar .nav-section + a { margin-top: 4px; }
+    #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+    .overlay.active { display: block; }
+    main { max-width: 800px; margin: 28px auto; padding: 0 16px; display: grid; gap: 14px; }
+    h1 { margin-bottom: 6px; color: var(--navy); }
+    h2 { font-size: 17px; color: var(--navy); }
+    .hint { color: var(--muted); font-size: 14px; margin: 0; }
+    .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px 18px; margin: 0; }
+    .success { background: #e6f4ea; color: #137333; border-radius: 10px; padding: 14px 18px; margin: 0; }
+    .empty { background: #fff7da; border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 20px; text-align: center; color: #6b5317; margin: 0; }
+    .card { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 18px 20px; display: grid; gap: 10px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    textarea { width: 100%; min-height: 110px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; resize: vertical; }
+    .counter { color: var(--muted); font-size: 13px; text-align: right; }
+    button { background: var(--navy); color: var(--white); border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; font: inherit; justify-self: start; }
+    button.small { padding: 5px 10px; font-size: 13px; }
+    button.revise { background: #7a5c00; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    .objective { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; }
+    .objective-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .objective-text { color: var(--navy-soft); }
+    .date { color: var(--muted); font-size: 13px; }
+    .status { padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+    .status-pending { background: #fff3cd; color: #7a5c00; }
+    .status-approved { background: #e6f4ea; color: #137333; }
+    .status-revision-suggested { background: #fdecec; color: #8a1c1c; }
+    .actions { display: flex; gap: 6px; }
+    a { color: var(--navy); font-weight: bold; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menuToggle">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <button id="closeSidebar">&times;</button>
+    <a href="../index.html">Home</a>
+
+    <p class="nav-section">Placement</p>
+    <a href="placement-details.html">Placement Details</a>
+    <a href="company-requirements.html">Company Requirements</a>
+    <a href="learning_objectives.html" class="current">Learning Objectives</a>
+
+    <p class="nav-section">Reports</p>
+    <a href="internship_log.html">Log Internship Hours</a>
+    <a href="progress-summary.html">Progress Summary</a>
+    <a href="reported-issues.html">Reported Issues</a>
+
+    <p class="nav-section">Evaluation</p>
+    <a href="evaluation-criteria.html">Evaluation Criteria</a>
+    <a href="internship_grade.html">My Grade &amp; Evaluation</a>
+
+    <p class="nav-section">Help</p>
+    <a href="contact-support.html">Contact Support</a>
+  </nav>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <h1>My Learning Objectives</h1>
+    <p id="status-text" class="hint" role="status">Loading...</p>
+    <p id="error-box" class="error" role="alert" hidden></p>
+    <p id="success-box" class="success" role="status" hidden></p>
+
+    <form id="objective-form" class="card" hidden>
+      <h2>Learning objectives <span class="hint">(optional)</span></h2>
+      <p class="hint">Write what you want to learn during your internship. This field is optional: you can submit your application without it.</p>
+      <textarea id="objective-text" maxlength="500" placeholder="e.g. Improve my communication and technical skills."></textarea>
+      <div class="counter"><span id="char-count">0</span> / 500</div>
+      <button type="submit">Save</button>
+    </form>
+
+    <section id="review-card" class="card" hidden>
+      <div class="objective-top">
+        <h2>Supervisor review</h2>
+        <span id="review-status" class="status"></span>
+      </div>
+      <p id="current-objective" class="objective-text"></p>
+      <div id="review-actions" class="actions">
+        <button type="button" class="small" id="approve-btn">Approve</button>
+        <button type="button" class="small revise" id="revise-btn">Suggest revision</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Check these names against our database before merging.
+    // The learning objective is stored in the STUDENT table.
+    const STUDENT_TABLE = "student";
+    const OBJECTIVE_COLUMN = "learning_objective";
+    const STATUS_COLUMN = "objective_status";
+
+    const MAX_LENGTH = 500;
+    const ALLOWED_TEXT = /^[\p{L}\p{N}_\s.,!?'-]+$/u;
+
+    const statusText = document.getElementById("status-text");
+    const errorBox = document.getElementById("error-box");
+    const successBox = document.getElementById("success-box");
+    const form = document.getElementById("objective-form");
+    const textArea = document.getElementById("objective-text");
+    const reviewCard = document.getElementById("review-card");
+
+    let studentId = null;
+
+    function isEmpty(value) {
+      return value === null || value === undefined || String(value).trim() === "";
+    }
+
+    function showError(message) {
+      successBox.hidden = true;
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    }
+
+    function showSuccess(message) {
+      errorBox.hidden = true;
+      successBox.textContent = message;
+      successBox.hidden = false;
+    }
+
+    function validateObjective(text) {
+      const clean = String(text || "").trim();
+      if (!clean) return [true, ""];   // empty is allowed: the field is optional
+      if (clean.length > MAX_LENGTH) return [false, "Learning objective must not exceed " + MAX_LENGTH + " characters."];
+      if (!ALLOWED_TEXT.test(clean)) return [false, "Learning objective contains invalid formatting or prohibited characters."];
+      return [true, clean];
+    }
+
+    function updateCounter() {
+      document.getElementById("char-count").textContent = textArea.value.length;
+    }
+
+    function showReview(objective, status) {
+      // The supervisor only reviews an objective that was actually provided.
+      if (isEmpty(objective)) {
+        reviewCard.hidden = true;
+        return;
+      }
+      const current = status || "Pending";
+      const badge = document.getElementById("review-status");
+      badge.textContent = current;
+      badge.className = "status status-" + current.toLowerCase().replace(/ /g, "-");
+      document.getElementById("current-objective").textContent = objective;
+      document.getElementById("review-actions").hidden = current !== "Pending";
+      reviewCard.hidden = false;
+    }
+
+    async function loadObjective() {
+      const { data, error } = await supabaseClient
+        .from(STUDENT_TABLE)
+        .select("*")
+        .eq("student_id", studentId)
+        .maybeSingle();
+
+      if (error) {
+        showError("Could not load your learning objective: " + error.message);
+        return;
+      }
+      const objective = data ? data[OBJECTIVE_COLUMN] : null;
+      textArea.value = objective || "";
+      updateCounter();
+      showReview(objective, data ? data[STATUS_COLUMN] : null);
+    }
+
+    async function review(decision) {
+      if (!["Approved", "Revision Suggested"].includes(decision)) return;
+      const { error } = await supabaseClient
+        .from(STUDENT_TABLE)
+        .update({ [STATUS_COLUMN]: decision })
+        .eq("student_id", studentId);
+
+      if (error) {
+        showError("Could not update the review: " + error.message);
+        return;
+      }
+      showSuccess("Objective status: " + decision + ".");
+      loadObjective();
+    }
+
+    document.getElementById("approve-btn").addEventListener("click", () => review("Approved"));
+    document.getElementById("revise-btn").addEventListener("click", () => review("Revision Suggested"));
+    textArea.addEventListener("input", updateCounter);
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      if (isEmpty(studentId) || !Number.isInteger(Number(studentId))) {
+        showError("Your student_id is invalid, so the learning objective was not saved.");
+        return;
+      }
+
+      const [ok, result] = validateObjective(textArea.value);
+      if (!ok) {
+        showError(result + " Nothing was saved.");
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from(STUDENT_TABLE)
+        .update({
+          [OBJECTIVE_COLUMN]: result || null,
+          [STATUS_COLUMN]: result ? "Pending" : null
+        })
+        .eq("student_id", studentId);
+
+      if (error) {
+        showError("Could not save your learning objective: " + error.message);
+        return;
+      }
+
+      showSuccess(result
+        ? "Learning objective saved. Your supervisor will review it."
+        : "Saved without a learning objective. You can still continue with your application.");
+      loadObjective();
+    });
+
+    async function init() {
+      const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+      const user = sessionData?.session?.user;
+
+      if (sessionError || !user) {
+        statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to manage your learning objectives.';
+        return;
+      }
+
+      const { data: student, error: studentError } = await supabaseClient
+        .from(STUDENT_TABLE)
+        .select("student_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (studentError) {
+        statusText.hidden = true;
+        showError("Could not check your student record: " + studentError.message);
+        return;
+      }
+      if (!student || isEmpty(student.student_id) || !Number.isInteger(Number(student.student_id))) {
+        statusText.hidden = true;
+        showError("Your student_id is missing or invalid, so you cannot save learning objectives.");
+        return;
+      }
+
+      studentId = student.student_id;
+      statusText.hidden = true;
+      form.hidden = false;
+      loadObjective();
+    }
+
+    init();
+
+    // Side menu
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+    function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+    overlay.addEventListener("click", hideSidebar);
+  </script>
+</body>
+</html>
