@@ -58,9 +58,9 @@ cuts the tag.
 | 1 — team, environment, proposal | esraa | Wed 23 Sep |
 | 2 — design sprint | nouf| Wed 7 Oct |
 | 3 — sprint 1 | manar | Wed 21 Oct |
-| 4 — sprint 2 | heba | Wed 4 Nov |
-| 5 — sprint 3 | nouf | Wed 18 Nov |
-| 6 — final sprint | manar | Wed 9 Dec |
+| 4 — sprint 2 |  nouf| Wed 4 Nov |
+| 5 — sprint 3 | Heba | Wed 18 Nov |
+| 6 — final sprint | esraa | Wed 9 Dec |
 
 ## What is in this repository
 
