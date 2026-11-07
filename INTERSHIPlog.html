@@ -7,12 +7,12 @@ import java.util.regex.Pattern;
 
 // Issue #34: Log Daily Internship Hours
 class InternshipLog {
-    String studentId;
-    String workDate;
-    LocalTime checkInTime;
-    LocalTime checkOutTime;
-    double totalHours;
-    String status;
+    private final String studentId;
+    private final String workDate;
+    private LocalTime checkInTime;
+    private LocalTime checkOutTime;
+    private double totalHours;
+    private String status;
 
     public InternshipLog(String studentId, String workDate) {
         this.studentId = studentId;
@@ -21,6 +21,30 @@ class InternshipLog {
         this.checkOutTime = null;
         this.totalHours = 0.0;
         this.status = "Pending";
+    }
+
+    public String getStudentId() {
+        return studentId;
+    }
+
+    public String getWorkDate() {
+        return workDate;
+    }
+
+    public LocalTime getCheckInTime() {
+        return checkInTime;
+    }
+
+    public LocalTime getCheckOutTime() {
+        return checkOutTime;
+    }
+
+    public double getTotalHours() {
+        return totalHours;
+    }
+
+    public String getStatus() {
+        return status;
     }
 
     public Response recordTimes(String checkInStr, String checkOutStr) {
@@ -43,9 +67,9 @@ class InternshipLog {
     }
 
     private void calculateTotalHours() {
-        double checkIn = this.checkInTime.getHour() + (double) this.checkInTime.getMinute() / 60.0;
-        double checkOut = this.checkOutTime.getHour() + (double) this.checkOutTime.getMinute() / 60.0;
-        this.totalHours = checkOut - checkIn;
+        double checkInMinutes = this.checkInTime.getHour() * 60.0 + this.checkInTime.getMinute();
+        double checkOutMinutes = this.checkOutTime.getHour() * 60.0 + this.checkOutTime.getMinute();
+        this.totalHours = (checkOutMinutes - checkInMinutes) / 60.0;
     }
 
     public Response setStatus(String supervisorDecision) {
@@ -59,9 +83,9 @@ class InternshipLog {
 
 // Issue #35: Optional Learning Objectives
 class LearningObjective {
-    String studentId;
-    String objective;
-    String status;
+    private final String studentId;
+    private String objective;
+    private String status;
 
     public LearningObjective(String studentId, String objective) {
         this.studentId = studentId;
@@ -69,8 +93,19 @@ class LearningObjective {
         this.status = "Pending";
     }
 
+    public String getStudentId() {
+        return studentId;
+    }
+
+    public String getObjective() {
+        return objective;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
     public Response validate() {
-        // Validate the student ID.
         if (this.studentId == null) {
             return new Response(false, "Error: Invalid student ID.");
         }
@@ -79,19 +114,16 @@ class LearningObjective {
             return new Response(false, "Error: Invalid student ID.");
         }
 
-        // The learning objective is optional.
         if (this.objective == null) {
             this.objective = "";
         }
 
         this.objective = this.objective.trim();
 
-        // An empty objective is allowed.
         if (this.objective.isEmpty()) {
             return new Response(true, "No learning objective provided.");
         }
 
-        // Validate text and prohibit unsupported characters.
         if (this.objective.length() > 500) {
             return new Response(false, "Error: Objective must not exceed 500 characters.");
         }
@@ -136,8 +168,44 @@ class Response {
 }
 
 public class MainApp {
-
     public static double calculateWeeklyHours(List<InternshipLog> logs, String weekStart) {
-        """Calculate total hours for a seven-day period."""
-        LocalDate start = LocalDate.parse(weekStart);
-        LocalDate end = start.plusDays(7);
+        if (logs == null || logs.isEmpty()) {
+            return 0.0;
+        }
+
+        LocalDate start;
+        try {
+            start = LocalDate.parse(weekStart);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid week start date.", e);
+        }
+
+        LocalDate end = start.plusDays(6);
+        double total = 0.0;
+
+        for (InternshipLog log : logs) {
+            if (log == null || log.getWorkDate() == null) {
+                continue;
+            }
+
+            try {
+                LocalDate workDate = LocalDate.parse(log.getWorkDate());
+                if (!workDate.isBefore(start) && !workDate.isAfter(end)) {
+                    total += log.getTotalHours();
+                }
+            } catch (DateTimeParseException ignored) {
+                // Skip rows whose date is not in ISO format.
+            }
+        }
+
+        return total;
+    }
+
+    public static void main(String[] args) {
+        InternshipLog log = new InternshipLog("S123", "2026-11-02");
+        System.out.println(log.recordTimes("09:00", "12:30").message);
+
+        LearningObjective objective = new LearningObjective("S123", "Improve Java skills.");
+        System.out.println(objective.validate().message);
+    }
+}
