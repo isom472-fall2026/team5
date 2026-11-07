@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notification Permissions</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .permission-dialog { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-width: 400px; text-align: center; }
+        h2 { color: #333; margin-top: 0; }
+        p { color: #666; font-size: 16px; margin-bottom: 30px; }
+        .button-group { display: flex; justify-content: space-between; gap: 15px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn-deny { background-color: #e0e0e0; color: #333; }
+        .btn-deny:hover { background-color: #d0d0d0; }
+        .btn-allow { background-color: #007bff; color: white; }
+        .btn-allow:hover { background-color: #0056b3; }
+        .message { margin-top: 20px; padding: 10px; border-radius: 4px; display: none; text-align: center; font-weight: bold; }
+        .error { display: block; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .success { display: block; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+
+    <div class="permission-dialog">
+        <h2>Enable Notifications</h2>
+        <p>Stay updated with timely alerts and updates by enabling push notifications.</p>
+        <div class="button-group">
+            <button class="btn-deny" onclick="handlePermission('denied')">Don't Allow</button>
+            <button class="btn-allow" onclick="handlePermission('allowed')">Allow</button>
+        </div>
+        <div id="messageBox" class="message"></div>
+    </div>
+
+    <script>
+        function handlePermission(choice) {
+            const messageBox = document.getElementById('messageBox');
+            
+            // Simulating a student ID check or preference processing
+            const studentId = "s2182160972"; 
+
+            if (!studentId) {
+                messageBox.className = 'message error';
+                messageBox.textContent = 'Error: Invalid student ID. Settings retained.';
+                return;
+            }
+
+            if (choice === 'allowed') {
+                messageBox.className = 'message success';
+                messageBox.textContent = 'Notification permissions enabled successfully!';
+            } else {
+                messageBox.className = 'message success';
+                messageBox.textContent = 'Notification permissions denied. You can change this later in settings.';
+            }
+            
+            // Hide buttons after choice is made
+            document.querySelector('.button-group').style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>

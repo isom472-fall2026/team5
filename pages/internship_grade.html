@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Internship grade and evaluation | Field Training</title>
+  <style>
+    :root {
+      --navy: #0f1f3d;
+      --navy-soft: #33415c;
+      --gold: #f2c230;
+      --white: #ffffff;
+      --line: #e3e8f0;
+      --muted: #5a6785;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+    .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+    .sidebar.open { left: 0; }
+    .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+    .sidebar a:hover { color: var(--gold); }
+    .sidebar a.current { font-weight: bold; color: var(--gold); }
+    .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar .nav-section + a { margin-top: 4px; }
+    #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+    .overlay.active { display: block; }
+    main { max-width: 800px; margin: 28px auto; padding: 0 16px; display: grid; gap: 14px; }
+    h1 { margin-bottom: 6px; color: var(--navy); }
+    h2 { font-size: 17px; color: var(--navy); }
+    .hint { color: var(--muted); font-size: 14px; margin: 0; }
+    .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px 18px; margin: 0; }
+    .empty { background: #fff7da; border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 20px; text-align: center; color: #6b5317; margin: 0; }
+    .card { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 18px 20px; display: grid; gap: 12px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .score-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .score { font-size: 40px; font-weight: bold; color: var(--navy); }
+    .score small { font-size: 18px; color: var(--muted); }
+    .status { padding: 6px 14px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+    .status-pass { background: #e6f4ea; color: #137333; }
+    .status-fail { background: #fdecec; color: #8a1c1c; }
+    .details { display: grid; gap: 8px; }
+    .detail { display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 8px; color: var(--navy-soft); }
+    .detail strong { color: var(--navy); }
+    a { color: var(--navy); font-weight: bold; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menuToggle">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <button id="closeSidebar">&times;</button>
+    <a href="../index.html">Home</a>
+
+    <p class="nav-section">Placement</p>
+    <a href="placement-details.html">Placement Details</a>
+    <a href="company-requirements.html">Company Requirements</a>
+
+    <p class="nav-section">Reports</p>
+    <a href="internship_log.html">Internship Attendance</a>
+    <a href="progress-summary.html">Progress Summary</a>
+    <a href="reported-issues.html">Reported Issues</a>
+
+    <p class="nav-section">Evaluation</p>
+    <a href="evaluation-criteria.html">Evaluation Criteria</a>
+    <a href="internship_grade.html" class="current">My Grade &amp; Evaluation</a>
+
+    <p class="nav-section">Help</p>
+    <a href="contact-support.html">Contact Support</a>
+  </nav>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <h1>My Internship Grade and Evaluation</h1>
+    <p id="status-text" class="hint" role="status">Loading your evaluation...</p>
+    <p id="error-box" class="error" role="alert" hidden></p>
+    <p id="empty-box" class="empty" hidden>Your internship has not been evaluated yet</p>
+
+    <section id="result" class="card" hidden>
+      <div class="score-row">
+        <div>
+          <h2>Overall evaluation score</h2>
+          <div class="score"><span id="overall-score">--</span> <small>/ 100</small></div>
+        </div>
+        <span id="grade-status" class="status"></span>
+      </div>
+
+      <h2>Academic performance details</h2>
+      <div class="details">
+        <div class="detail"><span>Site supervisor rating</span><strong id="site-rating">--</strong></div>
+        <div class="detail"><span>Academic supervisor rating</span><strong id="supervisor-rating">--</strong></div>
+        <div class="detail"><span>Final letter grade</span><strong id="letter-grade">--</strong></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Check these names against our database before merging.
+    const EVALUATION_TABLE = "evaluation";
+    const RATING_MAX = 100;   // change to 5 if ratings are stored out of 5
+    const PASS_MARK = 60;     // overall score needed to pass
+
+    const requiredColumns = ["evaluation_id", "student_id", "site_rating", "supervisor_rating"];
+
+    const statusText = document.getElementById("status-text");
+    const errorBox = document.getElementById("error-box");
+    const emptyBox = document.getElementById("empty-box");
+    const result = document.getElementById("result");
+
+    function isEmpty(value) {
+      return value === null || value === undefined || String(value).trim() === "";
+    }
+
+    function showError(message) {
+      statusText.hidden = true;
+      emptyBox.hidden = true;
+      result.hidden = true;
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    }
+
+    function findProblemColumns(row) {
+      return requiredColumns.filter((column) => {
+        const value = row[column];
+        if (isEmpty(value)) return true;
+        if (column === "site_rating" || column === "supervisor_rating") {
+          const n = Number(value);
+          return Number.isNaN(n) || n < 0 || n > RATING_MAX;
+        }
+        return false;
+      });
+    }
+
+    function letterGrade(score) {
+      if (score >= 90) return "A";
+      if (score >= 80) return "B";
+      if (score >= 70) return "C";
+      if (score >= 60) return "D";
+      return "F";
+    }
+
+    function showEvaluation(row) {
+      const site = Number(row.site_rating);
+      const supervisor = Number(row.supervisor_rating);
+      const overall = ((site + supervisor) / 2) * (100 / RATING_MAX);
+      const passed = overall >= PASS_MARK;
+
+      document.getElementById("overall-score").textContent = overall.toFixed(1);
+      document.getElementById("site-rating").textContent = site + " / " + RATING_MAX;
+      document.getElementById("supervisor-rating").textContent = supervisor + " / " + RATING_MAX;
+      document.getElementById("letter-grade").textContent = letterGrade(overall);
+
+      const status = document.getElementById("grade-status");
+      status.textContent = passed ? "Completed - Passed" : "Completed - Not passed";
+      status.className = "status " + (passed ? "status-pass" : "status-fail");
+
+      statusText.hidden = true;
+      result.hidden = false;
+    }
+
+    async function loadEvaluation() {
+      const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+      const user = sessionData?.session?.user;
+
+      if (sessionError || !user) {
+        statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to see your evaluation.';
+        return;
+      }
+
+      const { data: student, error: studentError } = await supabaseClient
+        .from("student")
+        .select("student_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (studentError) {
+        showError("Could not check your student record: " + studentError.message);
+        return;
+      }
+      if (!student || isEmpty(student.student_id) || !Number.isInteger(Number(student.student_id))) {
+        showError("Your student_id is missing or invalid, so your evaluation cannot be shown.");
+        return;
+      }
+
+      const { data: rows, error } = await supabaseClient
+        .from(EVALUATION_TABLE)
+        .select(requiredColumns.join(", "))
+        .eq("student_id", student.student_id)
+        .order("evaluation_id", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        showError("Could not load your evaluation: " + error.message);
+        return;
+      }
+
+      if (!rows.length) {
+        statusText.hidden = true;
+        emptyBox.hidden = false;
+        return;
+      }
+
+      const row = rows[0];
+      const problems = findProblemColumns(row);
+      if (problems.length) {
+        showError("Your evaluation has missing or invalid data in these columns: " + problems.join(", "));
+        return;
+      }
+
+      showEvaluation(row);
+    }
+
+    loadEvaluation();
+
+    // Side menu
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+    function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+    overlay.addEventListener("click", hideSidebar);
+  </script>
+</body>
+</html>

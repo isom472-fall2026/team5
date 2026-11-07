@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation Criteria</title>
+<style>
+  :root {
+    --navy: #0f1f3d;
+    --navy-soft: #33415c;
+    --gold: #f2c230;
+    --white: #ffffff;
+    --line: #e3e8f0;
+    --muted: #5a6785;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+  header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+  #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+  .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+  .sidebar.open { left: 0; }
+  .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+  .sidebar a:hover { color: var(--gold); }
+  .sidebar a.current { font-weight: bold; color: var(--gold); }
+  .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar .nav-section + a { margin-top: 4px; }
+  #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+  .overlay.active { display: block; }
+  main { max-width: 800px; margin: 28px auto; padding: 0 16px; }
+  h1 { margin-bottom: 6px; color: var(--navy); }
+  .sub { color: var(--muted); margin-bottom: 16px; }
+  .print-btn { background: var(--navy); color: var(--white); border: none; border-radius: 8px; padding: 10px 18px; cursor: pointer; font-weight: bold; margin-bottom: 8px; }
+  .print-btn:hover { background: var(--gold); color: var(--navy); }
+  .category { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px; margin-top: 16px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+  .category h2 { font-size: 17px; color: var(--navy); margin-bottom: 10px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); color: var(--navy-soft); }
+  th { color: var(--navy); background: #f7f8fb; }
+  .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px; margin-top: 16px; }
+  [hidden] { display: none !important; }
+  @media print {
+    header, .sidebar, .overlay, .print-btn { display: none !important; }
+    .category { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="menuToggle">&#9776;</button>
+  <strong>Internship Platform</strong>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <button id="closeSidebar">&times;</button>
+  <a href="../index.html">Home</a>
+
+  <p class="nav-section">Placement</p>
+  <a href="placement-details.html">Placement Details</a>
+  <a href="company-requirements.html">Company Requirements</a>
+
+  <p class="nav-section">Reports</p>
+  <a href="internship_log.html">Internship Attendance</a>
+  <a href="progress-summary.html">Progress Summary</a>
+  <a href="reported-issues.html">Reported Issues</a>
+
+  <p class="nav-section">Evaluation</p>
+  <a href="evaluation-criteria.html" class="current">Evaluation Criteria</a>
+
+  <p class="nav-section">Help</p>
+  <a href="contact-support.html">Contact Support</a>
+</nav>
+<div class="overlay" id="overlay"></div>
+
+<main>
+  <h1>Internship Evaluation Criteria</h1>
+  <p class="sub">This is how your performance will be assessed.</p>
+  <button class="print-btn" id="printBtn">Print / Export as PDF</button>
+
+  <div class="error" id="error" hidden></div>
+  <div id="rubric"></div>
+</main>
+
+<script>
+  // Columns every evaluation row must have (acceptance criterion 4)
+  const REQUIRED = ["evaluation_id", "student_id", "site_rating", "supervisor_comment"];
+
+  // Sample data. Later, replace this with data from your database (Supabase).
+  const evaluations = [
+    { evaluation_id: 1, student_id: 101, category: "Technical skills",
+      indicator: "Applies course knowledge to real tasks", site_rating: 5, supervisor_comment: "Strong understanding" },
+    { evaluation_id: 2, student_id: 101, category: "Technical skills",
+      indicator: "Uses required tools correctly", site_rating: 4, supervisor_comment: "Good" },
+    { evaluation_id: 3, student_id: 101, category: "Reporting",
+      indicator: "Submits clear weekly reports", site_rating: 4, supervisor_comment: "On time" },
+    { evaluation_id: 4, student_id: 101, category: "Reporting",
+      indicator: "Documents work with evidence", site_rating: 3, supervisor_comment: "Add more detail" }
+  ];
+
+  function showError(message) {
+    const box = document.getElementById("error");
+    box.textContent = message;
+    box.hidden = false;
+  }
+
+  function render() {
+    // Criterion 4: show an explicit error instead of an empty view
+    if (!evaluations || evaluations.length === 0) {
+      showError("Error: no evaluation data was found.");
+      return;
+    }
+    for (const row of evaluations) {
+      const missing = REQUIRED.filter(col => row[col] === undefined || row[col] === null || row[col] === "");
+      if (missing.length > 0) {
+        showError("Error: missing or invalid column(s): " + missing.join(", "));
+        return;
+      }
+    }
+
+    // Criterion 2: group the rows by category
+    const groups = {};
+    for (const row of evaluations) {
+      (groups[row.category] = groups[row.category] || []).push(row);
+    }
+
+    // Criterion 1: display the rubric with performance indicators
+    const container = document.getElementById("rubric");
+    for (const category in groups) {
+      const section = document.createElement("div");
+      section.className = "category";
+      section.innerHTML = "<h2>" + category + "</h2>" +
+        "<div class='table-wrap'><table><tr><th>Indicator</th><th>Rating</th><th>Supervisor comment</th></tr>" +
+        groups[category].map(r =>
+          "<tr><td>" + r.indicator + "</td><td>" + r.site_rating + "/5</td><td>" + r.supervisor_comment + "</td></tr>"
+        ).join("") + "</table></div>";
+      container.appendChild(section);
+    }
+  }
+
+  // Criterion 3: print / export
+  document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+  render();
+
+  // Side menu
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+  function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+  document.getElementById("menuToggle").addEventListener("click", openSidebar);
+  document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+  overlay.addEventListener("click", hideSidebar);
+</script>
+</body>
+</html>

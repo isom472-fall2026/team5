@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acceptance Documents</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; background: #f5f7fb; }
+    main { max-width: 800px; margin: auto; background: white; padding: 24px; border-radius: 12px; }
+    input, button { padding: 10px; margin: 8px 0; }
+    input { display: block; width: 95%; }
+    button { background: #164b82; color: white; border: 0; border-radius: 5px; cursor: pointer; }
+    #message { color: #b00020; }
+    li { margin: 12px 0; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Acceptance Documents</h1>
+  <p>Upload acceptance files and reports to company channels.</p>
+
+  <label>Company Channel ID</label>
+  <input id="channel" placeholder="Enter channel UUID">
+
+  <label>Document Name</label>
+  <input id="documentName" placeholder="Enter document name">
+
+  <label>Select Document</label>
+  <input id="file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+
+  <button id="upload">Upload Document</button>
+  <p id="message" role="status"></p>
+
+  <h2>Channel Documents</h2>
+  <button id="load">Refresh Documents</button>
+  <ul id="documents"></ul>
+</main>
+
+<script src="../js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const message = document.getElementById("message");
+
+document.getElementById("upload").onclick = async () => {
+  const channel = document.getElementById("channel").value.trim();
+  const name = document.getElementById("documentName").value.trim();
+  const file = document.getElementById("file").files[0];
+
+  if (!channel || !name || !file) {
+    message.textContent = "Error: Channel, document name and file are required.";
+    return;
+  }
+
+  const extension = file.name.split(".").pop().toLowerCase();
+  if (!["pdf","doc","docx","jpg","jpeg","png"].includes(extension)) {
+    message.textContent = "Error: Unsupported file format.";
+    return;
+  }
+
+  message.textContent = "Uploading...";
+  const path = `${channel}/${crypto.randomUUID()}.${extension}`;
+
+  const uploaded = await db.storage.from("acceptance-documents").upload(path, file);
+  if (uploaded.error) {
+    message.textContent = "Upload failed: " + uploaded.error.message;
+    return;
+  }
+
+  const saved = await db.from("acceptance_documents").insert({
+    channel_id: channel,
+    document_name: name,
+    file_path: path,
+    file_type: extension,
+    version_number: 1
+  });
+
+  if (saved.error) {
+    await db.storage.from("acceptance-documents").remove([path]);
+    message.textContent = "Save failed: " + saved.error.message;
+    return;
+  }
+
+  message.textContent = "Document uploaded successfully.";
+  document.getElementById("load").click();
+};
+
+document.getElementById("load").onclick = async () => {
+  const channel = document.getElementById("channel").value.trim();
+  if (!channel) {
+    message.textContent = "Error: Enter a company channel ID.";
+    return;
+  }
+
+  const result = await db.from("acceptance_documents")
+    .select("document_id,document_name,file_path,version_number,uploaded_at")
+    .eq("channel_id", channel)
+    .order("uploaded_at", { ascending: false });
+
+  const list = document.getElementById("documents");
+  list.replaceChildren();
+
+  if (result.error) {
+    message.textContent = result.error.message;
+    return;
+  }
+
+  for (const doc of result.data) {
+    const li = document.createElement("li");
+    li.textContent = `${doc.document_name} — Version ${doc.version_number}`;
+    list.appendChild(li);
+  }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation Criteria</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 800px; margin: 24px auto; padding: 0 16px; color: #222; }
+  h1 { margin-bottom: 4px; }
+  .category { margin-top: 24px; }
+  .category h2 { border-bottom: 2px solid #2b6cb0; padding-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+  button { background: #2b6cb0; color: #fff; border: 0; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
+  #error { background: #fde8e8; color: #9b1c1c; padding: 12px; border-radius: 6px; margin-top: 16px; }
+  @media print { button { display: none; } }
+</style>
+</head>
+<body>
+  <h1>Internship Evaluation Criteria</h1>
+  <p>This is how your performance will be assessed.</p>
+  <button id="printBtn">Print / Export as PDF</button>
+
+  <div id="error" hidden></div>
+  <div id="rubric"></div>
+
+<script>
+  // Columns every evaluation row must have (acceptance criterion 4)
+  const REQUIRED = ["evaluation_id", "student_id", "site_rating", "supervisor_comment"];
+
+  // Sample data. Later, replace this with data from your database (Supabase).
+  const evaluations = [
+    { evaluation_id: 1, student_id: 101, category: "Technical skills",
+      indicator: "Applies course knowledge to real tasks", site_rating: 5,supervisor_comment:"Strong understanding"},
+    { evaluation_id: 2, student_id: 101, category: "Technical skills",
+      indicator: "Uses required tools correctly", site_rating: 4, supervisor_comment: "Good" },
+    { evaluation_id: 3, student_id: 101, category: "Reporting",
+      indicator: "Submits clear weekly reports", site_rating: 4, supervisor_comment: "On time" },
+    { evaluation_id: 4, student_id: 101, category: "Reporting",
+      indicator: "Documents work with evidence", site_rating: 3, supervisor_comment: "Add more detail" }
+  ];
+
+  function showError(message) {
+    const box = document.getElementById("error");
+    box.textContent = message;
+    box.hidden = false;
+  }
+
+  function render() {
+    // Criterion 4: show an explicit error instead of an empty view
+    if (!evaluations || evaluations.length === 0) {
+      showError("Error: no evaluation data was found.");
+      return;
+    }
+    for (const row of evaluations) {
+      const missing = REQUIRED.filter(col => row[col] === undefined || row[col] === null || row[col] === "");
+      if (missing.length > 0) {
+        showError("Error: missing or invalid column(s): " + missing.join(", "));
+        return;
+      }
+    }
+
+    // Criterion 2: group the rows by category
+    const groups = {};
+    for (const row of evaluations) {
+      (groups[row.category] = groups[row.category] || []).push(row);
+    }
+
+    // Criterion 1: display the rubric with performance indicators
+    const container = document.getElementById("rubric");
+    for (const category in groups) {
+      const section = document.createElement("div");
+      section.className = "category";
+      section.innerHTML = "<h2>" + category + "</h2>" +
+        "<table><tr><th>Indicator</th><th>Rating</th><th>Supervisor comment</th></tr>" +
+        groups[category].map(r =>
+          "<tr><td>" + r.indicator + "</td><td>" + r.site_rating + "/5</td><td>" + r.supervisor_comment + "</td></tr>"
+        ).join("") + "</table>";
+      container.appendChild(section);
+    }
+  }
+
+  // Criterion 3: print / export
+  document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+  render();
+</script>
+</body>
+</html>
+

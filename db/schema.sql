@@ -2,6 +2,10 @@
 -- 1. CLEANUP: DROP EVERYTHING FROM SCRATCH (Including new tables)
 -- =======================================================================================
 DROP TABLE IF EXISTS InternshipCertificate CASCADE;
+DROP TABLE IF EXISTS InternshipIssueNotification CASCADE;
+DROP TABLE IF EXISTS InternshipIssueReport CASCADE;
+DROP TABLE IF EXISTS SupervisorNotification CASCADE;
+DROP TABLE IF EXISTS WeeklyProgressReport CASCADE;
 DROP TABLE IF EXISTS DailyInternshipLog CASCADE;
 DROP TABLE IF EXISTS CompanyChannel CASCADE;
 DROP TABLE IF EXISTS AcceptanceDocument CASCADE;
@@ -15,6 +19,8 @@ DROP TABLE IF EXISTS SupervisingProfessor CASCADE;
 DROP TYPE IF EXISTS semester_enum CASCADE;
 DROP FUNCTION IF EXISTS public.handle_new_student CASCADE;
 DROP FUNCTION IF EXISTS public.professor_owns_student_cycle(INT);
+DROP FUNCTION IF EXISTS public.employer_owns_student(INT);
+DROP FUNCTION IF EXISTS public.get_employer_attendance_roster();
 
 -- =======================================================================================
 -- 2. CREATE CUSTOM TYPES
@@ -123,12 +129,12 @@ CREATE TABLE InternshipFeedback (
 -- Issue #25: Evaluate Training Site
 CREATE TABLE InternshipEvaluation (
     evaluation_id SERIAL PRIMARY KEY,
-    student_id INT REFERENCES Student(student_id) ON DELETE CASCADE,
-    place_name VARCHAR(150) REFERENCES EmploymentPlace(place_name) ON DELETE CASCADE,
-    professor_id INT REFERENCES SupervisingProfessor(professor_id) ON DELETE CASCADE,
-    site_rating INT,
-    supervisor_rating INT,
-    feedback_comments TEXT,
+    student_id INT NOT NULL REFERENCES Student(student_id) ON DELETE CASCADE,
+    place_name VARCHAR(150) NOT NULL REFERENCES EmploymentPlace(place_name) ON DELETE CASCADE,
+    professor_id INT NOT NULL REFERENCES SupervisingProfessor(professor_id) ON DELETE CASCADE,
+    site_rating INT NOT NULL CONSTRAINT internship_evaluation_site_rating_range CHECK (site_rating BETWEEN 1 AND 5),
+    supervisor_rating INT NOT NULL CONSTRAINT internship_evaluation_supervisor_rating_range CHECK (supervisor_rating BETWEEN 1 AND 5),
+    feedback_comments TEXT NOT NULL CONSTRAINT internship_evaluation_feedback_not_blank CHECK (length(btrim(feedback_comments)) > 0),
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -152,13 +158,22 @@ CREATE TABLE CompanyChannel (
 -- Issue #34: Log Daily Internship Hours
 CREATE TABLE DailyInternshipLog (
     log_id SERIAL PRIMARY KEY,
-    student_id INT REFERENCES Student(student_id) ON DELETE CASCADE,
-    work_date DATE,
-    check_in_time TIME,
-    check_out_time TIME,
-    total_hours DECIMAL(5,2),
+    student_id INT NOT NULL REFERENCES Student(student_id) ON DELETE CASCADE,
+    work_date DATE NOT NULL,
+    check_in_time TIME NOT NULL,
+    check_out_time TIME NOT NULL,
+    total_hours DECIMAL(5,2) GENERATED ALWAYS AS (
+        round((EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 3600)::NUMERIC, 2)
+    ) STORED,
     approval_status VARCHAR(20) DEFAULT 'Pending',
-    supervisor_notes TEXT
+    supervisor_notes TEXT,
+    CONSTRAINT daily_log_checkout_after_checkin CHECK (check_out_time > check_in_time),
+    CONSTRAINT daily_log_half_hour_time_slots CHECK (
+        EXTRACT(MINUTE FROM check_in_time) IN (0, 30)
+        AND EXTRACT(SECOND FROM check_in_time) = 0
+        AND EXTRACT(MINUTE FROM check_out_time) IN (0, 30)
+        AND EXTRACT(SECOND FROM check_out_time) = 0
+    )
 );
 
 -- Issue #26: Request Internship Certificate
@@ -170,6 +185,96 @@ CREATE TABLE InternshipCertificate (
     issue_date DATE,
     certificate_file_path VARCHAR(255)
 );
+
+CREATE TABLE WeeklyProgressReport (
+    report_id SERIAL PRIMARY KEY,
+    student_id INT NOT NULL REFERENCES Student(student_id) ON DELETE CASCADE,
+    week_start DATE NOT NULL,
+    weekly_hours NUMERIC(5,2) NOT NULL CHECK (weekly_hours >= 0 AND weekly_hours <= 168),
+    progress_details TEXT NOT NULL CHECK (length(btrim(progress_details)) > 0),
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (student_id, week_start),
+    CHECK (EXTRACT(ISODOW FROM week_start) = 1)
+);
+
+CREATE TABLE SupervisorNotification (
+    notification_id SERIAL PRIMARY KEY,
+    professor_id INT NOT NULL REFERENCES SupervisingProfessor(professor_id) ON DELETE CASCADE,
+    report_id INT NOT NULL UNIQUE REFERENCES WeeklyProgressReport(report_id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE InternshipIssueReport (
+    issue_report_id SERIAL PRIMARY KEY,
+    student_id INT NOT NULL REFERENCES Student(student_id) ON DELETE CASCADE,
+    category VARCHAR(30) NOT NULL CHECK (
+        category IN ('Workplace', 'Supervision', 'Workload', 'Safety', 'Other')
+    ),
+    description TEXT NOT NULL CHECK (length(btrim(description)) > 0),
+    status VARCHAR(20) NOT NULL DEFAULT 'Submitted' CHECK (
+        status IN ('Submitted', 'Under review', 'Resolved')
+    ),
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE InternshipIssueNotification (
+    notification_id SERIAL PRIMARY KEY,
+    professor_id INT NOT NULL REFERENCES SupervisingProfessor(professor_id) ON DELETE CASCADE,
+    issue_report_id INT NOT NULL UNIQUE REFERENCES InternshipIssueReport(issue_report_id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION public.prevent_internship_issue_report_content_changes()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+    IF NEW.student_id IS DISTINCT FROM OLD.student_id
+        OR NEW.category IS DISTINCT FROM OLD.category
+        OR NEW.description IS DISTINCT FROM OLD.description
+        OR NEW.submitted_at IS DISTINCT FROM OLD.submitted_at THEN
+        RAISE EXCEPTION 'Only report status can be changed';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER internship_issue_report_status_only
+BEFORE UPDATE ON InternshipIssueReport
+FOR EACH ROW
+EXECUTE FUNCTION public.prevent_internship_issue_report_content_changes();
+
+CREATE OR REPLACE FUNCTION public.notify_supervisor_of_internship_issue()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    INSERT INTO public.internshipissuenotification (professor_id, issue_report_id, message)
+    SELECT
+        ic.professor_id,
+        NEW.issue_report_id,
+        format(
+            'A %s internship issue was reported by %s.',
+            NEW.category,
+            COALESCE(s.name, 'A student')
+        )
+    FROM public.student s
+    JOIN public.internshipcycle ic ON ic.cycle_id = s.internship_cycle_id
+    WHERE s.student_id = NEW.student_id;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_internship_issue_report_submitted
+AFTER INSERT ON InternshipIssueReport
+FOR EACH ROW
+EXECUTE FUNCTION public.notify_supervisor_of_internship_issue();
 
 -- =======================================================================================
 -- 5. ENABLE ROW LEVEL SECURITY (RLS)
@@ -187,46 +292,11 @@ ALTER TABLE AcceptanceDocument ENABLE ROW LEVEL SECURITY;
 ALTER TABLE CompanyChannel ENABLE ROW LEVEL SECURITY;
 ALTER TABLE DailyInternshipLog ENABLE ROW LEVEL SECURITY;
 ALTER TABLE InternshipCertificate ENABLE ROW LEVEL SECURITY;
+ALTER TABLE WeeklyProgressReport ENABLE ROW LEVEL SECURITY;
+ALTER TABLE SupervisorNotification ENABLE ROW LEVEL SECURITY;
+ALTER TABLE InternshipIssueReport ENABLE ROW LEVEL SECURITY;
+ALTER TABLE InternshipIssueNotification ENABLE ROW LEVEL SECURITY;
 
--- =======================================================================================
--- 6. CREATE RLS POLICIES
--- =======================================================================================
--- (Standard permissive authenticated access for standard reads, restricted writes for core tables)
-CREATE POLICY "Students can view own profile" ON Student FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY "Students can update own profile" ON Student FOR UPDATE TO authenticated USING (auth.uid() = user_id);
-
-CREATE POLICY "Authenticated users can view professors" ON SupervisingProfessor FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Professors can update own profile" ON SupervisingProfessor FOR UPDATE TO authenticated USING (auth.uid() = user_id);
-
-CREATE POLICY "Authenticated users can view employment places" ON EmploymentPlace FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Employment places can update own profile" ON EmploymentPlace FOR UPDATE TO authenticated USING (auth.uid() = user_id);
-
-CREATE POLICY "Authenticated users can view internship cycles" ON InternshipCycle FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Professors can manage their own internship cycles" ON InternshipCycle FOR ALL TO authenticated USING (professor_id IN (SELECT professor_id FROM SupervisingProfessor WHERE user_id = auth.uid()));
-CREATE POLICY "Students submit their own feedback" ON InternshipFeedback FOR INSERT TO authenticated
-WITH CHECK (
-EXISTS (
-SELECT 1 FROM Student s
-WHERE s.student_id = InternshipFeedback.student_id
-AND s.user_id = auth.uid()
-)
-);
-
-CREATE POLICY "Students update their own feedback" ON InternshipFeedback FOR UPDATE TO authenticated
-USING (
-EXISTS (
-SELECT 1 FROM Student s
-WHERE s.student_id = InternshipFeedback.student_id
-AND s.user_id = auth.uid()
-)
-)
-WITH CHECK (
-EXISTS (
-SELECT 1 FROM Student s
-WHERE s.student_id = InternshipFeedback.student_id
-AND s.user_id = auth.uid()
-)
-);
 CREATE OR REPLACE FUNCTION public.professor_owns_student_cycle(p_student_id INT)
 RETURNS BOOLEAN
 LANGUAGE SQL
@@ -246,7 +316,433 @@ $$;
 REVOKE ALL ON FUNCTION public.professor_owns_student_cycle(INT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.professor_owns_student_cycle(INT) TO authenticated;
 
-CREATE POLICY "Anyone can view place enrollments" ON PlaceEnrolledinSemester FOR SELECT TO public USING (true);
+CREATE OR REPLACE FUNCTION public.employer_owns_student(p_student_id INT)
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.student s
+        JOIN public.employmentplace ep ON ep.user_id = auth.uid()
+        LEFT JOIN public.internshipcycle ic ON ic.cycle_id = s.internship_cycle_id
+        WHERE s.student_id = p_student_id
+          AND (s.employment_place = ep.place_name OR ic.place_name = ep.place_name)
+    );
+$$;
+REVOKE ALL ON FUNCTION public.employer_owns_student(INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.employer_owns_student(INT) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_employer_attendance_roster()
+RETURNS TABLE(student_id INT, name VARCHAR)
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+    SELECT DISTINCT s.student_id, s.name
+    FROM public.student s
+    JOIN public.employmentplace ep ON ep.user_id = auth.uid()
+    LEFT JOIN public.internshipcycle ic ON ic.cycle_id = s.internship_cycle_id
+    WHERE s.employment_place = ep.place_name OR ic.place_name = ep.place_name
+    ORDER BY s.student_id;
+$$;
+REVOKE ALL ON FUNCTION public.get_employer_attendance_roster() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_employer_attendance_roster() TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.notify_supervisor_of_weekly_report()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    INSERT INTO public.supervisornotification (professor_id, report_id, message)
+    SELECT
+        ic.professor_id,
+        NEW.report_id,
+        format(
+            'A weekly progress report for the week of %s was submitted by %s (%s hours).',
+            NEW.week_start,
+            COALESCE(s.name, 'A student'),
+            NEW.weekly_hours
+        )
+    FROM public.student s
+    JOIN public.internshipcycle ic ON ic.cycle_id = s.internship_cycle_id
+    WHERE s.student_id = NEW.student_id;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_weekly_progress_report_submitted
+AFTER INSERT ON WeeklyProgressReport
+FOR EACH ROW
+EXECUTE FUNCTION public.notify_supervisor_of_weekly_report();
+
+-- =======================================================================================
+-- 6. CREATE RLS POLICIES
+-- ================================================================
+
+-- ---------------------------------------------------------------------------------------
+-- 1. AcceptanceDocument (Managed by the associated Employment Place)
+-- ---------------------------------------------------------------------------------------
+
+-- Students and professors can read documents for their assigned employment place.
+CREATE POLICY "Concerned users can view acceptance documents"
+ON AcceptanceDocument FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = AcceptanceDocument.place_name
+          AND ep.user_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.user_id = auth.uid()
+          AND s.employment_place = AcceptanceDocument.place_name
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = AcceptanceDocument.place_name
+          AND sp.user_id = auth.uid()
+    )
+);
+
+-- Employment places can upload acceptance documents for their own company
+CREATE POLICY "Employment places can upload their acceptance documents" 
+ON AcceptanceDocument FOR INSERT TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = AcceptanceDocument.place_name
+          AND ep.user_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = AcceptanceDocument.place_name
+          AND sp.user_id = auth.uid()
+    )
+);
+
+-- Employment places and supervising professors can update their own documents.
+CREATE POLICY "Employment places can update their acceptance documents" 
+ON AcceptanceDocument FOR UPDATE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = AcceptanceDocument.place_name
+          AND ep.user_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = AcceptanceDocument.place_name
+          AND sp.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = AcceptanceDocument.place_name
+          AND ep.user_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = AcceptanceDocument.place_name
+          AND sp.user_id = auth.uid()
+    )
+);
+
+-- Employment places and supervising professors can delete their own documents.
+CREATE POLICY "Employment places can delete their acceptance documents" 
+ON AcceptanceDocument FOR DELETE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = AcceptanceDocument.place_name
+          AND ep.user_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = AcceptanceDocument.place_name
+          AND sp.user_id = auth.uid()
+    )
+);
+
+
+-- ---------------------------------------------------------------------------------------
+-- 2. CompanyChannel (Managed by the associated Employment Place)
+-- ---------------------------------------------------------------------------------------
+
+CREATE POLICY "Concerned users can view company channels"
+ON CompanyChannel FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.user_id = auth.uid()
+          AND s.employment_place = CompanyChannel.place_name
+    )
+    OR EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = CompanyChannel.place_name
+          AND ep.user_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = CompanyChannel.place_name
+          AND sp.user_id = auth.uid()
+    )
+);
+
+-- Employment places and supervising professors can create channels for their place.
+CREATE POLICY "Employment places can create channels" 
+ON CompanyChannel FOR INSERT TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = CompanyChannel.place_name
+          AND ep.user_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = CompanyChannel.place_name
+          AND sp.user_id = auth.uid()
+    )
+);
+
+-- Employment places and supervising professors can update their channels.
+CREATE POLICY "Employment places can update their channels" 
+ON CompanyChannel FOR UPDATE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = CompanyChannel.place_name
+          AND ep.user_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = CompanyChannel.place_name
+          AND sp.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = CompanyChannel.place_name
+          AND ep.user_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = CompanyChannel.place_name
+          AND sp.user_id = auth.uid()
+    )
+);
+
+-- Employment places and supervising professors can delete their channels.
+CREATE POLICY "Employment places can delete their channels" 
+ON CompanyChannel FOR DELETE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM EmploymentPlace ep
+        WHERE ep.place_name = CompanyChannel.place_name
+          AND ep.user_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = CompanyChannel.place_name
+          AND sp.user_id = auth.uid()
+    )
+);
+
+
+-- ---------------------------------------------------------------------------------------
+-- 3. InternshipCertificate (Requested by Student, Approved/Updated by Professor)
+-- ---------------------------------------------------------------------------------------
+
+-- Students can submit certificate requests only for themselves with pending status
+CREATE POLICY "Students can request their own certificate" 
+ON InternshipCertificate FOR INSERT TO authenticated
+WITH CHECK (
+    verification_status = 'Pending Approval'
+    AND EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipCertificate.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+
+-- Students can withdraw/cancel their own pending certificate request
+CREATE POLICY "Students can cancel their pending certificate request" 
+ON InternshipCertificate FOR DELETE TO authenticated
+USING (
+    verification_status = 'Pending Approval'
+    AND EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipCertificate.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+
+-- Supervising professors can update certificate status, file path, and issue date
+CREATE POLICY "Professors can review and issue certificates" 
+ON InternshipCertificate FOR UPDATE TO authenticated
+USING (public.professor_owns_student_cycle(InternshipCertificate.student_id))
+WITH CHECK (public.professor_owns_student_cycle(InternshipCertificate.student_id));
+
+CREATE POLICY "Students and their professors can view weekly progress reports"
+ON WeeklyProgressReport FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = WeeklyProgressReport.student_id
+          AND s.user_id = auth.uid()
+    )
+    OR public.professor_owns_student_cycle(WeeklyProgressReport.student_id)
+);
+
+CREATE POLICY "Students can submit their own weekly progress report before the deadline"
+ON WeeklyProgressReport FOR INSERT TO authenticated
+WITH CHECK (
+    week_start = date_trunc('week', timezone('Asia/Kuwait', now()))::date
+    AND timezone('Asia/Kuwait', now()) < week_start + 5
+    AND EXISTS (
+        SELECT 1
+        FROM Student s
+        JOIN InternshipCycle ic ON ic.cycle_id = s.internship_cycle_id
+        WHERE s.student_id = WeeklyProgressReport.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+
+CREATE POLICY "Supervising professors can view their weekly report notifications"
+ON SupervisorNotification FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM SupervisingProfessor sp
+        WHERE sp.professor_id = SupervisorNotification.professor_id
+          AND sp.user_id = auth.uid()
+    )
+);
+
+CREATE POLICY "Students and their professors can view internship issue reports"
+ON InternshipIssueReport FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipIssueReport.student_id
+          AND s.user_id = auth.uid()
+    )
+    OR public.professor_owns_student_cycle(InternshipIssueReport.student_id)
+);
+
+CREATE POLICY "Students can submit internship issues for themselves"
+ON InternshipIssueReport FOR INSERT TO authenticated
+WITH CHECK (
+    status = 'Submitted'
+    AND EXISTS (
+        SELECT 1
+        FROM Student s
+        JOIN InternshipCycle ic ON ic.cycle_id = s.internship_cycle_id
+        WHERE s.student_id = InternshipIssueReport.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+
+CREATE POLICY "Supervising professors can update issue status for their students"
+ON InternshipIssueReport FOR UPDATE TO authenticated
+USING (public.professor_owns_student_cycle(InternshipIssueReport.student_id))
+WITH CHECK (public.professor_owns_student_cycle(InternshipIssueReport.student_id));
+
+REVOKE UPDATE ON TABLE public.InternshipIssueReport FROM authenticated;
+GRANT UPDATE (status) ON TABLE public.InternshipIssueReport TO authenticated;
+
+CREATE POLICY "Assigned professors can read internship issue notifications"
+ON InternshipIssueNotification FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM SupervisingProfessor sp
+        WHERE sp.professor_id = InternshipIssueNotification.professor_id
+          AND sp.user_id = auth.uid()
+    )
+);
+
+CREATE POLICY "Students and their professors can view student profiles"
+ON Student FOR SELECT TO authenticated
+USING (
+    auth.uid() = user_id
+    OR public.professor_owns_student_cycle(Student.student_id)
+);
+CREATE POLICY "Students can update own profile" ON Student FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+
+CREATE POLICY "Authenticated users can view professors" ON SupervisingProfessor FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Professors can update own profile" ON SupervisingProfessor FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view approved or assigned employment places"
+ON EmploymentPlace FOR SELECT TO authenticated
+USING (
+    is_approved = true
+    OR user_id = auth.uid()
+    OR EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.user_id = auth.uid()
+          AND s.employment_place = EmploymentPlace.place_name
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = EmploymentPlace.place_name
+          AND sp.user_id = auth.uid()
+    )
+);
+CREATE POLICY "Employment places and assigned professors can update place information"
+ON EmploymentPlace FOR UPDATE TO authenticated
+USING (
+    user_id = auth.uid()
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = EmploymentPlace.place_name
+          AND sp.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    user_id = auth.uid()
+    OR EXISTS (
+        SELECT 1
+        FROM InternshipCycle ic
+        JOIN SupervisingProfessor sp ON sp.professor_id = ic.professor_id
+        WHERE ic.place_name = EmploymentPlace.place_name
+          AND sp.user_id = auth.uid()
+    )
+);
+
+CREATE POLICY "Authenticated users can view internship cycles" ON InternshipCycle FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Professors can manage their own internship cycles" ON InternshipCycle FOR ALL TO authenticated USING (professor_id IN (SELECT professor_id FROM SupervisingProfessor WHERE user_id = auth.uid()));
+CREATE POLICY "Authenticated users can view place enrollments" ON PlaceEnrolledinSemester FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Professors manage enrollments for their cycles" ON PlaceEnrolledinSemester FOR ALL TO authenticated
 USING (
     EXISTS (
@@ -267,12 +763,57 @@ WITH CHECK (
     )
 );
 
-CREATE POLICY "Anyone can read feedback" ON InternshipFeedback FOR SELECT TO public USING (true);
-CREATE POLICY "Anyone can read evaluations" ON InternshipEvaluation FOR SELECT TO public USING (true);
-CREATE POLICY "Auth users can read documents" ON AcceptanceDocument FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Auth users can read channels" ON CompanyChannel FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Anyone can read logs" ON DailyInternshipLog FOR SELECT TO public USING (true);
-CREATE POLICY "Auth users can read certificates" ON InternshipCertificate FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Students and their professors can view feedback"
+ON InternshipFeedback FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipFeedback.student_id
+          AND s.user_id = auth.uid()
+    )
+    OR public.professor_owns_student_cycle(InternshipFeedback.student_id)
+);
+
+CREATE POLICY "Students and their professors can view evaluations"
+ON InternshipEvaluation FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipEvaluation.student_id
+          AND s.user_id = auth.uid()
+    )
+    OR public.professor_owns_student_cycle(InternshipEvaluation.student_id)
+);
+
+CREATE POLICY "Students and their professors can view daily logs"
+ON DailyInternshipLog FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = DailyInternshipLog.student_id
+          AND s.user_id = auth.uid()
+    )
+    OR public.professor_owns_student_cycle(DailyInternshipLog.student_id)
+    OR public.employer_owns_student(DailyInternshipLog.student_id)
+);
+
+CREATE POLICY "Workplace supervisors record attendance for their interns"
+ON DailyInternshipLog FOR INSERT TO authenticated
+WITH CHECK (
+    approval_status = 'Approved'
+    AND public.employer_owns_student(DailyInternshipLog.student_id)
+);
+
+CREATE POLICY "Students and their professors can view certificate requests"
+ON InternshipCertificate FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = InternshipCertificate.student_id
+          AND s.user_id = auth.uid()
+    )
+    OR public.professor_owns_student_cycle(InternshipCertificate.student_id)
+);
 
 CREATE POLICY "Students submit their own feedback" ON InternshipFeedback FOR INSERT TO authenticated
 WITH CHECK (
@@ -298,32 +839,46 @@ WITH CHECK (
     )
 );
 
-CREATE POLICY "Students submit their own evaluations" ON InternshipEvaluation FOR INSERT TO authenticated
+CREATE POLICY "Students submit evaluations for their assigned cycle" ON InternshipEvaluation FOR INSERT TO authenticated
 WITH CHECK (
     EXISTS (
-        SELECT 1 FROM Student s
+        SELECT 1
+        FROM Student s
+        JOIN InternshipCycle ic ON ic.cycle_id = s.internship_cycle_id
         WHERE s.student_id = InternshipEvaluation.student_id
           AND s.user_id = auth.uid()
+          AND ic.place_name = InternshipEvaluation.place_name
+          AND ic.professor_id = InternshipEvaluation.professor_id
     )
 );
-CREATE POLICY "Students update their own evaluations" ON InternshipEvaluation FOR UPDATE TO authenticated
+CREATE POLICY "Students update evaluations for their assigned cycle" ON InternshipEvaluation FOR UPDATE TO authenticated
 USING (
     EXISTS (
-        SELECT 1 FROM Student s
+        SELECT 1
+        FROM Student s
+        JOIN InternshipCycle ic ON ic.cycle_id = s.internship_cycle_id
         WHERE s.student_id = InternshipEvaluation.student_id
           AND s.user_id = auth.uid()
+          AND ic.place_name = InternshipEvaluation.place_name
+          AND ic.professor_id = InternshipEvaluation.professor_id
     )
 )
 WITH CHECK (
     EXISTS (
-        SELECT 1 FROM Student s
+        SELECT 1
+        FROM Student s
+        JOIN InternshipCycle ic ON ic.cycle_id = s.internship_cycle_id
         WHERE s.student_id = InternshipEvaluation.student_id
           AND s.user_id = auth.uid()
+          AND ic.place_name = InternshipEvaluation.place_name
+          AND ic.professor_id = InternshipEvaluation.professor_id
     )
 );
 
 CREATE POLICY "Students submit their own daily logs" ON DailyInternshipLog FOR INSERT TO authenticated
 WITH CHECK (
+    approval_status = 'Pending'
+    AND
     EXISTS (
         SELECT 1 FROM Student s
         WHERE s.student_id = DailyInternshipLog.student_id
@@ -351,13 +906,97 @@ CREATE POLICY "Professors review logs for their students" ON DailyInternshipLog 
 USING (public.professor_owns_student_cycle(DailyInternshipLog.student_id))
 WITH CHECK (public.professor_owns_student_cycle(DailyInternshipLog.student_id));
 
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'student-documents',
+    'student-documents',
+    FALSE,
+    5242880,
+    ARRAY['application/pdf', 'image/jpeg', 'image/png']::TEXT[]
+)
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name,
+    public = EXCLUDED.public,
+    file_size_limit = EXCLUDED.file_size_limit,
+    allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+DROP POLICY IF EXISTS "Students upload documents for approved companies" ON storage.objects;
+CREATE POLICY "Students upload documents for approved companies"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+    AND EXISTS (
+        SELECT 1
+        FROM public.student s
+        WHERE s.user_id = auth.uid()
+          AND s.credits_passed >= 90
+    )
+    AND EXISTS (
+        SELECT 1
+        FROM public.employmentplace ep
+        WHERE ep.place_id::TEXT = (storage.foldername(name))[2]
+          AND ep.is_approved = TRUE
+    )
+);
+
+DROP POLICY IF EXISTS "Students view their own documents" ON storage.objects;
+CREATE POLICY "Students view their own documents"
+ON storage.objects FOR SELECT TO authenticated
+USING (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+);
+
+DROP POLICY IF EXISTS "Companies view submitted student documents" ON storage.objects;
+CREATE POLICY "Companies view submitted student documents"
+ON storage.objects FOR SELECT TO authenticated
+USING (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND EXISTS (
+        SELECT 1
+        FROM public.employmentplace ep
+        WHERE ep.place_id::TEXT = (storage.foldername(name))[2]
+          AND ep.user_id = auth.uid()
+    )
+);
+
+DROP POLICY IF EXISTS "Students update their own documents" ON storage.objects;
+CREATE POLICY "Students update their own documents"
+ON storage.objects FOR UPDATE TO authenticated
+USING (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+)
+WITH CHECK (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+    AND EXISTS (
+        SELECT 1
+        FROM public.student s
+        WHERE s.user_id = auth.uid()
+          AND s.credits_passed >= 90
+    )
+    AND EXISTS (
+        SELECT 1
+        FROM public.employmentplace ep
+        WHERE ep.place_id::TEXT = (storage.foldername(name))[2]
+          AND ep.is_approved = TRUE
+    )
+);
+
 -- =======================================================================================
 -- 7. AUTOMATED USER SIGNUP TRIGGER
 -- =======================================================================================
 -- Note: Dummy civil_id added since NOT NULL unique is required by Issue #23. 
 -- In production, the user must provide civil_id during auth sign up meta data.
 CREATE OR REPLACE FUNCTION public.handle_new_student()
-RETURNS TRIGGER AS \$\$
+RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.Student (user_id, name, student_email, civil_id)
   VALUES (
@@ -368,7 +1007,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-\$\$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

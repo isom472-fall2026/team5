@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internship Review</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      padding: 30px;
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    form {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+    label {
+      font-weight: bold;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    button {
+      background: #2d6cdf;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #2459b2;
+    }
+    .message {
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+      margin-bottom: 15px;
+    }
+    .message.error {
+      background: #ffe5e5;
+      color: #b00020;
+      display: block;
+    }
+    .message.success {
+      background: #e7f9ee;
+      color: #137a43;
+      display: block;
+    }
+    .review-card {
+      border: 1px solid #e1e1e1;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 12px;
+      background: #fafafa;
+    }
+    .review-card p {
+      margin: 6px 0;
+    }
+    .stars {
+      color: #f4b400;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Internship Review</h2>
+
+    <div id="feedbackMessage" class="message"></div>
+
+    <form id="reviewForm">
+      <div>
+        <label for="siteId">Site ID</label>
+        <input type="number" id="siteId" required />
+      </div>
+
+      <div>
+        <label for="studentId">Student ID</label>
+        <input type="text" id="studentId" required />
+      </div>
+
+      <div>
+        <label for="rating">Rating</label>
+        <select id="rating" required>
+          <option value="">Select rating</option>
+          <option value="5">5 - Excellent</option>
+          <option value="4">4 - Good</option>
+          <option value="3">3 - Average</option>
+          <option value="2">2 - Weak</option>
+          <option value="1">1 - Poor</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="comments">Comment</label>
+        <textarea id="comments" required></textarea>
+      </div>
+
+      <button type="submit">Submit Review</button>
+    </form>
+
+    <div id="reviewsContainer"></div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'internship_reviews';
+
+    const defaultReviews = [
+      {
+        siteId: 1,
+        studentId: 'S001',
+        rating: 5,
+        comments: 'Great experience, learned a lot and improved my skills.'
+      },
+      {
+        siteId: 1,
+        studentId: 'S002',
+        rating: 4,
+        comments: 'Helpful team and good support throughout the internship.'
+      }
+    ];
+
+    function getReviews() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultReviews));
+        return defaultReviews;
+      }
+
+      try {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : defaultReviews;
+      } catch {
+        return defaultReviews;
+      }
+    }
+
+    function saveReviews(reviews) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
+    }
+
+    function renderReviews() {
+      const container = document.getElementById('reviewsContainer');
+      const reviews = getReviews();
+
+      if (!reviews.length) {
+        container.innerHTML = '<p>No reviews yet.</p>';
+        return;
+      }
+
+      container.innerHTML = reviews.map(review => {
+        const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+
+        return `
+          <div class="review-card">
+            <p><strong>Site ID:</strong> ${review.siteId}</p>
+            <p><strong>Student:</strong> ${review.studentId}</p>
+            <p><strong>Rating:</strong> <span class="stars">${stars}</span></p>
+            <p><strong>Comment:</strong> ${review.comments}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('reviewForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      const feedbackMessage = document.getElementById('feedbackMessage');
+
+      const siteId = parseInt(document.getElementById('siteId').value, 10);
+      const studentId = document.getElementById('studentId').value.trim();
+      const rating = parseInt(document.getElementById('rating').value, 10);
+      const comments = document.getElementById('comments').value.trim();
+
+      if (!siteId || !studentId || !rating || !comments) {
+        feedbackMessage.textContent = 'Error: All required fields must be provided.';
+        feedbackMessage.className = 'message error';
+        return;
+      }
+
+      const newReview = { siteId, studentId, rating, comments };
+      const reviews = getReviews();
+      reviews.unshift(newReview);
+      saveReviews(reviews);
+
+      feedbackMessage.textContent = 'Review submitted successfully.';
+      feedbackMessage.className = 'message success';
+
+      document.getElementById('reviewForm').reset();
+      renderReviews();
+    });
+
+    renderReviews();
+  </script>
+</body>
+</html>

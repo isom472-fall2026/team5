@@ -7,16 +7,289 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     :root {
+      --navy: #0f1f3d;
+      --navy-soft: #33415c;
+      --gold: #f2c230;
+      --white: #ffffff;
+      --line: #e3e8f0;
+      --muted: #5a6785;
       color-scheme: light;
       font-family: "Segoe UI", sans-serif;
-      background: #f4f6f3;
       color: #202b27;
     }
 
     * { box-sizing: border-box; }
 
-    body { margin: 0; }
+    body {
+      margin: 0;
+      background: #f4f6f3;
+      min-height: 100vh;
+      transition: background .25s;
+    }
 
+    /* ── Sunburst background — only on sign-in screen ── */
+    /*
+      Pure CSS conic-gradient sunburst: alternating gold shades
+      produce sharp crisp rays with zero image scaling artefacts.
+    */
+    body.show-sunburst {
+      background-color: #f2c230;
+      background-image:
+        conic-gradient(
+          from 0deg at 50% 60%,
+          #f2c230 0deg,   #e8b41e 6deg,
+          #f2c230 12deg,  #e8b41e 18deg,
+          #f2c230 24deg,  #e8b41e 30deg,
+          #f2c230 36deg,  #e8b41e 42deg,
+          #f2c230 48deg,  #e8b41e 54deg,
+          #f2c230 60deg,  #e8b41e 66deg,
+          #f2c230 72deg,  #e8b41e 78deg,
+          #f2c230 84deg,  #e8b41e 90deg,
+          #f2c230 96deg,  #e8b41e 102deg,
+          #f2c230 108deg, #e8b41e 114deg,
+          #f2c230 120deg, #e8b41e 126deg,
+          #f2c230 132deg, #e8b41e 138deg,
+          #f2c230 144deg, #e8b41e 150deg,
+          #f2c230 156deg, #e8b41e 162deg,
+          #f2c230 168deg, #e8b41e 174deg,
+          #f2c230 180deg, #e8b41e 186deg,
+          #f2c230 192deg, #e8b41e 198deg,
+          #f2c230 204deg, #e8b41e 210deg,
+          #f2c230 216deg, #e8b41e 222deg,
+          #f2c230 228deg, #e8b41e 234deg,
+          #f2c230 240deg, #e8b41e 246deg,
+          #f2c230 252deg, #e8b41e 258deg,
+          #f2c230 264deg, #e8b41e 270deg,
+          #f2c230 276deg, #e8b41e 282deg,
+          #f2c230 288deg, #e8b41e 294deg,
+          #f2c230 300deg, #e8b41e 306deg,
+          #f2c230 312deg, #e8b41e 318deg,
+          #f2c230 324deg, #e8b41e 330deg,
+          #f2c230 336deg, #e8b41e 342deg,
+          #f2c230 348deg, #e8b41e 354deg,
+          #f2c230 360deg
+        );
+      background-attachment: fixed;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 4px solid var(--gold);
+      position: relative;
+    }
+
+    .header-title {
+      flex: 1;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: .3px;
+    }
+
+    #menuToggle {
+      background: none;
+      border: none;
+      color: var(--white);
+      font-size: 24px;
+      cursor: pointer;
+      min-height: unset;
+      padding: 0;
+      line-height: 1;
+    }
+
+    /* ── Profile Icon ── */
+    .profile-nav-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    #profile-nav-btn {
+      width: 38px;
+      height: 38px;
+      min-height: unset;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--gold);
+      border: 2px solid var(--white);
+      color: var(--navy);
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: box-shadow .2s;
+      flex-shrink: 0;
+    }
+
+    #profile-nav-btn:hover { box-shadow: 0 0 0 3px rgba(242,194,48,.5); }
+    #profile-nav-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+    /* ── Profile Dropdown ── */
+    #profile-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 240px;
+      background: var(--white);
+      border: 1px solid #d0d8e8;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(15,31,61,.18);
+      z-index: 2000;
+      overflow: hidden;
+    }
+
+    #profile-dropdown.open { display: block; }
+
+    .pd-header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 14px 16px 10px;
+    }
+
+    .pd-header .pd-name {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 2px;
+    }
+
+    .pd-header .pd-label {
+      font-size: 11px;
+      opacity: .7;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .pd-body {
+      padding: 10px 16px;
+    }
+
+    .pd-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #eef0f5;
+    }
+
+    .pd-row:last-child { border-bottom: none; }
+
+    .pd-row .pd-key {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .pd-row .pd-val {
+      color: var(--navy);
+      font-weight: 500;
+    }
+
+    .pd-footer {
+      padding: 10px 16px;
+      border-top: 1px solid #eef0f5;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Editable fields in the dropdown */
+    .pd-field-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 7px 0;
+      border-bottom: 1px solid #eef0f5;
+    }
+
+    .pd-field-wrap:last-of-type { border-bottom: none; }
+
+    .pd-field-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; min-height: unset; padding: 0; line-height: 1; }
+    .header-account { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-left: auto; }
+    .header-user-icon { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; }
+    .header-user-icon svg { width: 20px; height: 20px; }
+    #signed-in-label { max-width: 34vw; overflow-wrap: anywhere; font-size: 14px; }
+    .header-auth-actions { display: flex; gap: 8px; }
+    .pd-field-input {
+      width: 100%;
+      padding: 5px 8px;
+      border: 1px solid #d0d8e8;
+      border-radius: 4px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--navy);
+      background: #f7f9fc;
+      transition: border-color .15s, background .15s;
+      min-height: unset;
+    }
+
+    .pd-field-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      background: #fff;
+    }
+
+    /* Save & sign-out buttons in footer */
+    #profile-save-btn {
+      width: 100%;
+      min-height: 34px;
+      background: var(--gold);
+      border: none;
+      border-radius: 4px;
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    #profile-save-btn:hover { background: #e0b31a; }
+
+    #profile-signout-btn {
+      width: 100%;
+      min-height: 36px;
+      background: var(--navy);
+      border: none;
+      border-radius: 4px;
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    #profile-signout-btn:hover { background: var(--navy-soft); }
+
+    /* ── Sidebar ── */
+    .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 1050; overflow-y: auto; }
+    .sidebar.open { left: 0; }
+    .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+    .sidebar a:hover { color: var(--gold); }
+    .sidebar a.current { font-weight: bold; color: var(--gold); }
+    .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar .nav-section + a { margin-top: 4px; }
+    #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; min-height: unset; padding: 0; line-height: 1; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 1040; }
+    .overlay.active { display: block; }
+
+    /* ── Main ── */
     main {
       width: min(1120px, calc(100% - 40px));
       margin: 40px auto;
@@ -26,21 +299,48 @@
 
     .auth-body { padding: 24px; }
 
-    .account-bar {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 14px;
-      margin-bottom: 12px;
-      color: #53635b;
-      font-size: 14px;
-    }
+    /* account-bar hidden — replaced by profile dropdown */
+    .account-bar { display: none; }
 
     section {
       overflow: hidden;
       border: 1px solid #d5ddd7;
       border-radius: 6px;
       background: #fff;
+    }
+
+    /* Sign-in card: semi-transparent so sunburst shows through */
+    body.show-sunburst #auth-section {
+      background: rgba(255,255,255,0.93);
+      backdrop-filter: blur(2px);
+      box-shadow: 0 8px 32px rgba(15,31,61,.18);
+    }
+
+    /* ── Sign-in page minimal footer ── */
+    #signin-footer {
+      display: none;
+      text-align: center;
+      padding: 18px 0 28px;
+      font-size: 13px;
+      color: rgba(15,31,61,0.75);
+      gap: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    body.show-sunburst #signin-footer { display: flex; }
+
+    #signin-footer a {
+      color: var(--navy);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    #signin-footer a:hover { text-decoration: underline; }
+
+    #signin-footer .sf-sep {
+      opacity: .4;
+      user-select: none;
     }
 
     .section-heading {
@@ -62,19 +362,53 @@
       font-weight: 650;
     }
 
+    /* ── Buttons: navy/gold palette ── */
     button {
       min-height: 38px;
       padding: 0 14px;
-      border: 1px solid #176b56;
+      border: 2px solid var(--navy);
       border-radius: 4px;
-      background: #176b56;
-      color: white;
+      background: var(--navy);
+      color: var(--white);
       font: inherit;
       cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
     }
 
     button:disabled { cursor: wait; opacity: 0.7; }
 
+    .btn-success {
+      background-color: var(--navy) !important;
+      border-color: var(--navy) !important;
+      color: var(--white) !important;
+    }
+    .btn-success:hover, .btn-success:focus {
+      background-color: var(--navy-soft) !important;
+      border-color: var(--navy-soft) !important;
+      color: var(--white) !important;
+    }
+
+    .btn-outline-success {
+      background-color: transparent !important;
+      border-color: var(--navy) !important;
+      color: var(--navy) !important;
+    }
+    .btn-outline-success:hover, .btn-outline-success:focus {
+      background-color: var(--gold) !important;
+      border-color: var(--navy) !important;
+      color: var(--navy) !important;
+    }
+
+    .btn-outline-secondary {
+      border-color: var(--navy-soft) !important;
+      color: var(--navy-soft) !important;
+    }
+    .btn-outline-secondary:hover {
+      background-color: var(--navy-soft) !important;
+      color: var(--white) !important;
+    }
+
+    /* ── Filters ── */
     .filters {
       display: flex;
       flex-wrap: wrap;
@@ -132,6 +466,13 @@
     td:first-child, th:first-child { padding-left: 16px; }
 
     @media (max-width: 600px) {
+      header { gap: 8px; padding: 12px; }
+      header > strong { font-size: 14px; }
+      .header-account { gap: 6px; }
+      .header-user-icon { width: 30px; height: 30px; }
+      #signed-in-label { max-width: 32vw; font-size: 12px; }
+      .header-auth-actions { gap: 4px; }
+      .header-auth-actions .btn, #signout-button { padding: 4px 6px; font-size: 12px; }
       main { width: min(100% - 24px, 1120px); margin: 20px auto; }
       .auth-section { margin-top: 8vh; }
       .auth-body { padding: 18px; }
@@ -141,12 +482,86 @@
       #table-status { padding-right: 16px; padding-left: 16px; }
       .table-wrap { padding: 8px 12px 16px; }
       h1 { font-size: 19px; }
+      #profile-dropdown { right: -4px; min-width: 210px; }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
 </head>
-<body>
+<body class="show-sunburst">
+  <header>
+    <button id="menuToggle">&#9776;</button>
+    <strong>Internship Platform</strong>
+    <div id="header-account" class="header-account" hidden>
+      <span class="header-user-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="3.5"></circle>
+          <path d="M5 20c.7-3.5 3.2-5.5 7-5.5s6.3 2 7 5.5"></path>
+        </svg>
+      </span>
+      <span id="signed-in-label" hidden></span>
+      <div id="header-auth-actions" class="header-auth-actions" hidden>
+        <button id="header-signin-button" class="btn btn-outline-light btn-sm" type="button">Log in</button>
+        <button id="header-signup-button" class="btn btn-warning btn-sm" type="button">Sign up</button>
+      </div>
+      <button id="signout-button" class="btn btn-outline-light btn-sm" type="button" hidden>Log out</button>
+    <span class="header-title">Internship Platform</span>
+
+    <!-- Profile icon — far right of nav bar (shown when signed in) -->
+    <div class="profile-nav-wrap" id="profile-nav-wrap" hidden>
+      <button id="profile-nav-btn" aria-label="Student profile" aria-expanded="false" aria-haspopup="true">&#128100;</button>
+      <div id="profile-dropdown" role="menu" aria-label="Student profile menu">
+        <!-- Header: student name -->
+        <div class="pd-header">
+          <p class="pd-name" id="pd-name">—</p>
+          <span class="pd-label">Student Profile</span>
+        </div>
+        <!-- Profile details — editable fields -->
+        <div class="pd-body">
+          <div class="pd-field-wrap">
+            <label class="pd-field-label" for="pd-civil-id">Civil ID</label>
+            <input class="pd-field-input" id="pd-civil-id" type="text" placeholder="Enter Civil ID" autocomplete="off">
+          </div>
+          <div class="pd-field-wrap">
+            <label class="pd-field-label" for="pd-student-id">Student ID</label>
+            <input class="pd-field-input" id="pd-student-id" type="text" placeholder="Enter Student ID" autocomplete="off">
+          </div>
+          <div class="pd-field-wrap">
+            <label class="pd-field-label" for="pd-units">Completed Units</label>
+            <input class="pd-field-input" id="pd-units" type="number" min="0" placeholder="e.g. 90" autocomplete="off">
+          </div>
+        </div>
+        <!-- Footer: save + sign out -->
+        <div class="pd-footer">
+          <p id="pd-save-status" class="small mb-1" role="status" aria-live="polite" style="display:none;margin:0;"></p>
+          <button id="profile-save-btn" type="button">Save Changes</button>
+          <button id="profile-signout-btn" type="button">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <button id="closeSidebar">&times;</button>
+    <a href="index.html" class="current">Home</a>
+
+    <p class="nav-section">Placement</p>
+    <a href="pages/placement-details.html">Placement Details</a>
+    <a href="pages/company-requirements.html">Company Requirements</a>
+
+    <p class="nav-section">Reports</p>
+    <a href="pages/internship_log.html">Internship Attendance</a>
+    <a href="pages/progress-summary.html">Progress Summary</a>
+    <a href="pages/reported-issues.html">Reported Issues</a>
+
+    <p class="nav-section">Evaluation</p>
+    <a href="pages/evaluation-criteria.html">Evaluation Criteria</a>
+
+    <p class="nav-section">Help</p>
+    <a href="pages/contact-support.html">Contact Support</a>
+  </nav>
+  <div class="overlay" id="overlay"></div>
+
   <main>
     <p id="auth-loading" class="alert alert-secondary" role="status">Checking your sign-in status...</p>
     <section id="auth-section" class="auth-section border rounded bg-white overflow-hidden" aria-labelledby="auth-heading" hidden>
@@ -193,20 +608,33 @@
           </div>
           <button class="btn btn-success w-100" type="submit">Create account</button>
         </form>
+        <div class="mt-3">
+          <a href="mailto:cba@ku.edu.kw" class="btn btn-outline-success btn-sm">Contact Support</a>
+        </div>
       </div>
     </section>
+
+    <!-- account-bar kept for JS compatibility but visually hidden -->
     <div id="account-bar" class="account-bar" hidden>
       <span id="signed-in-label"></span>
       <button id="signout-button" class="btn btn-outline-secondary btn-sm" type="button">Sign out</button>
     </div>
     <p id="account-status" class="small text-danger text-end" role="status" aria-live="polite" hidden></p>
+
     <section id="opportunities-view" class="border rounded bg-white overflow-hidden" aria-labelledby="employment-places-heading" hidden>
       <div class="section-heading">
         <div class="heading-copy">
-          <h1 id="employment-places-heading">Training opportunities</h1>
+          <h1 id="employment-places-heading" tabindex="-1">Training opportunities</h1>
           <p id="cycle-label"></p>
         </div>
-        <button id="refresh-button" class="btn btn-success" type="button">Refresh</button>
+        <div class="d-flex flex-wrap gap-2">
+          <button id="open-weekly-report" class="btn btn-success" type="button">Submit weekly report</button>
+          <button id="open-internship-evaluation" class="btn btn-outline-success" type="button">Evaluate training site</button>
+          <button id="open-internship-issue" class="btn btn-outline-success" type="button">Report an internship issue</button>
+          <button id="open-supervisor-notifications" class="btn btn-outline-success" type="button" hidden>Supervisor notifications</button>
+          <button id="open-internship-issues" class="btn btn-outline-success" type="button" hidden>Review internship issues</button>
+          <button id="refresh-button" class="btn btn-success" type="button">Refresh</button>
+        </div>
       </div>
       <div class="filters" aria-label="Filter training opportunities">
         <div class="filter-control col-12 col-md-auto">
@@ -219,6 +647,7 @@
         </div>
       </div>
       <p id="table-status" role="status" aria-live="polite">Loading approved training opportunities...</p>
+      <div id="data-errors" style="padding: 8px 24px 0;"></div>
       <div class="table-wrap">
         <table class="table table-hover align-middle mb-0">
           <thead>
@@ -236,10 +665,145 @@
               <th scope="col">Required documents</th>
               <th scope="col">Company requirements</th>
               <th scope="col">Last updated</th>
+              <th scope="col">Upload Documents</th>
             </tr>
           </thead>
           <tbody id="employment-places-body"></tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- Sign-in minimal footer — only visible when sunburst is active -->
+    <footer id="signin-footer" aria-label="Support contacts">
+      <span>&#128247; Instagram: <a href="https://instagram.com/osta_cba" target="_blank" rel="noopener">@osta_cba</a></span>
+      <span class="sf-sep">|</span>
+      <span>&#9993; Email: <a href="mailto:cba@ku.edu.kw">cba@ku.edu.kw</a></span>
+    </footer>
+  </main>
+
+    <section id="weekly-report-view" class="border rounded bg-white overflow-hidden" aria-labelledby="weekly-report-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="weekly-report-heading" tabindex="-1">Weekly progress report</h1>
+          <p id="report-week-label"></p>
+        </div>
+        <button id="back-from-report" class="btn btn-outline-secondary" type="button">Back to opportunities</button>
+      </div>
+      <div class="auth-body">
+        <p id="report-deadline" class="alert alert-info" role="status"></p>
+        <p id="report-status" class="alert alert-danger" role="alert" hidden></p>
+        <form id="weekly-report-form">
+          <div class="mb-3">
+            <label class="form-label" for="weekly-hours">Hours this week</label>
+            <input class="form-control" id="weekly-hours" name="weekly-hours" type="number" min="0" max="168" step="0.25" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="progress-details">Progress and completed work</label>
+            <textarea class="form-control" id="progress-details" name="progress-details" rows="5" maxlength="5000" required></textarea>
+          </div>
+          <button id="submit-weekly-report" class="btn btn-success" type="submit">Submit report</button>
+        </form>
+      </div>
+    </section>
+    <section id="internship-issue-view" class="border rounded bg-white overflow-hidden" aria-labelledby="internship-issue-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="internship-issue-heading" tabindex="-1">Report an internship issue</h1>
+          <p>Only your supervising professor can view this report.</p>
+        </div>
+        <button id="back-from-internship-issue" class="btn btn-outline-secondary" type="button">Back to opportunities</button>
+      </div>
+      <div class="auth-body">
+        <p id="internship-issue-status" class="alert alert-danger" role="alert" hidden></p>
+        <form id="internship-issue-form">
+          <div class="mb-3">
+            <label class="form-label" for="internship-issue-category">Issue category</label>
+            <select class="form-select" id="internship-issue-category" name="category" required>
+              <option value="">Choose a category</option>
+              <option value="Workplace">Workplace</option>
+              <option value="Supervision">Supervision</option>
+              <option value="Workload">Workload</option>
+              <option value="Safety">Safety</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="internship-issue-description">Describe the issue</label>
+            <textarea class="form-control" id="internship-issue-description" name="description" rows="5" maxlength="5000" required></textarea>
+          </div>
+          <button id="submit-internship-issue" class="btn btn-success" type="submit">Submit issue report</button>
+        </form>
+      </div>
+    </section>
+    <section id="internship-evaluation-view" class="border rounded bg-white overflow-hidden" aria-labelledby="internship-evaluation-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="internship-evaluation-heading" tabindex="-1">Evaluate your training site and supervisor</h1>
+          <p>Share your ratings and feedback about your internship.</p>
+        </div>
+        <button id="back-from-internship-evaluation" class="btn btn-outline-secondary" type="button">Back to opportunities</button>
+      </div>
+      <div class="auth-body">
+        <p id="internship-evaluation-status" class="alert alert-info" role="status" aria-live="polite" hidden></p>
+        <form id="internship-evaluation-form" hidden>
+          <div class="mb-3">
+            <label class="form-label" for="site-rating">Training site rating</label>
+            <select class="form-select" id="site-rating" name="site-rating" required>
+              <option value="">Choose a rating</option>
+              <option value="1">1 - Poor</option>
+              <option value="2">2 - Fair</option>
+              <option value="3">3 - Good</option>
+              <option value="4">4 - Very good</option>
+              <option value="5">5 - Excellent</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="site-feedback">Feedback about the training site</label>
+            <textarea class="form-control" id="site-feedback" name="site-feedback" rows="4" maxlength="2000" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="supervisor-rating">Supervisor rating</label>
+            <select class="form-select" id="supervisor-rating" name="supervisor-rating" required>
+              <option value="">Choose a rating</option>
+              <option value="1">1 - Poor</option>
+              <option value="2">2 - Fair</option>
+              <option value="3">3 - Good</option>
+              <option value="4">4 - Very good</option>
+              <option value="5">5 - Excellent</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="supervisor-feedback">Feedback about your supervisor</label>
+            <textarea class="form-control" id="supervisor-feedback" name="supervisor-feedback" rows="4" maxlength="2000" required></textarea>
+          </div>
+          <button id="submit-internship-evaluation" class="btn btn-success" type="submit">Submit evaluation</button>
+        </form>
+      </div>
+    </section>
+    <section id="supervisor-notifications-view" class="border rounded bg-white overflow-hidden" aria-labelledby="supervisor-notifications-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="supervisor-notifications-heading" tabindex="-1">Supervisor notifications</h1>
+          <p>Weekly progress report submissions</p>
+        </div>
+        <button id="back-from-notifications" class="btn btn-outline-secondary" type="button">Back to opportunities</button>
+      </div>
+      <div class="auth-body">
+        <p id="notification-status" role="status" aria-live="polite">Loading notifications...</p>
+        <ul id="notification-list" class="list-group"></ul>
+      </div>
+    </section>
+    <section id="internship-issues-view" class="border rounded bg-white overflow-hidden" aria-labelledby="internship-issues-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="internship-issues-heading" tabindex="-1">Internship issue reports</h1>
+          <p>Review reports from students in your assigned cycles.</p>
+        </div>
+        <button id="back-from-internship-issues" class="btn btn-outline-secondary" type="button">Back to opportunities</button>
+      </div>
+      <div class="auth-body">
+        <p id="internship-issues-list-status" role="status" aria-live="polite">Loading issue reports...</p>
+        <div id="internship-issues-list" class="list-group"></div>
       </div>
     </section>
   </main>
@@ -262,10 +826,35 @@
     const authDescription = document.getElementById("auth-description");
     const showSigninButton = document.getElementById("show-signin");
     const showSignupButton = document.getElementById("show-signup");
-    const accountBar = document.getElementById("account-bar");
+    const headerAccount = document.getElementById("header-account");
     const signedInLabel = document.getElementById("signed-in-label");
+    const headerAuthActions = document.getElementById("header-auth-actions");
+    const headerSigninButton = document.getElementById("header-signin-button");
+    const headerSignupButton = document.getElementById("header-signup-button");
     const signoutButton = document.getElementById("signout-button");
     const accountStatus = document.getElementById("account-status");
+    const weeklyReportView = document.getElementById("weekly-report-view");
+    const weeklyReportForm = document.getElementById("weekly-report-form");
+    const internshipIssueView = document.getElementById("internship-issue-view");
+    const internshipIssueForm = document.getElementById("internship-issue-form");
+    const internshipIssueStatus = document.getElementById("internship-issue-status");
+    const submitInternshipIssueButton = document.getElementById("submit-internship-issue");
+    const internshipEvaluationView = document.getElementById("internship-evaluation-view");
+    const internshipEvaluationForm = document.getElementById("internship-evaluation-form");
+    const internshipEvaluationStatus = document.getElementById("internship-evaluation-status");
+    const submitInternshipEvaluationButton = document.getElementById("submit-internship-evaluation");
+    const reportWeekLabel = document.getElementById("report-week-label");
+    const reportDeadline = document.getElementById("report-deadline");
+    const reportStatus = document.getElementById("report-status");
+    const submitWeeklyReportButton = document.getElementById("submit-weekly-report");
+    const openSupervisorNotificationsButton = document.getElementById("open-supervisor-notifications");
+    const openInternshipIssuesButton = document.getElementById("open-internship-issues");
+    const supervisorNotificationsView = document.getElementById("supervisor-notifications-view");
+    const notificationStatus = document.getElementById("notification-status");
+    const notificationList = document.getElementById("notification-list");
+    const internshipIssuesView = document.getElementById("internship-issues-view");
+    const internshipIssuesListStatus = document.getElementById("internship-issues-list-status");
+    const internshipIssuesList = document.getElementById("internship-issues-list");
     let opportunities = [];
     let authStateReady = false;
     let activeUserId = null;
@@ -284,6 +873,112 @@
       "company_requirements",
       "last_updated_at"
     ];
+
+    // ── Profile dropdown elements ──
+    const profileNavWrap = document.getElementById("profile-nav-wrap");
+    const profileNavBtn  = document.getElementById("profile-nav-btn");
+    const profileDropdown = document.getElementById("profile-dropdown");
+    const pdName       = document.getElementById("pd-name");
+    const pdCivilId    = document.getElementById("pd-civil-id");
+    const pdStudentId  = document.getElementById("pd-student-id");
+    const pdUnits      = document.getElementById("pd-units");
+    const profileSignoutBtn = document.getElementById("profile-signout-btn");
+
+    // Toggle dropdown open/close
+    profileNavBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = profileDropdown.classList.toggle("open");
+      profileNavBtn.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!profileDropdown.contains(e.target) && e.target !== profileNavBtn) {
+        profileDropdown.classList.remove("open");
+        profileNavBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    // Profile save button
+    document.getElementById("profile-save-btn").addEventListener("click", saveProfileChanges);
+
+    // Profile sign-out button (inside dropdown)
+    profileSignoutBtn.addEventListener("click", async () => {
+      profileSignoutBtn.disabled = true;
+      profileDropdown.classList.remove("open");
+      profileNavBtn.setAttribute("aria-expanded", "false");
+      const { error } = await supabaseClient.auth.signOut();
+      profileSignoutBtn.disabled = false;
+      if (error) {
+        accountStatus.textContent = "Could not sign out. Please try again.";
+        accountStatus.hidden = false;
+      }
+    });
+
+    // Load student profile details into the dropdown
+    async function loadProfileDropdown(userId) {
+      try {
+        const { data: student, error } = await supabaseClient
+          .from("student")
+          .select("name, student_id, civil_id, completed_units")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (error || !student) return;
+        if (student.name)            pdName.textContent        = student.name;
+        if (student.civil_id        != null) pdCivilId.value   = student.civil_id;
+        if (student.student_id      != null) pdStudentId.value = student.student_id;
+        if (student.completed_units != null) pdUnits.value     = student.completed_units;
+      } catch (_) { /* silently ignore */ }
+    }
+
+    // Save profile changes back to Supabase
+    async function saveProfileChanges() {
+      const saveBtn    = document.getElementById("profile-save-btn");
+      const saveStatus = document.getElementById("pd-save-status");
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving…";
+      saveStatus.style.display = "none";
+
+      const updates = {};
+      const civilVal  = pdCivilId.value.trim();
+      const studVal   = pdStudentId.value.trim();
+      const unitsVal  = pdUnits.value.trim();
+
+      if (civilVal  !== "") updates.civil_id         = civilVal;
+      if (studVal   !== "") updates.student_id       = studVal;
+      if (unitsVal  !== "") updates.completed_units  = Number(unitsVal);
+
+      if (!Object.keys(updates).length) {
+        saveStatus.textContent = "Nothing to save.";
+        saveStatus.style.color = "var(--muted)";
+        saveStatus.style.display = "block";
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Changes";
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient
+          .from("student")
+          .update(updates)
+          .eq("user_id", activeUserId);
+
+        if (error) throw error;
+
+        saveStatus.textContent = "✓ Saved!";
+        saveStatus.style.color = "#1a7a4a";
+        // Also update the displayed name in the header if name field exists
+      } catch (err) {
+        saveStatus.textContent = err.message || "Could not save. Please try again.";
+        saveStatus.style.color = "#c0392b";
+      } finally {
+        saveStatus.style.display = "block";
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Changes";
+      }
+    }
 
     function getCurrentAcademicCycle(date = new Date()) {
       const month = date.getMonth();
@@ -344,22 +1039,496 @@
       activeUserId = userId;
       authLoading.hidden = true;
       accountStatus.hidden = true;
+      headerAccount.hidden = false;
 
       if (!user) {
+        signedInLabel.hidden = true;
+        headerAuthActions.hidden = false;
+        signoutButton.hidden = true;
         authSection.hidden = false;
         opportunitiesView.hidden = true;
-        accountBar.hidden = true;
+        weeklyReportView.hidden = true;
+        internshipIssueView.hidden = true;
+        internshipEvaluationView.hidden = true;
+        supervisorNotificationsView.hidden = true;
+        internshipIssuesView.hidden = true;
+        openSupervisorNotificationsButton.hidden = true;
+        openInternshipIssuesButton.hidden = true;
+        // Hide profile icon
+        profileNavWrap.hidden = true;
+        // Reset dropdown data
+        pdName.textContent = "—";
+        pdCivilId.value = "";
+        pdStudentId.value = "";
+        pdUnits.value = "";
+        // Show sunburst on sign-in screen
+        document.body.classList.add("show-sunburst");
         return;
       }
 
       authSection.hidden = true;
+      signedInLabel.hidden = false;
+      headerAuthActions.hidden = true;
+      signoutButton.hidden = false;
       opportunitiesView.hidden = false;
-      accountBar.hidden = false;
+      weeklyReportView.hidden = true;
+      internshipIssueView.hidden = true;
+      internshipEvaluationView.hidden = true;
+      supervisorNotificationsView.hidden = true;
+      internshipIssuesView.hidden = true;
       signedInLabel.textContent = `Signed in as ${user.email ?? "student"}`;
+      // Remove sunburst once signed in
+      document.body.classList.remove("show-sunburst");
+
+      // Show profile icon and seed name from email
+      profileNavWrap.hidden = false;
+      const emailName = (user.email ?? "").split("@")[0];
+      pdName.textContent = emailName || user.email || "Student";
       if (shouldLoadOpportunities) {
         setTimeout(() => {
-          if (activeUserId === userId) loadApprovedOpportunities();
+          if (activeUserId === userId) {
+            loadApprovedOpportunities();
+            loadSupervisorAccess(userId);
+            loadProfileDropdown(userId);
+          }
         }, 0);
+      }
+    }
+
+    function getCurrentWeekStartInKuwait() {
+      const dateParts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Kuwait",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(new Date());
+      const parts = Object.fromEntries(dateParts.map(({ type, value }) => [type, value]));
+      const date = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)));
+      const daysSinceMonday = (date.getUTCDay() + 6) % 7;
+      date.setUTCDate(date.getUTCDate() - daysSinceMonday);
+      return date.toISOString().slice(0, 10);
+    }
+
+    function isWeeklyReportSubmissionOpen(weekStart) {
+      const deadline = Date.parse(`${weekStart}T00:00:00+03:00`) + 5 * 24 * 60 * 60 * 1000;
+      return Date.now() < deadline;
+    }
+
+    function openWeeklyReport() {
+      const weekStart = getCurrentWeekStartInKuwait();
+      const formattedWeek = new Date(`${weekStart}T00:00:00Z`).toLocaleDateString("en-US", {
+        timeZone: "UTC",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+      reportWeekLabel.textContent = `Week beginning ${formattedWeek}`;
+      const isOpen = isWeeklyReportSubmissionOpen(weekStart);
+      reportDeadline.textContent = isOpen
+        ? "Submit by Friday at 23:59 Kuwait time."
+        : "The submission deadline for this week has passed.";
+      submitWeeklyReportButton.disabled = !isOpen;
+      reportStatus.hidden = true;
+      opportunitiesView.hidden = true;
+      supervisorNotificationsView.hidden = true;
+      weeklyReportView.hidden = false;
+      document.getElementById("weekly-report-heading").focus();
+    }
+
+    async function loadSupervisorAccess(userId) {
+      const { data, error } = await supabaseClient
+        .from("supervisingprofessor")
+        .select("professor_id")
+        .eq("user_id", userId)
+        .limit(1);
+
+      if (activeUserId !== userId) return;
+      if (error) {
+        openSupervisorNotificationsButton.hidden = true;
+        openInternshipIssuesButton.hidden = true;
+        accountStatus.textContent = "Could not check supervisor access.";
+        accountStatus.hidden = false;
+        return;
+      }
+
+      openSupervisorNotificationsButton.hidden = data.length === 0;
+      openInternshipIssuesButton.hidden = data.length === 0;
+    }
+
+    function showInternshipIssueFeedback(message, type = "error") {
+      internshipIssueStatus.className = type === "success" ? "alert alert-success" : "alert alert-danger";
+      internshipIssueStatus.textContent = message;
+      internshipIssueStatus.hidden = false;
+    }
+
+    document.getElementById("internship-issue-category").addEventListener("invalid", (event) => {
+      event.target.setCustomValidity("Select an issue category.");
+    });
+    document.getElementById("internship-issue-category").addEventListener("change", (event) => {
+      event.target.setCustomValidity("");
+    });
+    document.getElementById("internship-issue-description").addEventListener("invalid", (event) => {
+      event.target.setCustomValidity("Describe the internship issue before submitting.");
+    });
+    document.getElementById("internship-issue-description").addEventListener("input", (event) => {
+      event.target.setCustomValidity("");
+    });
+
+    async function submitInternshipIssue(event) {
+      event.preventDefault();
+      internshipIssueStatus.hidden = true;
+      const formData = new FormData(internshipIssueForm);
+      const category = formData.get("category");
+      const description = formData.get("description").trim();
+      if (!category || !description) {
+        showInternshipIssueFeedback("Choose a category and describe the issue before submitting.");
+        return;
+      }
+
+      submitInternshipIssueButton.disabled = true;
+      submitInternshipIssueButton.textContent = "Submitting...";
+      try {
+        const { data: student, error: studentError } = await supabaseClient
+          .from("student")
+          .select("student_id, internship_cycle_id")
+          .eq("user_id", activeUserId)
+          .maybeSingle();
+        if (studentError) throw studentError;
+        if (!student || !student.internship_cycle_id) {
+          throw new Error("Your student profile must be linked to an internship cycle before reporting an issue.");
+        }
+
+        const { error } = await supabaseClient
+          .from("internshipissuereport")
+          .insert({
+            student_id: student.student_id,
+            category,
+            description,
+            status: "Submitted"
+          });
+        if (error) throw error;
+
+        internshipIssueForm.reset();
+        showInternshipIssueFeedback("Issue report submitted. Your supervising professor was notified.", "success");
+      } catch (error) {
+        const message = error?.code === "23503"
+          ? "Your student profile or supervising professor could not be verified."
+          : error?.code === "42501"
+            ? "You can submit an issue report only for your own student profile."
+            : error?.code === "23514"
+              ? "Select a valid issue category and enter a description."
+              : error.message || "Could not submit the issue report. Please try again.";
+        showInternshipIssueFeedback(message);
+      } finally {
+        submitInternshipIssueButton.disabled = false;
+        submitInternshipIssueButton.textContent = "Submit issue report";
+      }
+    }
+
+    async function getInternshipEvaluationContext(userId) {
+      const { data: student, error: studentError } = await supabaseClient
+        .from("student")
+        .select("student_id, internship_cycle_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (studentError) throw studentError;
+      if (!student || !student.internship_cycle_id) {
+        throw new Error("Your student profile must be linked to an internship cycle before submitting an evaluation.");
+      }
+
+      const { data: cycle, error: cycleError } = await supabaseClient
+        .from("internshipcycle")
+        .select("cycle_id, professor_id, place_name")
+        .eq("cycle_id", student.internship_cycle_id)
+        .maybeSingle();
+      if (cycleError) throw cycleError;
+      if (!cycle || !cycle.professor_id || !cycle.place_name) {
+        throw new Error("Your assigned training site and supervisor could not be verified.");
+      }
+
+      return {
+        student_id: student.student_id,
+        place_name: cycle.place_name,
+        professor_id: cycle.professor_id
+      };
+    }
+
+    function showInternshipEvaluationFeedback(message, type = "error") {
+      internshipEvaluationStatus.className = type === "success" ? "alert alert-success" : "alert alert-danger";
+      internshipEvaluationStatus.textContent = message;
+      internshipEvaluationStatus.hidden = false;
+    }
+
+    async function openInternshipEvaluation() {
+      opportunitiesView.hidden = true;
+      weeklyReportView.hidden = true;
+      internshipIssueView.hidden = true;
+      supervisorNotificationsView.hidden = true;
+      internshipIssuesView.hidden = true;
+      internshipEvaluationView.hidden = false;
+      internshipEvaluationForm.hidden = true;
+      internshipEvaluationStatus.hidden = true;
+      document.getElementById("internship-evaluation-heading").focus();
+
+      const userId = activeUserId;
+      if (!userId) {
+        showInternshipEvaluationFeedback("Sign in with a student account to submit an evaluation.");
+        return;
+      }
+      try {
+        await getInternshipEvaluationContext(userId);
+        if (activeUserId !== userId) return;
+        internshipEvaluationForm.hidden = false;
+        internshipEvaluationStatus.className = "alert alert-info";
+        internshipEvaluationStatus.textContent = "Your evaluation will be visible to you and your assigned supervising professor.";
+        internshipEvaluationStatus.hidden = false;
+      } catch (error) {
+        if (activeUserId !== userId) return;
+        showInternshipEvaluationFeedback(error.message || "Could not verify your assigned training site and supervisor.");
+      }
+    }
+
+    async function submitInternshipEvaluation(event) {
+      event.preventDefault();
+      internshipEvaluationStatus.hidden = true;
+      const formData = new FormData(internshipEvaluationForm);
+      const siteRating = Number(formData.get("site-rating"));
+      const supervisorRating = Number(formData.get("supervisor-rating"));
+      const siteFeedback = String(formData.get("site-feedback") ?? "").trim();
+      const supervisorFeedback = String(formData.get("supervisor-feedback") ?? "").trim();
+      if (![siteRating, supervisorRating].every((rating) => Number.isInteger(rating) && rating >= 1 && rating <= 5)
+        || !siteFeedback || !supervisorFeedback) {
+        showInternshipEvaluationFeedback("Choose a rating from 1 to 5 and provide feedback for both the training site and supervisor.");
+        return;
+      }
+
+      submitInternshipEvaluationButton.disabled = true;
+      submitInternshipEvaluationButton.textContent = "Submitting...";
+      try {
+        const userId = activeUserId;
+        if (!userId) throw new Error("Sign in with a student account to submit an evaluation.");
+        const evaluationContext = await getInternshipEvaluationContext(userId);
+        if (activeUserId !== userId) throw new Error("Your sign-in status changed. Please try again.");
+        const { error } = await supabaseClient
+          .from("internshipevaluation")
+          .insert({
+            ...evaluationContext,
+            site_rating: siteRating,
+            supervisor_rating: supervisorRating,
+            feedback_comments: `Training site feedback:\n${siteFeedback}\n\nSupervisor feedback:\n${supervisorFeedback}`
+          });
+        if (error) throw error;
+
+        internshipEvaluationForm.reset();
+        showInternshipEvaluationFeedback("Your evaluation was submitted successfully.", "success");
+      } catch (error) {
+        const message = error?.code === "23502" || error?.code === "23514"
+          ? "Choose a rating from 1 to 5 and provide feedback for both the training site and supervisor."
+          : error?.code === "23503" || error?.code === "42501"
+            ? "Your student profile, training site, or assigned supervisor could not be verified."
+            : error.message || "Could not submit the evaluation. Please try again.";
+        showInternshipEvaluationFeedback(message);
+      } finally {
+        submitInternshipEvaluationButton.disabled = false;
+        submitInternshipEvaluationButton.textContent = "Submit evaluation";
+      }
+    }
+
+    async function updateInternshipIssueStatus(reportId, status, button, feedback) {
+      button.disabled = true;
+      feedback.textContent = "";
+      const { data, error } = await supabaseClient
+        .from("internshipissuereport")
+        .update({ status })
+        .eq("issue_report_id", reportId)
+        .select("issue_report_id")
+        .maybeSingle();
+
+      if (error) {
+        feedback.textContent = error.message || "Could not update the issue status.";
+      } else if (!data) {
+        feedback.textContent = "The issue report was not found or you are not its supervising professor.";
+      } else {
+        feedback.textContent = "Issue status updated.";
+      }
+      button.disabled = false;
+    }
+
+    async function loadInternshipIssueReports() {
+      internshipIssuesListStatus.textContent = "Loading issue reports...";
+      internshipIssuesList.replaceChildren();
+      const { data: notifications, error: notificationError } = await supabaseClient
+        .from("internshipissuenotification")
+        .select("issue_report_id, message, created_at")
+        .order("created_at", { ascending: false });
+      if (notificationError) {
+        internshipIssuesListStatus.textContent = "Could not load issue notifications. Please try again.";
+        return;
+      }
+      if (!notifications.length) {
+        internshipIssuesListStatus.textContent = "There are no internship issue reports yet.";
+        return;
+      }
+
+      const reportIds = notifications.map((notification) => notification.issue_report_id);
+      const { data: reports, error: reportError } = await supabaseClient
+        .from("internshipissuereport")
+        .select("issue_report_id, student_id, category, description, status, submitted_at")
+        .in("issue_report_id", reportIds);
+      if (reportError) {
+        internshipIssuesListStatus.textContent = "Could not load internship issue reports. Please try again.";
+        return;
+      }
+
+      const studentIds = [...new Set(reports.map((report) => report.student_id))];
+      const { data: students, error: studentError } = await supabaseClient
+        .from("student")
+        .select("student_id, name, student_email")
+        .in("student_id", studentIds);
+      if (studentError) {
+        internshipIssuesListStatus.textContent = "Could not load the reporting student details. Please try again.";
+        return;
+      }
+
+      const studentsById = new Map(students.map((student) => [student.student_id, student]));
+      const reportsById = new Map(reports.map((report) => [report.issue_report_id, report]));
+      let renderedCount = 0;
+      for (const notification of notifications) {
+        const report = reportsById.get(notification.issue_report_id);
+        if (!report) continue;
+        const student = studentsById.get(report.student_id);
+        const card = document.createElement("article");
+        card.className = "list-group-item";
+        const heading = document.createElement("h2");
+        heading.className = "h5";
+        heading.textContent = `${report.category} issue — ${student?.name ?? "Student"}`;
+        const email = document.createElement("p");
+        email.className = "mb-1";
+        email.textContent = student?.student_email ?? "Student email unavailable";
+        const description = document.createElement("p");
+        description.className = "mb-2";
+        description.textContent = report.description;
+        const submitted = document.createElement("small");
+        submitted.className = "d-block text-secondary mb-2";
+        submitted.textContent = `Submitted ${new Date(report.submitted_at).toLocaleString()}`;
+        const notificationMessage = document.createElement("p");
+        notificationMessage.className = "small text-secondary";
+        notificationMessage.textContent = notification.message;
+        const label = document.createElement("label");
+        label.className = "form-label";
+        label.textContent = "Status";
+        const select = document.createElement("select");
+        select.className = "form-select mb-2";
+        select.setAttribute("aria-label", `Status for ${report.category} report from ${student?.name ?? "student"}`);
+        for (const value of ["Submitted", "Under review", "Resolved"]) {
+          select.add(new Option(value, value, value === report.status, value === report.status));
+        }
+        const feedback = document.createElement("p");
+        feedback.className = "small mb-2";
+        feedback.setAttribute("role", "status");
+        const updateButton = document.createElement("button");
+        updateButton.className = "btn btn-success btn-sm";
+        updateButton.type = "button";
+        updateButton.textContent = "Update status";
+        updateButton.addEventListener("click", () => {
+          updateInternshipIssueStatus(report.issue_report_id, select.value, updateButton, feedback);
+        });
+        label.htmlFor = `issue-status-${report.issue_report_id}`;
+        select.id = label.htmlFor;
+        card.append(heading, email, description, submitted, notificationMessage, label, select, updateButton, feedback);
+        internshipIssuesList.append(card);
+        renderedCount += 1;
+      }
+      internshipIssuesListStatus.textContent = `${renderedCount} internship issue report${renderedCount === 1 ? "" : "s"}.`;
+    }
+
+    async function loadSupervisorNotifications() {
+      notificationStatus.textContent = "Loading notifications...";
+      notificationList.replaceChildren();
+      const { data, error } = await supabaseClient
+        .from("supervisornotification")
+        .select("notification_id, message, created_at")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        notificationStatus.textContent = "Could not load supervisor notifications. Please try again.";
+        return;
+      }
+
+      if (!data.length) {
+        notificationStatus.textContent = "There are no weekly report notifications yet.";
+        return;
+      }
+
+      notificationStatus.textContent = `${data.length} notification${data.length === 1 ? "" : "s"}.`;
+      for (const notification of data) {
+        const item = document.createElement("li");
+        item.className = "list-group-item";
+        const message = document.createElement("p");
+        message.className = "mb-1";
+        message.textContent = notification.message;
+        const timestamp = document.createElement("small");
+        timestamp.className = "text-secondary";
+        timestamp.textContent = new Date(notification.created_at).toLocaleString();
+        item.append(message, timestamp);
+        notificationList.append(item);
+      }
+    }
+
+    async function submitWeeklyReport(event) {
+      event.preventDefault();
+      reportStatus.hidden = true;
+      const weekStart = getCurrentWeekStartInKuwait();
+      if (!isWeeklyReportSubmissionOpen(weekStart)) {
+        reportDeadline.textContent = "The submission deadline for this week has passed.";
+        submitWeeklyReportButton.disabled = true;
+        return;
+      }
+
+      submitWeeklyReportButton.disabled = true;
+      submitWeeklyReportButton.textContent = "Submitting...";
+      try {
+        const { data: student, error: studentError } = await supabaseClient
+          .from("student")
+          .select("student_id, internship_cycle_id")
+          .eq("user_id", activeUserId)
+          .maybeSingle();
+        if (studentError) throw studentError;
+        if (!student || !student.internship_cycle_id) {
+          throw new Error("Your student profile must be linked to an internship cycle before submitting a report.");
+        }
+
+        const formData = new FormData(weeklyReportForm);
+        const { error } = await supabaseClient
+          .from("weeklyprogressreport")
+          .insert({
+            student_id: student.student_id,
+            week_start: weekStart,
+            weekly_hours: Number(formData.get("weekly-hours")),
+            progress_details: formData.get("progress-details").trim()
+          });
+        if (error?.code === "23505") {
+          throw new Error("A weekly report has already been submitted for this week.");
+        }
+        if (error) throw error;
+
+        reportStatus.className = "alert alert-success";
+        reportStatus.textContent = "Weekly report submitted. Your supervising professor was notified.";
+        reportStatus.hidden = false;
+        weeklyReportForm.reset();
+      } catch (error) {
+        reportStatus.className = "alert alert-danger";
+        reportStatus.textContent = error?.code === "42501"
+          ? "You cannot submit this report after the deadline or for another student."
+          : error?.code === "23503"
+            ? "The student profile or internship cycle could not be verified."
+            : error?.code === "23514"
+              ? "Enter valid weekly hours and non-empty progress details."
+              : error.message || "Could not submit the weekly report. Please try again.";
+        reportStatus.hidden = false;
+      } finally {
+        submitWeeklyReportButton.disabled = !isWeeklyReportSubmissionOpen(weekStart);
+        submitWeeklyReportButton.textContent = "Submit report";
       }
     }
 
@@ -379,6 +1548,10 @@
         }
         row.append(cell);
       }
+
+      const uploadCell = document.createElement("td");
+      uploadCell.innerHTML = `<input type="file" accept=".pdf,.png,.jpg" class="form-control form-control-sm" />`;
+      row.append(uploadCell);
 
       tableBody.append(row);
     }
@@ -402,6 +1575,14 @@
       } else {
         tableStatus.textContent = `${visibleOpportunities.length} of ${opportunities.length} approved opportunit${opportunities.length === 1 ? "y" : "ies"} found.`;
       }
+    }
+
+    function checkRequiredColumns(rows) {
+      const errorBox = document.getElementById("data-errors");
+      const missing = rows.length ? columns.filter((column) => !(column in rows[0])) : [];
+      errorBox.textContent = missing.length
+        ? `Missing required columns: ${missing.join(", ")}`
+        : "";
     }
 
     async function loadApprovedOpportunities() {
@@ -453,6 +1634,7 @@
         if (error) throw error;
 
         opportunities = data;
+        checkRequiredColumns(data);
         setFilterOptions(majorFilter, "All majors", data.map((place) => place.target_major).filter(Boolean));
         setFilterOptions(fieldFilter, "All training fields", data.flatMap((place) => splitTrainingFields(place.available_departments)));
         renderOpportunities();
@@ -468,6 +1650,14 @@
 
     showSigninButton.addEventListener("click", () => setAuthMode("signin"));
     showSignupButton.addEventListener("click", () => setAuthMode("signup"));
+    headerSigninButton.addEventListener("click", () => {
+      setAuthMode("signin");
+      document.getElementById("signin-email").focus();
+    });
+    headerSignupButton.addEventListener("click", () => {
+      setAuthMode("signup");
+      document.getElementById("signup-name").focus();
+    });
 
     signinForm.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -545,7 +1735,74 @@
     majorFilter.addEventListener("change", renderOpportunities);
     fieldFilter.addEventListener("change", renderOpportunities);
     refreshButton.addEventListener("click", loadApprovedOpportunities);
+    document.getElementById("open-weekly-report").addEventListener("click", openWeeklyReport);
+    document.getElementById("open-internship-evaluation").addEventListener("click", openInternshipEvaluation);
+    document.getElementById("back-from-internship-evaluation").addEventListener("click", () => {
+      internshipEvaluationView.hidden = true;
+      opportunitiesView.hidden = false;
+      document.getElementById("employment-places-heading").focus();
+    });
+    document.getElementById("back-from-report").addEventListener("click", () => {
+      weeklyReportView.hidden = true;
+      opportunitiesView.hidden = false;
+      document.getElementById("employment-places-heading").focus();
+    });
+    document.getElementById("open-internship-issue").addEventListener("click", () => {
+      opportunitiesView.hidden = true;
+      weeklyReportView.hidden = true;
+      supervisorNotificationsView.hidden = true;
+      internshipIssuesView.hidden = true;
+      internshipIssueView.hidden = false;
+      internshipIssueStatus.hidden = true;
+      document.getElementById("internship-issue-heading").focus();
+    });
+    document.getElementById("back-from-internship-issue").addEventListener("click", () => {
+      internshipIssueView.hidden = true;
+      opportunitiesView.hidden = false;
+      document.getElementById("employment-places-heading").focus();
+    });
+    openSupervisorNotificationsButton.addEventListener("click", () => {
+      opportunitiesView.hidden = true;
+      weeklyReportView.hidden = true;
+      internshipIssueView.hidden = true;
+      internshipIssuesView.hidden = true;
+      supervisorNotificationsView.hidden = false;
+      loadSupervisorNotifications();
+      document.getElementById("supervisor-notifications-heading").focus();
+    });
+    document.getElementById("back-from-notifications").addEventListener("click", () => {
+      supervisorNotificationsView.hidden = true;
+      opportunitiesView.hidden = false;
+      document.getElementById("employment-places-heading").focus();
+    });
+    openInternshipIssuesButton.addEventListener("click", () => {
+      opportunitiesView.hidden = true;
+      weeklyReportView.hidden = true;
+      internshipIssueView.hidden = true;
+      supervisorNotificationsView.hidden = true;
+      internshipIssuesView.hidden = false;
+      loadInternshipIssueReports();
+      document.getElementById("internship-issues-heading").focus();
+    });
+    document.getElementById("back-from-internship-issues").addEventListener("click", () => {
+      internshipIssuesView.hidden = true;
+      opportunitiesView.hidden = false;
+      document.getElementById("employment-places-heading").focus();
+    });
+    weeklyReportForm.addEventListener("submit", submitWeeklyReport);
+    internshipIssueForm.addEventListener("submit", submitInternshipIssue);
+    internshipEvaluationForm.addEventListener("submit", submitInternshipEvaluation);
     loadApprovedOpportunities();
+
+    // Side menu
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+    function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+    overlay.addEventListener("click", hideSidebar);
   </script>
+
 </body>
 </html>

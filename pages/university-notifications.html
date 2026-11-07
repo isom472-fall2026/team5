@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>University notifications | Field Training</title>
+  <style>
+    :root {
+      --navy: #0f1f3d;
+      --navy-soft: #33415c;
+      --gold: #f2c230;
+      --white: #ffffff;
+      --line: #e3e8f0;
+      --muted: #5a6785;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+    .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+    .sidebar.open { left: 0; }
+    .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+    .sidebar a:hover { color: var(--gold); }
+    .sidebar a.current { font-weight: bold; color: var(--gold); }
+    .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar .nav-section + a { margin-top: 4px; }
+    #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+    .overlay.active { display: block; }
+    main { max-width: 800px; margin: 28px auto; padding: 0 16px; display: grid; gap: 14px; }
+    h1 { margin-bottom: 6px; color: var(--navy); }
+    h2 { font-size: 18px; color: var(--navy); }
+    .hint { color: var(--muted); font-size: 14px; margin: 0; }
+    .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px 18px; margin: 0; }
+    .empty { background: #fff7da; border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 20px; text-align: center; color: #6b5317; margin: 0; }
+    .alerts { display: grid; gap: 8px; }
+    .alert { background: #fff3cd; color: #5c4500; border: 1px solid #f2d97a; border-radius: 10px; padding: 12px 16px; margin: 0; font-weight: 600; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    .event { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px 20px; display: grid; gap: 8px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .event-past { border-left-color: var(--line); opacity: .8; }
+    .event-title { font-weight: 600; font-size: 17px; }
+    dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; }
+    dt { font-weight: 600; color: var(--navy-soft); font-size: 14px; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    a { color: var(--navy); font-weight: bold; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menuToggle">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <button id="closeSidebar">&times;</button>
+    <a href="../index.html">Home</a>
+
+    <p class="nav-section">Placement</p>
+    <a href="placement-details.html">Placement Details</a>
+    <a href="company-requirements.html">Company Requirements</a>
+
+    <p class="nav-section">Reports</p>
+    <a href="internship_log.html">Internship Attendance</a>
+    <a href="progress-summary.html">Progress Summary</a>
+    <a href="reported-issues.html">Reported Issues</a>
+    <a href="university-notifications.html" class="current">University Notifications</a>
+
+    <p class="nav-section">Evaluation</p>
+    <a href="evaluation-criteria.html">Evaluation Criteria</a>
+
+    <p class="nav-section">Help</p>
+    <a href="contact-support.html">Contact Support</a>
+  </nav>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <h1>University Notifications</h1>
+    <p class="hint">Seminars, meetings and events for intern students.</p>
+    <p id="status-text" class="hint" role="status">Loading notifications...</p>
+    <p id="error-box" class="error" role="alert" hidden></p>
+
+    <section class="alerts" id="alerts" aria-live="polite"></section>
+
+    <h2 id="upcoming-heading" hidden>Upcoming events</h2>
+    <p id="empty-box" class="empty" hidden>No upcoming intern events</p>
+    <ul id="upcoming-list"></ul>
+
+    <h2 id="past-heading" hidden>Past events</h2>
+    <ul id="past-list"></ul>
+  </main>
+
+  <script>
+    // Names used in the database (see db/schema.sql).
+    const ANN_TABLE = "universityannouncement";
+    const COL = { id: "announcement_id", title: "title", date: "event_date", time: "event_time", location: "location" };
+    // Only intern-specific events are shown. Set INTERN_FILTER to null if the table only holds intern events.
+    const INTERN_FILTER = { column: "audience", value: "interns" };
+    const ALERT_DAYS = 3; // events starting within this many days get an alert
+
+    const statusText = document.getElementById("status-text");
+    const errorBox = document.getElementById("error-box");
+    const alertsBox = document.getElementById("alerts");
+    const upcomingHeading = document.getElementById("upcoming-heading");
+    const pastHeading = document.getElementById("past-heading");
+    const emptyBox = document.getElementById("empty-box");
+    const upcomingList = document.getElementById("upcoming-list");
+    const pastList = document.getElementById("past-list");
+
+    function isEmpty(value) {
+      return value === null || value === undefined || String(value).trim() === "";
+    }
+
+    function showError(message) {
+      statusText.hidden = true;
+      alertsBox.replaceChildren();
+      upcomingHeading.hidden = true;
+      pastHeading.hidden = true;
+      emptyBox.hidden = true;
+      upcomingList.replaceChildren();
+      pastList.replaceChildren();
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    }
+
+    function validStudentId(value) {
+      return !isEmpty(value) && Number.isInteger(Number(value)) && Number(value) > 0;
+    }
+
+    // Parses "YYYY-MM-DD" (+ optional "HH:MM") into a local Date, or null if wrong
+    function parseEvent(dateValue, timeValue) {
+      const d = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateValue).trim());
+      if (!d) return null;
+      let hours = 0, minutes = 0;
+      if (!isEmpty(timeValue)) {
+        const t = /^(\d{1,2}):(\d{2})/.exec(String(timeValue).trim());
+        if (!t) return null;
+        hours = Number(t[1]);
+        minutes = Number(t[2]);
+      }
+      const result = new Date(Number(d[1]), Number(d[2]) - 1, Number(d[3]), hours, minutes);
+      return Number.isNaN(result.getTime()) ? null : result;
+    }
+
+    // Title and event date are mandatory
+    function findProblems(rows) {
+      const problems = [];
+      rows.forEach((row, index) => {
+        const label = isEmpty(row[COL.id]) ? "Announcement " + (index + 1) : "Announcement " + row[COL.id];
+        const bad = [];
+        if (isEmpty(row[COL.title])) bad.push("title");
+        if (isEmpty(row[COL.date]) || !parseEvent(row[COL.date], row[COL.time])) bad.push("event date");
+        if (bad.length) problems.push(label + ": " + bad.join(", "));
+      });
+      return problems;
+    }
+
+    function formatWhen(date, hasTime) {
+      const day = date.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+      return hasTime ? day + " at " + date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : day;
+    }
+
+    function addRow(list, label, value) {
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+      const dd = document.createElement("dd");
+      dd.textContent = isEmpty(value) ? "Not provided" : String(value).trim();
+      list.append(dt, dd);
+    }
+
+    function buildEvent(ev, isPast) {
+      const item = document.createElement("li");
+      item.className = "event" + (isPast ? " event-past" : "");
+      const title = document.createElement("span");
+      title.className = "event-title";
+      title.textContent = String(ev.row[COL.title]).trim();
+      const list = document.createElement("dl");
+      addRow(list, "Date", ev.when.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" }));
+      addRow(list, "Time", isEmpty(ev.row[COL.time]) ? "" : ev.when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }));
+      addRow(list, "Location", ev.row[COL.location]);
+      item.append(title, list);
+      return item;
+    }
+
+    async function init() {
+      // Stop early with a clear message if the connection settings are missing
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        showError("This page cannot connect to the database right now. Please try again later.");
+        return;
+      }
+      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      try {
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        const user = sessionData?.session?.user;
+
+        if (sessionError || !user) {
+          statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to see university notifications.';
+          return;
+        }
+
+        const { data: student, error: studentError } = await supabaseClient
+          .from("student")
+          .select("student_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (studentError) {
+          console.error(studentError);
+          showError("Your student record could not be loaded. Please try again later.");
+          return;
+        }
+        if (!student || !validStudentId(student.student_id)) {
+          showError("Your student_id is missing or invalid, so university notifications could not be retrieved.");
+          return;
+        }
+
+        let query = supabaseClient.from(ANN_TABLE).select("*");
+        if (INTERN_FILTER) query = query.eq(INTERN_FILTER.column, INTERN_FILTER.value);
+        const { data: rows, error } = await query;
+
+        if (error) {
+          console.error(error);
+          showError("University notifications could not be loaded. Please try again later.");
+          return;
+        }
+
+        const problems = findProblems(rows);
+        if (problems.length) {
+          showError("Some announcements have a missing or wrong title or event date, so notifications could not be retrieved. " + problems.join(" | "));
+          return;
+        }
+
+        const now = new Date();
+        const events = rows
+          .map((row) => ({ row, when: parseEvent(row[COL.date], row[COL.time]) }))
+          .sort((a, b) => a.when - b.when);
+        const upcoming = events.filter((e) => e.when >= now);
+        const past = events.filter((e) => e.when < now).reverse();
+
+        statusText.hidden = true;
+
+        // Timely alerts for events starting soon
+        const limit = new Date(now.getTime() + ALERT_DAYS * 24 * 60 * 60 * 1000);
+        upcoming.filter((e) => e.when <= limit).forEach((e) => {
+          const alert = document.createElement("p");
+          alert.className = "alert";
+          alert.textContent = "Coming up: " + String(e.row[COL.title]).trim() + ", " + formatWhen(e.when, !isEmpty(e.row[COL.time]));
+          alertsBox.append(alert);
+        });
+
+        upcomingHeading.hidden = false;
+        emptyBox.hidden = upcoming.length > 0;
+        upcoming.forEach((e) => upcomingList.append(buildEvent(e, false)));
+
+        pastHeading.hidden = past.length === 0;
+        past.forEach((e) => pastList.append(buildEvent(e, true)));
+      } catch (err) {
+        console.error(err);
+        showError("University notifications could not be loaded. Please try again later.");
+      }
+    }
+
+    init();
+
+    // Side menu
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+    function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+    overlay.addEventListener("click", hideSidebar);
+  </script>
+</body>
+</html>
