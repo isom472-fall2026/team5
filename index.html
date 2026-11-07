@@ -15,13 +15,210 @@
       --muted: #5a6785;
       color-scheme: light;
       font-family: "Segoe UI", sans-serif;
-      background: #f4f6f3;
       color: #202b27;
     }
 
     * { box-sizing: border-box; }
 
-    body { margin: 0; }
+    body {
+      margin: 0;
+      background: #f4f6f3;
+      min-height: 100vh;
+      transition: background .25s;
+    }
+
+    /* ── Sunburst background — only on sign-in screen ── */
+    /*
+      Pure CSS conic-gradient sunburst: alternating gold shades
+      produce sharp crisp rays with zero image scaling artefacts.
+    */
+    body.show-sunburst {
+      background-color: #f2c230;
+      background-image:
+        conic-gradient(
+          from 0deg at 50% 60%,
+          #f2c230 0deg,   #e8b41e 6deg,
+          #f2c230 12deg,  #e8b41e 18deg,
+          #f2c230 24deg,  #e8b41e 30deg,
+          #f2c230 36deg,  #e8b41e 42deg,
+          #f2c230 48deg,  #e8b41e 54deg,
+          #f2c230 60deg,  #e8b41e 66deg,
+          #f2c230 72deg,  #e8b41e 78deg,
+          #f2c230 84deg,  #e8b41e 90deg,
+          #f2c230 96deg,  #e8b41e 102deg,
+          #f2c230 108deg, #e8b41e 114deg,
+          #f2c230 120deg, #e8b41e 126deg,
+          #f2c230 132deg, #e8b41e 138deg,
+          #f2c230 144deg, #e8b41e 150deg,
+          #f2c230 156deg, #e8b41e 162deg,
+          #f2c230 168deg, #e8b41e 174deg,
+          #f2c230 180deg, #e8b41e 186deg,
+          #f2c230 192deg, #e8b41e 198deg,
+          #f2c230 204deg, #e8b41e 210deg,
+          #f2c230 216deg, #e8b41e 222deg,
+          #f2c230 228deg, #e8b41e 234deg,
+          #f2c230 240deg, #e8b41e 246deg,
+          #f2c230 252deg, #e8b41e 258deg,
+          #f2c230 264deg, #e8b41e 270deg,
+          #f2c230 276deg, #e8b41e 282deg,
+          #f2c230 288deg, #e8b41e 294deg,
+          #f2c230 300deg, #e8b41e 306deg,
+          #f2c230 312deg, #e8b41e 318deg,
+          #f2c230 324deg, #e8b41e 330deg,
+          #f2c230 336deg, #e8b41e 342deg,
+          #f2c230 348deg, #e8b41e 354deg,
+          #f2c230 360deg
+        );
+      background-attachment: fixed;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 4px solid var(--gold);
+      position: relative;
+    }
+
+    .header-title {
+      flex: 1;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: .3px;
+    }
+
+    #menuToggle {
+      background: none;
+      border: none;
+      color: var(--white);
+      font-size: 24px;
+      cursor: pointer;
+      min-height: unset;
+      padding: 0;
+      line-height: 1;
+    }
+
+    /* ── Profile Icon ── */
+    .profile-nav-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    #profile-nav-btn {
+      width: 38px;
+      height: 38px;
+      min-height: unset;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--gold);
+      border: 2px solid var(--white);
+      color: var(--navy);
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: box-shadow .2s;
+      flex-shrink: 0;
+    }
+
+    #profile-nav-btn:hover { box-shadow: 0 0 0 3px rgba(242,194,48,.5); }
+    #profile-nav-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+    /* ── Profile Dropdown ── */
+    #profile-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 240px;
+      background: var(--white);
+      border: 1px solid #d0d8e8;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(15,31,61,.18);
+      z-index: 2000;
+      overflow: hidden;
+    }
+
+    #profile-dropdown.open { display: block; }
+
+    .pd-header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 14px 16px 10px;
+    }
+
+    .pd-header .pd-name {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 2px;
+    }
+
+    .pd-header .pd-label {
+      font-size: 11px;
+      opacity: .7;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .pd-body {
+      padding: 10px 16px;
+    }
+
+    .pd-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #eef0f5;
+    }
+
+    .pd-row:last-child { border-bottom: none; }
+
+    .pd-row .pd-key {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .pd-row .pd-val {
+      color: var(--navy);
+      font-weight: 500;
+    }
+
+    .pd-footer {
+      padding: 10px 16px;
+      border-top: 1px solid #eef0f5;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Editable fields in the dropdown */
+    .pd-field-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 7px 0;
+      border-bottom: 1px solid #eef0f5;
+    }
+
+    .pd-field-wrap:last-of-type { border-bottom: none; }
+
+    .pd-field-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
 
     header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
     #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; min-height: unset; padding: 0; line-height: 1; }
@@ -30,6 +227,57 @@
     .header-user-icon svg { width: 20px; height: 20px; }
     #signed-in-label { max-width: 34vw; overflow-wrap: anywhere; font-size: 14px; }
     .header-auth-actions { display: flex; gap: 8px; }
+    .pd-field-input {
+      width: 100%;
+      padding: 5px 8px;
+      border: 1px solid #d0d8e8;
+      border-radius: 4px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--navy);
+      background: #f7f9fc;
+      transition: border-color .15s, background .15s;
+      min-height: unset;
+    }
+
+    .pd-field-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      background: #fff;
+    }
+
+    /* Save & sign-out buttons in footer */
+    #profile-save-btn {
+      width: 100%;
+      min-height: 34px;
+      background: var(--gold);
+      border: none;
+      border-radius: 4px;
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    #profile-save-btn:hover { background: #e0b31a; }
+
+    #profile-signout-btn {
+      width: 100%;
+      min-height: 36px;
+      background: var(--navy);
+      border: none;
+      border-radius: 4px;
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    #profile-signout-btn:hover { background: var(--navy-soft); }
+
+    /* ── Sidebar ── */
     .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 1050; overflow-y: auto; }
     .sidebar.open { left: 0; }
     .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
@@ -41,6 +289,7 @@
     .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 1040; }
     .overlay.active { display: block; }
 
+    /* ── Main ── */
     main {
       width: min(1120px, calc(100% - 40px));
       margin: 40px auto;
@@ -50,11 +299,48 @@
 
     .auth-body { padding: 24px; }
 
+    /* account-bar hidden — replaced by profile dropdown */
+    .account-bar { display: none; }
+
     section {
       overflow: hidden;
       border: 1px solid #d5ddd7;
       border-radius: 6px;
       background: #fff;
+    }
+
+    /* Sign-in card: semi-transparent so sunburst shows through */
+    body.show-sunburst #auth-section {
+      background: rgba(255,255,255,0.93);
+      backdrop-filter: blur(2px);
+      box-shadow: 0 8px 32px rgba(15,31,61,.18);
+    }
+
+    /* ── Sign-in page minimal footer ── */
+    #signin-footer {
+      display: none;
+      text-align: center;
+      padding: 18px 0 28px;
+      font-size: 13px;
+      color: rgba(15,31,61,0.75);
+      gap: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    body.show-sunburst #signin-footer { display: flex; }
+
+    #signin-footer a {
+      color: var(--navy);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    #signin-footer a:hover { text-decoration: underline; }
+
+    #signin-footer .sf-sep {
+      opacity: .4;
+      user-select: none;
     }
 
     .section-heading {
@@ -76,19 +362,53 @@
       font-weight: 650;
     }
 
+    /* ── Buttons: navy/gold palette ── */
     button {
       min-height: 38px;
       padding: 0 14px;
-      border: 1px solid #176b56;
+      border: 2px solid var(--navy);
       border-radius: 4px;
-      background: #176b56;
-      color: white;
+      background: var(--navy);
+      color: var(--white);
       font: inherit;
       cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
     }
 
     button:disabled { cursor: wait; opacity: 0.7; }
 
+    .btn-success {
+      background-color: var(--navy) !important;
+      border-color: var(--navy) !important;
+      color: var(--white) !important;
+    }
+    .btn-success:hover, .btn-success:focus {
+      background-color: var(--navy-soft) !important;
+      border-color: var(--navy-soft) !important;
+      color: var(--white) !important;
+    }
+
+    .btn-outline-success {
+      background-color: transparent !important;
+      border-color: var(--navy) !important;
+      color: var(--navy) !important;
+    }
+    .btn-outline-success:hover, .btn-outline-success:focus {
+      background-color: var(--gold) !important;
+      border-color: var(--navy) !important;
+      color: var(--navy) !important;
+    }
+
+    .btn-outline-secondary {
+      border-color: var(--navy-soft) !important;
+      color: var(--navy-soft) !important;
+    }
+    .btn-outline-secondary:hover {
+      background-color: var(--navy-soft) !important;
+      color: var(--white) !important;
+    }
+
+    /* ── Filters ── */
     .filters {
       display: flex;
       flex-wrap: wrap;
@@ -162,12 +482,13 @@
       #table-status { padding-right: 16px; padding-left: 16px; }
       .table-wrap { padding: 8px 12px 16px; }
       h1 { font-size: 19px; }
+      #profile-dropdown { right: -4px; min-width: 210px; }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
 </head>
-<body>
+<body class="show-sunburst">
   <header>
     <button id="menuToggle">&#9776;</button>
     <strong>Internship Platform</strong>
@@ -184,6 +505,39 @@
         <button id="header-signup-button" class="btn btn-warning btn-sm" type="button">Sign up</button>
       </div>
       <button id="signout-button" class="btn btn-outline-light btn-sm" type="button" hidden>Log out</button>
+    <span class="header-title">Internship Platform</span>
+
+    <!-- Profile icon — far right of nav bar (shown when signed in) -->
+    <div class="profile-nav-wrap" id="profile-nav-wrap" hidden>
+      <button id="profile-nav-btn" aria-label="Student profile" aria-expanded="false" aria-haspopup="true">&#128100;</button>
+      <div id="profile-dropdown" role="menu" aria-label="Student profile menu">
+        <!-- Header: student name -->
+        <div class="pd-header">
+          <p class="pd-name" id="pd-name">—</p>
+          <span class="pd-label">Student Profile</span>
+        </div>
+        <!-- Profile details — editable fields -->
+        <div class="pd-body">
+          <div class="pd-field-wrap">
+            <label class="pd-field-label" for="pd-civil-id">Civil ID</label>
+            <input class="pd-field-input" id="pd-civil-id" type="text" placeholder="Enter Civil ID" autocomplete="off">
+          </div>
+          <div class="pd-field-wrap">
+            <label class="pd-field-label" for="pd-student-id">Student ID</label>
+            <input class="pd-field-input" id="pd-student-id" type="text" placeholder="Enter Student ID" autocomplete="off">
+          </div>
+          <div class="pd-field-wrap">
+            <label class="pd-field-label" for="pd-units">Completed Units</label>
+            <input class="pd-field-input" id="pd-units" type="number" min="0" placeholder="e.g. 90" autocomplete="off">
+          </div>
+        </div>
+        <!-- Footer: save + sign out -->
+        <div class="pd-footer">
+          <p id="pd-save-status" class="small mb-1" role="status" aria-live="polite" style="display:none;margin:0;"></p>
+          <button id="profile-save-btn" type="button">Save Changes</button>
+          <button id="profile-signout-btn" type="button">Sign out</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -254,11 +608,19 @@
           </div>
           <button class="btn btn-success w-100" type="submit">Create account</button>
         </form>
-     <div class="mt-3">
-  <a href="#contact-section" class="btn btn-outline-success btn-sm">Contact Support</a>
-</div>
+        <div class="mt-3">
+          <a href="mailto:cba@ku.edu.kw" class="btn btn-outline-success btn-sm">Contact Support</a>
+        </div>
+      </div>
     </section>
+
+    <!-- account-bar kept for JS compatibility but visually hidden -->
+    <div id="account-bar" class="account-bar" hidden>
+      <span id="signed-in-label"></span>
+      <button id="signout-button" class="btn btn-outline-secondary btn-sm" type="button">Sign out</button>
+    </div>
     <p id="account-status" class="small text-danger text-end" role="status" aria-live="polite" hidden></p>
+
     <section id="opportunities-view" class="border rounded bg-white overflow-hidden" aria-labelledby="employment-places-heading" hidden>
       <div class="section-heading">
         <div class="heading-copy">
@@ -310,36 +672,15 @@
         </table>
       </div>
     </section>
-<!-- Student Profile Section -->
-<section id="student-profile" class="mb-4 border rounded bg-white p-4">
-  <h2 class="h5 mb-3">Student Profile</h2>
-  <div id="profile-details" class="row g-2">
-    <div class="col-md-6"><strong>Name:</strong> <span id="profile-name">-</span></div>
-    <div class="col-md-6"><strong>Student ID:</strong> <span id="profile-id">-</span></div>
-    <div class="col-md-6"><strong>Civil ID:</strong> <span id="profile-civil-id">-</span></div>
-    <div class="col-md-6"><strong>Completed Units:</strong> <span id="profile-units">-</span></div>
-  </div>
-  <p id="profile-error" class="alert alert-danger mt-3 mb-0" hidden></p>
-</section>
-<!-- Support Contact Information Section -->
-<section id="contact-section" class="mt-4 border rounded bg-white p-4" aria-labelledby="contact-heading">
-  <div class="section-heading p-0 mb-3 border-0">
-    <h2 id="contact-heading" class="h5 m-0">Support Contact Information (OSTA)</h2>
-  </div>
-  <div class="row g-3 fs-6">
-    <div class="col-md-4">
-      <strong>Office / Department:</strong> <span id="coordination-office">Office of Student Training and Alumni (OSTA) - CBA</span>
-    </div>
-    <div class="col-md-4">
-      <strong>Instagram Support:</strong> <a id="support-instagram" href="https://instagram.com/osta_cba" target="_blank">@osta_cba</a>
-    </div>
-    <div class="col-md-4">
-      <strong>Email / Portal:</strong> <a id="support-email" href="mailto:cba@ku.edu.kw">cba@ku.edu.kw</a>
-    </div>
-  </div>
-  <p id="contact-error" class="alert alert-danger mt-3 mb-0" role="alert" hidden></p>
-</section>
-   </main>
+
+    <!-- Sign-in minimal footer — only visible when sunburst is active -->
+    <footer id="signin-footer" aria-label="Support contacts">
+      <span>&#128247; Instagram: <a href="https://instagram.com/osta_cba" target="_blank" rel="noopener">@osta_cba</a></span>
+      <span class="sf-sep">|</span>
+      <span>&#9993; Email: <a href="mailto:cba@ku.edu.kw">cba@ku.edu.kw</a></span>
+    </footer>
+  </main>
+
     <section id="weekly-report-view" class="border rounded bg-white overflow-hidden" aria-labelledby="weekly-report-heading" hidden>
       <div class="section-heading">
         <div class="heading-copy">
@@ -467,22 +808,6 @@
     </section>
   </main>
   <script>
-    function checkSupportContactInfo() {
-    const office = document.getElementById("coordination-office")?.textContent;
-    const instagram = document.getElementById("support-instagram")?.textContent;
-    const email = document.getElementById("support-email")?.textContent;
-    const errorElement = document.getElementById("contact-error");
-
-    if (!office || !instagram || !email) {
-      errorElement.textContent = "Error: Support contact information is incomplete.";
-      errorElement.hidden = false;
-    } else {
-      errorElement.hidden = true;
-    }
-  }
-
-  checkSupportContactInfo();
-
     const { createClient } = window.supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const tableBody = document.getElementById("employment-places-body");
@@ -548,6 +873,112 @@
       "company_requirements",
       "last_updated_at"
     ];
+
+    // ── Profile dropdown elements ──
+    const profileNavWrap = document.getElementById("profile-nav-wrap");
+    const profileNavBtn  = document.getElementById("profile-nav-btn");
+    const profileDropdown = document.getElementById("profile-dropdown");
+    const pdName       = document.getElementById("pd-name");
+    const pdCivilId    = document.getElementById("pd-civil-id");
+    const pdStudentId  = document.getElementById("pd-student-id");
+    const pdUnits      = document.getElementById("pd-units");
+    const profileSignoutBtn = document.getElementById("profile-signout-btn");
+
+    // Toggle dropdown open/close
+    profileNavBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = profileDropdown.classList.toggle("open");
+      profileNavBtn.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!profileDropdown.contains(e.target) && e.target !== profileNavBtn) {
+        profileDropdown.classList.remove("open");
+        profileNavBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    // Profile save button
+    document.getElementById("profile-save-btn").addEventListener("click", saveProfileChanges);
+
+    // Profile sign-out button (inside dropdown)
+    profileSignoutBtn.addEventListener("click", async () => {
+      profileSignoutBtn.disabled = true;
+      profileDropdown.classList.remove("open");
+      profileNavBtn.setAttribute("aria-expanded", "false");
+      const { error } = await supabaseClient.auth.signOut();
+      profileSignoutBtn.disabled = false;
+      if (error) {
+        accountStatus.textContent = "Could not sign out. Please try again.";
+        accountStatus.hidden = false;
+      }
+    });
+
+    // Load student profile details into the dropdown
+    async function loadProfileDropdown(userId) {
+      try {
+        const { data: student, error } = await supabaseClient
+          .from("student")
+          .select("name, student_id, civil_id, completed_units")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (error || !student) return;
+        if (student.name)            pdName.textContent        = student.name;
+        if (student.civil_id        != null) pdCivilId.value   = student.civil_id;
+        if (student.student_id      != null) pdStudentId.value = student.student_id;
+        if (student.completed_units != null) pdUnits.value     = student.completed_units;
+      } catch (_) { /* silently ignore */ }
+    }
+
+    // Save profile changes back to Supabase
+    async function saveProfileChanges() {
+      const saveBtn    = document.getElementById("profile-save-btn");
+      const saveStatus = document.getElementById("pd-save-status");
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving…";
+      saveStatus.style.display = "none";
+
+      const updates = {};
+      const civilVal  = pdCivilId.value.trim();
+      const studVal   = pdStudentId.value.trim();
+      const unitsVal  = pdUnits.value.trim();
+
+      if (civilVal  !== "") updates.civil_id         = civilVal;
+      if (studVal   !== "") updates.student_id       = studVal;
+      if (unitsVal  !== "") updates.completed_units  = Number(unitsVal);
+
+      if (!Object.keys(updates).length) {
+        saveStatus.textContent = "Nothing to save.";
+        saveStatus.style.color = "var(--muted)";
+        saveStatus.style.display = "block";
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Changes";
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient
+          .from("student")
+          .update(updates)
+          .eq("user_id", activeUserId);
+
+        if (error) throw error;
+
+        saveStatus.textContent = "✓ Saved!";
+        saveStatus.style.color = "#1a7a4a";
+        // Also update the displayed name in the header if name field exists
+      } catch (err) {
+        saveStatus.textContent = err.message || "Could not save. Please try again.";
+        saveStatus.style.color = "#c0392b";
+      } finally {
+        saveStatus.style.display = "block";
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Changes";
+      }
+    }
 
     function getCurrentAcademicCycle(date = new Date()) {
       const month = date.getMonth();
@@ -623,6 +1054,15 @@
         internshipIssuesView.hidden = true;
         openSupervisorNotificationsButton.hidden = true;
         openInternshipIssuesButton.hidden = true;
+        // Hide profile icon
+        profileNavWrap.hidden = true;
+        // Reset dropdown data
+        pdName.textContent = "—";
+        pdCivilId.value = "";
+        pdStudentId.value = "";
+        pdUnits.value = "";
+        // Show sunburst on sign-in screen
+        document.body.classList.add("show-sunburst");
         return;
       }
 
@@ -637,11 +1077,19 @@
       supervisorNotificationsView.hidden = true;
       internshipIssuesView.hidden = true;
       signedInLabel.textContent = `Signed in as ${user.email ?? "student"}`;
+      // Remove sunburst once signed in
+      document.body.classList.remove("show-sunburst");
+
+      // Show profile icon and seed name from email
+      profileNavWrap.hidden = false;
+      const emailName = (user.email ?? "").split("@")[0];
+      pdName.textContent = emailName || user.email || "Student";
       if (shouldLoadOpportunities) {
         setTimeout(() => {
           if (activeUserId === userId) {
             loadApprovedOpportunities();
             loadSupervisorAccess(userId);
+            loadProfileDropdown(userId);
           }
         }, 0);
       }
@@ -1355,5 +1803,6 @@
     document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
     overlay.addEventListener("click", hideSidebar);
   </script>
+
 </body>
 </html>
