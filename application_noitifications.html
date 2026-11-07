@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Status Notifications</title>
+    <style>
+        :root {
+            --navy: #0f1f3d;
+            --gold: #f2c230;
+            --white: #ffffff;
+            --line: #e3e8f0;
+            --muted: #5a6785;
+            --bg: #f5f7fb;
+            --success: #137333;
+            --danger: #c62828;
+            --warning: #8a5a00;
+            --info: #1e3a6c;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--navy);
+        }
+
+        .container {
+            max-width: 760px;
+            margin: 40px auto;
+            background: var(--white);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(15, 31, 61, 0.08);
+            padding: 24px;
+        }
+
+        h2 {
+            margin: 0 0 20px;
+            text-align: center;
+            color: var(--navy);
+        }
+
+        .notification-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .notification-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--gold);
+            border-radius: 10px;
+            background: #fffdf8;
+        }
+
+        .notification-body {
+            display: grid;
+            gap: 6px;
+        }
+
+        .notification-message {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .timestamp {
+            font-size: 0.85em;
+            color: var(--muted);
+        }
+
+        .status {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            border-radius: 999px;
+            padding: 6px 10px;
+            white-space: nowrap;
+        }
+
+        .status-approved,
+        .status-accepted {
+            background: #e6f4ea;
+            color: var(--success);
+        }
+
+        .status-rejected {
+            background: #fdecec;
+            color: var(--danger);
+        }
+
+        .status-submitted {
+            background: #e8eef8;
+            color: var(--info);
+        }
+
+        .status-under-review {
+            background: #fff3cd;
+            color: var(--warning);
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: var(--muted);
+            padding: 18px 12px;
+            border: 1px dashed var(--line);
+            border-radius: 10px;
+            background: #fafbfe;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Application Status Notifications</h2>
+        <div id="notificationList" class="notification-list" aria-live="polite"></div>
+    </div>
+
+    <script>
+        const notifications = [
+            { id: 1, message: 'Your internship application at TechCorp has been approved.', status: 'approved', timestamp: '2026-10-19 10:30 AM' },
+            { id: 2, message: 'Your application at BuildIt has been rejected.', status: 'rejected', timestamp: '2026-10-18 02:15 PM' }
+        ];
+
+        function renderNotifications() {
+            const listDisplay = document.getElementById('notificationList');
+
+            if (!Array.isArray(notifications) || notifications.length === 0) {
+                listDisplay.innerHTML = '<div class="empty-msg">No new notifications.</div>';
+                return;
+            }
+
+            listDisplay.innerHTML = notifications.map((n) => {
+                const statusClass = `status-${String(n.status || '').trim().toLowerCase().replace(/\s+/g, '-')}`;
+                const statusText = String(n.status || '').toUpperCase();
+
+                return `
+                    <div class="notification-item">
+                        <div class="notification-body">
+                            <div class="notification-message">${n.message}</div>
+                            <div class="timestamp">${n.timestamp}</div>
+                        </div>
+                        <div class="status ${statusClass}">${statusText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.addEventListener('DOMContentLoaded', renderNotifications);
+    </script>
+</body>
+</html>
