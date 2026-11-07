@@ -1,5 +1,5 @@
-INSERT INTO Student (name, age, GPA, major) 
-VALUES 
-('Sarah Mohammed', 20, 3.5, 'Information Systems'),
-('Ali Khaled', 22, 3.2, 'Business Administration'),
-('Noor Ahmed', 21, 3.8, 'Accounting');
+INSERT INTO Student (name, age, GPA, major, civil_id)
+VALUES
+('Synthetic Student Four', 20, 3.5, 'Information Systems', 'TESTSTU00004'),
+('Synthetic Student Five', 22, 3.2, 'Business Administration', 'TESTSTU00005'),
+('Synthetic Student Six', 21, 3.8, 'Accounting', 'TESTSTU00006');

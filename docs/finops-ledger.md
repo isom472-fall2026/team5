@@ -66,6 +66,8 @@ We work using the agents feature in VS Code + Antigravity and record token usage
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
 |---|---|---|---|---|
+| View Internship Attendance Logs #22 | VS Code Copilot agent | Not recorded | Issue #22, acceptance criteria, db/schema.sql and attendance page | Test the seed and schema against PostgreSQL, not just with structural checks |
+| Evaluate Training Site #25 | VS Code Copilot agent | Not recorded | Issue #25, acceptance criteria, InternshipEvaluation schema and application code | Verify the evaluation flow with a signed-in student and assigned cycle |
 |  |  |  |  |  |
 
 ## Phase 5

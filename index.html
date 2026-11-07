@@ -25,6 +25,11 @@
 
     header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
     #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; min-height: unset; padding: 0; line-height: 1; }
+    .header-account { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-left: auto; }
+    .header-user-icon { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; }
+    .header-user-icon svg { width: 20px; height: 20px; }
+    #signed-in-label { max-width: 34vw; overflow-wrap: anywhere; font-size: 14px; }
+    .header-auth-actions { display: flex; gap: 8px; }
     .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 1050; overflow-y: auto; }
     .sidebar.open { left: 0; }
     .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
@@ -44,16 +49,6 @@
     .auth-section { max-width: 480px; margin: 12vh auto; }
 
     .auth-body { padding: 24px; }
-
-    .account-bar {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 14px;
-      margin-bottom: 12px;
-      color: #53635b;
-      font-size: 14px;
-    }
 
     section {
       overflow: hidden;
@@ -151,6 +146,13 @@
     td:first-child, th:first-child { padding-left: 16px; }
 
     @media (max-width: 600px) {
+      header { gap: 8px; padding: 12px; }
+      header > strong { font-size: 14px; }
+      .header-account { gap: 6px; }
+      .header-user-icon { width: 30px; height: 30px; }
+      #signed-in-label { max-width: 32vw; font-size: 12px; }
+      .header-auth-actions { gap: 4px; }
+      .header-auth-actions .btn, #signout-button { padding: 4px 6px; font-size: 12px; }
       main { width: min(100% - 24px, 1120px); margin: 20px auto; }
       .auth-section { margin-top: 8vh; }
       .auth-body { padding: 18px; }
@@ -169,6 +171,20 @@
   <header>
     <button id="menuToggle">&#9776;</button>
     <strong>Internship Platform</strong>
+    <div id="header-account" class="header-account" hidden>
+      <span class="header-user-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="3.5"></circle>
+          <path d="M5 20c.7-3.5 3.2-5.5 7-5.5s6.3 2 7 5.5"></path>
+        </svg>
+      </span>
+      <span id="signed-in-label" hidden></span>
+      <div id="header-auth-actions" class="header-auth-actions" hidden>
+        <button id="header-signin-button" class="btn btn-outline-light btn-sm" type="button">Log in</button>
+        <button id="header-signup-button" class="btn btn-warning btn-sm" type="button">Sign up</button>
+      </div>
+      <button id="signout-button" class="btn btn-outline-light btn-sm" type="button" hidden>Log out</button>
+    </div>
   </header>
 
   <nav class="sidebar" id="sidebar">
@@ -180,6 +196,7 @@
     <a href="pages/company-requirements.html">Company Requirements</a>
 
     <p class="nav-section">Reports</p>
+    <a href="pages/internship_log.html">Internship Attendance</a>
     <a href="pages/progress-summary.html">Progress Summary</a>
     <a href="pages/reported-issues.html">Reported Issues</a>
 
@@ -241,10 +258,6 @@
   <a href="#contact-section" class="btn btn-outline-success btn-sm">Contact Support</a>
 </div>
     </section>
-    <div id="account-bar" class="account-bar" hidden>
-      <span id="signed-in-label"></span>
-      <button id="signout-button" class="btn btn-outline-secondary btn-sm" type="button">Sign out</button>
-    </div>
     <p id="account-status" class="small text-danger text-end" role="status" aria-live="polite" hidden></p>
     <section id="opportunities-view" class="border rounded bg-white overflow-hidden" aria-labelledby="employment-places-heading" hidden>
       <div class="section-heading">
@@ -254,6 +267,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
           <button id="open-weekly-report" class="btn btn-success" type="button">Submit weekly report</button>
+          <button id="open-internship-evaluation" class="btn btn-outline-success" type="button">Evaluate training site</button>
           <button id="open-internship-issue" class="btn btn-outline-success" type="button">Report an internship issue</button>
           <button id="open-supervisor-notifications" class="btn btn-outline-success" type="button" hidden>Supervisor notifications</button>
           <button id="open-internship-issues" class="btn btn-outline-success" type="button" hidden>Review internship issues</button>
@@ -380,6 +394,51 @@
         </form>
       </div>
     </section>
+    <section id="internship-evaluation-view" class="border rounded bg-white overflow-hidden" aria-labelledby="internship-evaluation-heading" hidden>
+      <div class="section-heading">
+        <div class="heading-copy">
+          <h1 id="internship-evaluation-heading" tabindex="-1">Evaluate your training site and supervisor</h1>
+          <p>Share your ratings and feedback about your internship.</p>
+        </div>
+        <button id="back-from-internship-evaluation" class="btn btn-outline-secondary" type="button">Back to opportunities</button>
+      </div>
+      <div class="auth-body">
+        <p id="internship-evaluation-status" class="alert alert-info" role="status" aria-live="polite" hidden></p>
+        <form id="internship-evaluation-form" hidden>
+          <div class="mb-3">
+            <label class="form-label" for="site-rating">Training site rating</label>
+            <select class="form-select" id="site-rating" name="site-rating" required>
+              <option value="">Choose a rating</option>
+              <option value="1">1 - Poor</option>
+              <option value="2">2 - Fair</option>
+              <option value="3">3 - Good</option>
+              <option value="4">4 - Very good</option>
+              <option value="5">5 - Excellent</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="site-feedback">Feedback about the training site</label>
+            <textarea class="form-control" id="site-feedback" name="site-feedback" rows="4" maxlength="2000" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="supervisor-rating">Supervisor rating</label>
+            <select class="form-select" id="supervisor-rating" name="supervisor-rating" required>
+              <option value="">Choose a rating</option>
+              <option value="1">1 - Poor</option>
+              <option value="2">2 - Fair</option>
+              <option value="3">3 - Good</option>
+              <option value="4">4 - Very good</option>
+              <option value="5">5 - Excellent</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="supervisor-feedback">Feedback about your supervisor</label>
+            <textarea class="form-control" id="supervisor-feedback" name="supervisor-feedback" rows="4" maxlength="2000" required></textarea>
+          </div>
+          <button id="submit-internship-evaluation" class="btn btn-success" type="submit">Submit evaluation</button>
+        </form>
+      </div>
+    </section>
     <section id="supervisor-notifications-view" class="border rounded bg-white overflow-hidden" aria-labelledby="supervisor-notifications-heading" hidden>
       <div class="section-heading">
         <div class="heading-copy">
@@ -442,8 +501,11 @@
     const authDescription = document.getElementById("auth-description");
     const showSigninButton = document.getElementById("show-signin");
     const showSignupButton = document.getElementById("show-signup");
-    const accountBar = document.getElementById("account-bar");
+    const headerAccount = document.getElementById("header-account");
     const signedInLabel = document.getElementById("signed-in-label");
+    const headerAuthActions = document.getElementById("header-auth-actions");
+    const headerSigninButton = document.getElementById("header-signin-button");
+    const headerSignupButton = document.getElementById("header-signup-button");
     const signoutButton = document.getElementById("signout-button");
     const accountStatus = document.getElementById("account-status");
     const weeklyReportView = document.getElementById("weekly-report-view");
@@ -452,6 +514,10 @@
     const internshipIssueForm = document.getElementById("internship-issue-form");
     const internshipIssueStatus = document.getElementById("internship-issue-status");
     const submitInternshipIssueButton = document.getElementById("submit-internship-issue");
+    const internshipEvaluationView = document.getElementById("internship-evaluation-view");
+    const internshipEvaluationForm = document.getElementById("internship-evaluation-form");
+    const internshipEvaluationStatus = document.getElementById("internship-evaluation-status");
+    const submitInternshipEvaluationButton = document.getElementById("submit-internship-evaluation");
     const reportWeekLabel = document.getElementById("report-week-label");
     const reportDeadline = document.getElementById("report-deadline");
     const reportStatus = document.getElementById("report-status");
@@ -542,27 +608,34 @@
       activeUserId = userId;
       authLoading.hidden = true;
       accountStatus.hidden = true;
+      headerAccount.hidden = false;
 
       if (!user) {
+        signedInLabel.hidden = true;
+        headerAuthActions.hidden = false;
+        signoutButton.hidden = true;
         authSection.hidden = false;
         opportunitiesView.hidden = true;
         weeklyReportView.hidden = true;
         internshipIssueView.hidden = true;
+        internshipEvaluationView.hidden = true;
         supervisorNotificationsView.hidden = true;
         internshipIssuesView.hidden = true;
-        accountBar.hidden = true;
         openSupervisorNotificationsButton.hidden = true;
         openInternshipIssuesButton.hidden = true;
         return;
       }
 
       authSection.hidden = true;
+      signedInLabel.hidden = false;
+      headerAuthActions.hidden = true;
+      signoutButton.hidden = false;
       opportunitiesView.hidden = false;
       weeklyReportView.hidden = true;
       internshipIssueView.hidden = true;
+      internshipEvaluationView.hidden = true;
       supervisorNotificationsView.hidden = true;
       internshipIssuesView.hidden = true;
-      accountBar.hidden = false;
       signedInLabel.textContent = `Signed in as ${user.email ?? "student"}`;
       if (shouldLoadOpportunities) {
         setTimeout(() => {
@@ -701,6 +774,115 @@
       } finally {
         submitInternshipIssueButton.disabled = false;
         submitInternshipIssueButton.textContent = "Submit issue report";
+      }
+    }
+
+    async function getInternshipEvaluationContext(userId) {
+      const { data: student, error: studentError } = await supabaseClient
+        .from("student")
+        .select("student_id, internship_cycle_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (studentError) throw studentError;
+      if (!student || !student.internship_cycle_id) {
+        throw new Error("Your student profile must be linked to an internship cycle before submitting an evaluation.");
+      }
+
+      const { data: cycle, error: cycleError } = await supabaseClient
+        .from("internshipcycle")
+        .select("cycle_id, professor_id, place_name")
+        .eq("cycle_id", student.internship_cycle_id)
+        .maybeSingle();
+      if (cycleError) throw cycleError;
+      if (!cycle || !cycle.professor_id || !cycle.place_name) {
+        throw new Error("Your assigned training site and supervisor could not be verified.");
+      }
+
+      return {
+        student_id: student.student_id,
+        place_name: cycle.place_name,
+        professor_id: cycle.professor_id
+      };
+    }
+
+    function showInternshipEvaluationFeedback(message, type = "error") {
+      internshipEvaluationStatus.className = type === "success" ? "alert alert-success" : "alert alert-danger";
+      internshipEvaluationStatus.textContent = message;
+      internshipEvaluationStatus.hidden = false;
+    }
+
+    async function openInternshipEvaluation() {
+      opportunitiesView.hidden = true;
+      weeklyReportView.hidden = true;
+      internshipIssueView.hidden = true;
+      supervisorNotificationsView.hidden = true;
+      internshipIssuesView.hidden = true;
+      internshipEvaluationView.hidden = false;
+      internshipEvaluationForm.hidden = true;
+      internshipEvaluationStatus.hidden = true;
+      document.getElementById("internship-evaluation-heading").focus();
+
+      const userId = activeUserId;
+      if (!userId) {
+        showInternshipEvaluationFeedback("Sign in with a student account to submit an evaluation.");
+        return;
+      }
+      try {
+        await getInternshipEvaluationContext(userId);
+        if (activeUserId !== userId) return;
+        internshipEvaluationForm.hidden = false;
+        internshipEvaluationStatus.className = "alert alert-info";
+        internshipEvaluationStatus.textContent = "Your evaluation will be visible to you and your assigned supervising professor.";
+        internshipEvaluationStatus.hidden = false;
+      } catch (error) {
+        if (activeUserId !== userId) return;
+        showInternshipEvaluationFeedback(error.message || "Could not verify your assigned training site and supervisor.");
+      }
+    }
+
+    async function submitInternshipEvaluation(event) {
+      event.preventDefault();
+      internshipEvaluationStatus.hidden = true;
+      const formData = new FormData(internshipEvaluationForm);
+      const siteRating = Number(formData.get("site-rating"));
+      const supervisorRating = Number(formData.get("supervisor-rating"));
+      const siteFeedback = String(formData.get("site-feedback") ?? "").trim();
+      const supervisorFeedback = String(formData.get("supervisor-feedback") ?? "").trim();
+      if (![siteRating, supervisorRating].every((rating) => Number.isInteger(rating) && rating >= 1 && rating <= 5)
+        || !siteFeedback || !supervisorFeedback) {
+        showInternshipEvaluationFeedback("Choose a rating from 1 to 5 and provide feedback for both the training site and supervisor.");
+        return;
+      }
+
+      submitInternshipEvaluationButton.disabled = true;
+      submitInternshipEvaluationButton.textContent = "Submitting...";
+      try {
+        const userId = activeUserId;
+        if (!userId) throw new Error("Sign in with a student account to submit an evaluation.");
+        const evaluationContext = await getInternshipEvaluationContext(userId);
+        if (activeUserId !== userId) throw new Error("Your sign-in status changed. Please try again.");
+        const { error } = await supabaseClient
+          .from("internshipevaluation")
+          .insert({
+            ...evaluationContext,
+            site_rating: siteRating,
+            supervisor_rating: supervisorRating,
+            feedback_comments: `Training site feedback:\n${siteFeedback}\n\nSupervisor feedback:\n${supervisorFeedback}`
+          });
+        if (error) throw error;
+
+        internshipEvaluationForm.reset();
+        showInternshipEvaluationFeedback("Your evaluation was submitted successfully.", "success");
+      } catch (error) {
+        const message = error?.code === "23502" || error?.code === "23514"
+          ? "Choose a rating from 1 to 5 and provide feedback for both the training site and supervisor."
+          : error?.code === "23503" || error?.code === "42501"
+            ? "Your student profile, training site, or assigned supervisor could not be verified."
+            : error.message || "Could not submit the evaluation. Please try again.";
+        showInternshipEvaluationFeedback(message);
+      } finally {
+        submitInternshipEvaluationButton.disabled = false;
+        submitInternshipEvaluationButton.textContent = "Submit evaluation";
       }
     }
 
@@ -1020,6 +1202,14 @@
 
     showSigninButton.addEventListener("click", () => setAuthMode("signin"));
     showSignupButton.addEventListener("click", () => setAuthMode("signup"));
+    headerSigninButton.addEventListener("click", () => {
+      setAuthMode("signin");
+      document.getElementById("signin-email").focus();
+    });
+    headerSignupButton.addEventListener("click", () => {
+      setAuthMode("signup");
+      document.getElementById("signup-name").focus();
+    });
 
     signinForm.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -1098,6 +1288,12 @@
     fieldFilter.addEventListener("change", renderOpportunities);
     refreshButton.addEventListener("click", loadApprovedOpportunities);
     document.getElementById("open-weekly-report").addEventListener("click", openWeeklyReport);
+    document.getElementById("open-internship-evaluation").addEventListener("click", openInternshipEvaluation);
+    document.getElementById("back-from-internship-evaluation").addEventListener("click", () => {
+      internshipEvaluationView.hidden = true;
+      opportunitiesView.hidden = false;
+      document.getElementById("employment-places-heading").focus();
+    });
     document.getElementById("back-from-report").addEventListener("click", () => {
       weeklyReportView.hidden = true;
       opportunitiesView.hidden = false;
@@ -1147,6 +1343,7 @@
     });
     weeklyReportForm.addEventListener("submit", submitWeeklyReport);
     internshipIssueForm.addEventListener("submit", submitInternshipIssue);
+    internshipEvaluationForm.addEventListener("submit", submitInternshipEvaluation);
     loadApprovedOpportunities();
 
     // Side menu
