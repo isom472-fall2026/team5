@@ -66,7 +66,7 @@ We work using the agents feature in VS Code + Antigravity and record token usage
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| Phase 4 FinOps ledger update | ChatGPT | Usage not yet measured | Phase 4 requirements and existing ledger | Record actual usage and costs after each session |
 
 ## Phase 5
 
