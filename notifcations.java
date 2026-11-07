@@ -3,8 +3,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NotificationSystem {
-    private List<Map<String, String>> notifications;
+class NotificationSystem {
+    private final List<Map<String, String>> notifications;
 
     public NotificationSystem() {
         notifications = new ArrayList<>();
@@ -35,7 +35,7 @@ public class NotificationSystem {
                 String title = note.getOrDefault("title", "Unknown");
                 throw new IllegalArgumentException("Missing or incorrect fields in announcement: " + title);
             }
-            validatedNotifications.add(note);
+            validatedNotifications.add(new HashMap<>(note));
         }
 
         return validatedNotifications;

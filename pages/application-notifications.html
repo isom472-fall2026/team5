@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Application notifications | Field Training</title>
+  <style>
+    :root {
+      --navy: #0f1f3d;
+      --navy-soft: #33415c;
+      --gold: #f2c230;
+      --white: #ffffff;
+      --line: #e3e8f0;
+      --muted: #5a6785;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+    .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+    .sidebar.open { left: 0; }
+    .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+    .sidebar a:hover { color: var(--gold); }
+    .sidebar a.current { font-weight: bold; color: var(--gold); }
+    .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar .nav-section + a { margin-top: 4px; }
+    #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+    .overlay.active { display: block; }
+    main { max-width: 800px; margin: 28px auto; padding: 0 16px; display: grid; gap: 14px; }
+    h1 { margin-bottom: 6px; color: var(--navy); }
+    .hint { color: var(--muted); font-size: 14px; margin: 0; }
+    .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px 18px; margin: 0; }
+    .empty { background: #fff7da; border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 20px; text-align: center; color: #6b5317; margin: 0; }
+    .summary { background: #e8eef8; color: #1e3a6c; border-radius: 10px; padding: 12px 18px; font-weight: 600; margin: 0; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    .notice { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; padding: 16px 20px; display: grid; gap: 8px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .notice.unread { border-left-color: var(--gold); background: #fffdf3; }
+    .notice-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .company { font-weight: 600; font-size: 16px; color: var(--navy); }
+    .message { color: var(--navy-soft); margin: 0; }
+    .date { color: var(--muted); font-size: 13px; }
+    .badge-new { background: var(--gold); color: var(--navy); font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
+    .status { padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+    .status-submitted { background: #e8eef8; color: #1e3a6c; }
+    .status-under-review { background: #fff3cd; color: #7a5c00; }
+    .status-accepted { background: #e6f4ea; color: #137333; }
+    .status-rejected { background: #fdecec; color: #8a1c1c; }
+    button.mark { justify-self: start; background: var(--navy); color: var(--white); border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+    a { color: var(--navy); font-weight: bold; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menuToggle">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <button id="closeSidebar">&times;</button>
+    <a href="../index.html">Home</a>
+
+    <p class="nav-section">Placement</p>
+    <a href="placement-details.html">Placement Details</a>
+    <a href="company-requirements.html">Company Requirements</a>
+    <a href="application-notifications.html" class="current">Application Notifications</a>
+
+    <p class="nav-section">Reports</p>
+    <a href="progress-summary.html">Progress Summary</a>
+    <a href="reported-issues.html">Reported Issues</a>
+
+    <p class="nav-section">Evaluation</p>
+    <a href="evaluation-criteria.html">Evaluation Criteria</a>
+
+    <p class="nav-section">Help</p>
+    <a href="contact-support.html">Contact Support</a>
+  </nav>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <h1>Application Status Notifications</h1>
+    <p id="status-text" class="hint" role="status">Loading your notifications...</p>
+    <p id="error-box" class="error" role="alert" hidden></p>
+    <p id="summary-box" class="summary" hidden></p>
+    <p id="empty-box" class="empty" hidden>You have no application updates yet</p>
+    <ul id="notice-list"></ul>
+    <button id="mark-read" class="mark" hidden>Mark all as read</button>
+  </main>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Check these names against our database before merging.
+    const APPLICATION_TABLE = "internshipapplication";
+    const COLUMNS = "application_id, company_name, status, updated_at";
+
+    const statusText = document.getElementById("status-text");
+    const errorBox = document.getElementById("error-box");
+    const summaryBox = document.getElementById("summary-box");
+    const emptyBox = document.getElementById("empty-box");
+    const noticeList = document.getElementById("notice-list");
+    const markReadBtn = document.getElementById("mark-read");
+
+    const requiredColumns = ["application_id", "company_name", "status", "updated_at"];
+    const allowedStatuses = ["Submitted", "Under review", "Accepted", "Rejected"];
+
+    const messages = {
+      "Submitted": "Your application has been submitted.",
+      "Under review": "Your application is now under review.",
+      "Accepted": "Congratulations! Your application has been accepted.",
+      "Rejected": "Your application was not accepted this time."
+    };
+
+    let lastSeenKey = "";
+
+    function isEmpty(value) {
+      return value === null || value === undefined || String(value).trim() === "";
+    }
+
+    function getLastSeen() {
+      try { return Number(localStorage.getItem(lastSeenKey)) || 0; } catch { return 0; }
+    }
+
+    function setLastSeen(time) {
+      try { localStorage.setItem(lastSeenKey, String(time)); } catch {}
+    }
+
+    function showError(message) {
+      statusText.hidden = true;
+      noticeList.replaceChildren();
+      emptyBox.hidden = true;
+      summaryBox.hidden = true;
+      markReadBtn.hidden = true;
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    }
+
+    function findProblemColumns(app) {
+      return requiredColumns.filter((column) => {
+        const value = app[column];
+        if (isEmpty(value)) return true;
+        if (column === "status") return !allowedStatuses.includes(value);
+        if (column === "updated_at") return Number.isNaN(new Date(value).getTime());
+        return false;
+      });
+    }
+
+    function addNotice(app, lastSeen) {
+      const updated = new Date(app.updated_at);
+      const isUnread = updated.getTime() > lastSeen;
+
+      const item = document.createElement("li");
+      item.className = "notice" + (isUnread ? " unread" : "");
+
+      const top = document.createElement("div");
+      top.className = "notice-top";
+
+      const company = document.createElement("span");
+      company.className = "company";
+      company.textContent = app.company_name;
+      if (isUnread) {
+        const badge = document.createElement("span");
+        badge.className = "badge-new";
+        badge.textContent = "NEW";
+        company.append(badge);
+      }
+
+      const status = document.createElement("span");
+      status.className = "status status-" + app.status.toLowerCase().replace(/ /g, "-");
+      status.textContent = app.status;
+
+      top.append(company, status);
+
+      const message = document.createElement("p");
+      message.className = "message";
+      message.textContent = messages[app.status];
+
+      const date = document.createElement("span");
+      date.className = "date";
+      date.textContent = "Updated on " + updated.toLocaleString();
+
+      item.append(top, message, date);
+      noticeList.append(item);
+      return isUnread;
+    }
+
+    function render(apps) {
+      noticeList.replaceChildren();
+      const lastSeen = getLastSeen();
+      let unread = 0;
+      for (const app of apps) {
+        if (addNotice(app, lastSeen)) unread++;
+      }
+      summaryBox.textContent = unread
+        ? You have ${unread} new status update${unread > 1 ? "s" : ""}.
+        : "No new updates. You are all caught up.";
+      summaryBox.hidden = false;
+      markReadBtn.hidden = unread === 0;
+    }
+
+    async function loadNotifications() {
+      const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+      const user = sessionData?.session?.user;
+
+      if (sessionError || !user) {
+        statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to see your notifications.';
+        return;
+      }
+
+      lastSeenKey = "notificationsLastSeen_" + user.id;
+
+      const { data: student, error: studentError } = await supabaseClient
+        .from("student")
+        .select("student_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (studentError) {
+        showError(Could not check your student record: ${studentError.message});
+        return;
+      }
+      if (!student || isEmpty(student.student_id) || !Number.isInteger(Number(student.student_id))) {
+        showError("Your student_id is missing or invalid, so your notifications cannot be shown.");
+        return;
+      }
+
+      const { data: apps, error } = await supabaseClient
+        .from(APPLICATION_TABLE)
+        .select(COLUMNS)
+        .eq("student_id", student.student_id)
+        .order("updated_at", { ascending: false });
+
+      if (error) {
+        showError(Could not load your applications: ${error.message});
+        return;
+      }
+
+      const problems = [];
+      apps.forEach((app, index) => {
+        const columns = findProblemColumns(app);
+        if (columns.length) {
+          const label = isEmpty(app.application_id) ? Application #${index + 1} : Application ${app.application_id};
+          problems.push(${label}: ${columns.join(", ")});
+        }
+      });
+
+      if (problems.length) {
+        showError("Some applications have missing or invalid data. " + problems.join(" | "));
+        return;
+      }
+
+      statusText.hidden = true;
+      if (!apps.length) {
+        emptyBox.hidden = false;
+        return;
+      }
+
+      render(apps);
+      markReadBtn.onclick = () => { setLastSeen(Date.now()); render(apps); };
+    }
+
+    loadNotifications();
+
+    // Side menu
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+    function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+    overlay.addEventListener("click", hideSidebar);
+  </script>
+</body>
+</html>
