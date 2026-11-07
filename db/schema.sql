@@ -906,6 +906,90 @@ CREATE POLICY "Professors review logs for their students" ON DailyInternshipLog 
 USING (public.professor_owns_student_cycle(DailyInternshipLog.student_id))
 WITH CHECK (public.professor_owns_student_cycle(DailyInternshipLog.student_id));
 
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'student-documents',
+    'student-documents',
+    FALSE,
+    5242880,
+    ARRAY['application/pdf', 'image/jpeg', 'image/png']::TEXT[]
+)
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name,
+    public = EXCLUDED.public,
+    file_size_limit = EXCLUDED.file_size_limit,
+    allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+DROP POLICY IF EXISTS "Students upload documents for approved companies" ON storage.objects;
+CREATE POLICY "Students upload documents for approved companies"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+    AND EXISTS (
+        SELECT 1
+        FROM public.student s
+        WHERE s.user_id = auth.uid()
+          AND s.credits_passed >= 90
+    )
+    AND EXISTS (
+        SELECT 1
+        FROM public.employmentplace ep
+        WHERE ep.place_id::TEXT = (storage.foldername(name))[2]
+          AND ep.is_approved = TRUE
+    )
+);
+
+DROP POLICY IF EXISTS "Students view their own documents" ON storage.objects;
+CREATE POLICY "Students view their own documents"
+ON storage.objects FOR SELECT TO authenticated
+USING (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+);
+
+DROP POLICY IF EXISTS "Companies view submitted student documents" ON storage.objects;
+CREATE POLICY "Companies view submitted student documents"
+ON storage.objects FOR SELECT TO authenticated
+USING (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND EXISTS (
+        SELECT 1
+        FROM public.employmentplace ep
+        WHERE ep.place_id::TEXT = (storage.foldername(name))[2]
+          AND ep.user_id = auth.uid()
+    )
+);
+
+DROP POLICY IF EXISTS "Students update their own documents" ON storage.objects;
+CREATE POLICY "Students update their own documents"
+ON storage.objects FOR UPDATE TO authenticated
+USING (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+)
+WITH CHECK (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+    AND EXISTS (
+        SELECT 1
+        FROM public.student s
+        WHERE s.user_id = auth.uid()
+          AND s.credits_passed >= 90
+    )
+    AND EXISTS (
+        SELECT 1
+        FROM public.employmentplace ep
+        WHERE ep.place_id::TEXT = (storage.foldername(name))[2]
+          AND ep.is_approved = TRUE
+    )
+);
+
 -- =======================================================================================
 -- 7. AUTOMATED USER SIGNUP TRIGGER
 -- =======================================================================================
