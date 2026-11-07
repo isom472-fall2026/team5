@@ -3,10 +3,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NotificationSystem {
+public class notifcations {
     private List<Map<String, String>> notifications;
 
-    public NotificationSystem() {
+    public notifcations() {
         notifications = new ArrayList<>();
         
         Map<String, String> note1 = new HashMap<>();

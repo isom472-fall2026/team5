@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Supervisor or Coordinator</title>
+    <style>
+        :root {
+            --navy: #0f1f3d;
+            --gold: #f2c230;
+            --white: #ffffff;
+            --line: #e3e8f0;
+            --muted: #5a6785;
+            --success: #137333;
+            --error: #8a1c1c;
+            --bg: #f5f7fb;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--navy);
+        }
+
+        .page {
+            max-width: 780px;
+            margin: 40px auto;
+            padding: 0 18px;
+        }
+
+        h2, h3 {
+            margin: 0 0 18px;
+            color: var(--navy);
+        }
+
+        .contact-box {
+            background: var(--white);
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--gold);
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 10px rgba(15, 31, 61, 0.04);
+        }
+
+        .contact-box p {
+            margin: 10px 0;
+            line-height: 1.6;
+            color: var(--navy);
+        }
+
+        .contact-box strong {
+            color: var(--navy);
+        }
+
+        form {
+            background: var(--white);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(15, 31, 61, 0.04);
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--navy);
+        }
+
+        input, textarea, button {
+            font: inherit;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            background: var(--white);
+            color: var(--navy);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        button {
+            background: var(--navy);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 11px 18px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .error {
+            color: var(--error);
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: var(--success);
+            margin-top: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <h2>Assigned Supervisor &amp; Coordinator Contacts</h2>
+
+        <div class="contact-box">
+            <p><strong>Supervisor:</strong> Dr. Aisha Al-Mansoor | Email: aisha.mansoor@ku.edu.kw | Phone: +965 5000 1111</p>
+            <p><strong>Coordinator:</strong> Ms. Sara Nasser | Email: sara.nasser@ku.edu.kw | Phone: +965 5000 2222</p>
+        </div>
+
+        <h3>Send Direct Inquiry</h3>
+
+        <form id="inquiryForm" novalidate>
+            <label for="student_id">Student ID:</label>
+            <input type="text" id="student_id" name="student_id" placeholder="Enter your student ID">
+
+            <label for="recipient_email">Recipient Email:</label>
+            <input type="email" id="recipient_email" name="recipient_email" placeholder="name@example.com">
+
+            <label for="message_content">Message Content:</label>
+            <textarea id="message_content" name="message_content" placeholder="Type your inquiry here..."></textarea>
+
+            <button type="submit">Send Inquiry</button>
+            <div id="responseMessage"></div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('inquiryForm');
+        const responseDiv = document.getElementById('responseMessage');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const studentId = document.getElementById('student_id').value.trim();
+            const recipientEmail = document.getElementById('recipient_email').value.trim();
+            const messageContent = document.getElementById('message_content').value.trim();
+
+            responseDiv.className = '';
+            responseDiv.textContent = '';
+
+            if (!studentId) {
+                responseDiv.className = 'error';
+                responseDiv.textContent = 'Error: Invalid or missing student_id.';
+                return;
+            }
+
+            if (!recipientEmail || !recipientEmail.includes('@')) {
+                responseDiv.className = 'error';
+                responseDiv.textContent = 'Error: Missing or invalid recipient email.';
+                return;
+            }
+
+            if (!messageContent) {
+                responseDiv.className = 'error';
+                responseDiv.textContent = 'Error: Message content cannot be empty.';
+                return;
+            }
+
+            responseDiv.className = 'success';
+            responseDiv.textContent = 'Inquiry sent successfully!';
+        });
+    </script>
+</body>
+</html>
+
