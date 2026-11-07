@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Internship Certificate | Field Training</title>
+  <style>
+    :root {
+      --navy: #0f1f3d;
+      --navy-soft: #33415c;
+      --gold: #f2c230;
+      --white: #ffffff;
+      --line: #e3e8f0;
+      --muted: #5a6785;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+    .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+    .sidebar.open { left: 0; }
+    .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+    .sidebar a:hover { color: var(--gold); }
+    .sidebar a.current { font-weight: bold; color: var(--gold); }
+    .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar .nav-section + a { margin-top: 4px; }
+    #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+    .overlay.active { display: block; }
+    main { max-width: 800px; margin: 28px auto; padding: 0 16px; display: grid; gap: 14px; }
+    h1 { color: var(--navy); }
+    .hint { color: var(--muted); font-size: 14px; }
+    .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px 18px; }
+    .empty { background: #fff7da; border-left: 4px solid var(--gold); border-radius: 10px; padding: 18px; color: #6b5317; }
+    .card { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px 20px; display: grid; gap: 10px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .card-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .name { font-weight: 600; font-size: 16px; }
+    .badge { padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: #e8eef8; color: #1e3a6c; }
+    .badge.issued { background: #e6f4ea; color: #137333; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .btn { background: var(--navy); color: var(--white); border: none; border-radius: 8px; padding: 9px 16px; font-weight: bold; cursor: pointer; }
+    .btn:hover { background: var(--gold); color: var(--navy); }
+    .btn:disabled { background: #c3cad8; color: var(--white); cursor: not-allowed; }
+    .msg { font-size: 14px; font-weight: bold; }
+    .msg.good { color: #1d7a45; }
+    .msg.bad { color: #b42318; }
+    a { color: var(--navy); font-weight: bold; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menuToggle">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <button id="closeSidebar">&times;</button>
+    <a href="../index.html">Home</a>
+
+    <p class="nav-section">Placement</p>
+    <a href="placement-details.html">Placement Details</a>
+    <a href="company-requirements.html">Company Requirements</a>
+
+    <p class="nav-section">Reports</p>
+    <a href="progress-summary.html">Progress Summary</a>
+    <a href="reported-issues.html">Reported Issues</a>
+
+    <p class="nav-section">Evaluation</p>
+    <a href="evaluation-criteria.html">Evaluation Criteria</a>
+    <a href="certificate.html" class="current">My Certificate</a>
+
+    <p class="nav-section">Help</p>
+    <a href="contact-support.html">Contact Support</a>
+  </nav>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <h1>Internship Certificate</h1>
+    <p class="hint" id="subText">Your internship completion certificate, issued by your training site.</p>
+    <p class="hint" id="statusText">Loading...</p>
+    <p class="error" id="errorBox" hidden></p>
+    <div id="content"></div>
+  </main>
+
+  <script>
+    /*
+      Supabase setup this page needs (Esraa):
+      1. A private Storage bucket named "certificates". Files are saved as <student_id>.pdf.
+      2. Storage policies on "certificates":
+         - Training site users (EmploymentPlace.user_id) can upload and replace files for students placed at their company.
+         - A student can read only their own file (<their student_id>.pdf).
+         - A supervising professor can read the files of students in their InternshipCycle.
+      3. Table policies:
+         - Student: training site users can SELECT students whose employment_place equals their place_name.
+         - InternshipCertificate: training site users can INSERT and UPDATE rows for those students.
+    */
+    const BUCKET = "certificates";
+    const MAX_MB = 5;
+
+    let db = null;
+    const statusText = document.getElementById("statusText");
+    const errorBox = document.getElementById("errorBox");
+    const content = document.getElementById("content");
+
+    function isEmpty(v) { return v === null || v === undefined || String(v).trim() === ""; }
+    function validId(v) { return !isEmpty(v) && Number.isInteger(Number(v)) && Number(v) > 0; }
+    function formatDate(v) { return isEmpty(v) ? "Unknown date" : new Date(v).toLocaleDateString(); }
+
+    function showError(text) {
+      statusText.hidden = true;
+      content.replaceChildren();
+      errorBox.textContent = text;
+      errorBox.hidden = false;
+    }
+
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    // Opens a short-lived download link for a certificate file
+    async function download(path, msg) {
+      try {
+        const { data, error } = await db.storage.from(BUCKET).createSignedUrl(path, 60);
+        if (error) throw error;
+        window.open(data.signedUrl, "_blank");
+      } catch (err) {
+        console.error(err);
+        if (msg) { msg.className = "msg bad"; msg.textContent = "The certificate could not be downloaded. Please try again later."; }
+      }
+    }
+
+    // ---------- Student view ----------
+    async function studentView(student) {
+      if (!validId(student.student_id)) {
+        showError("Your student_id is missing or invalid, so your certificate cannot be shown.");
+        return;
+      }
+      const { data, error } = await db
+        .from("internshipcertificate")
+        .select("issue_date, certificate_file_path")
+        .eq("student_id", student.student_id)
+        .order("issue_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+
+      statusText.hidden = true;
+      if (!data || isEmpty(data.certificate_file_path)) {
+        content.replaceChildren(el("p", "empty", "Your certificate has not been issued yet."));
+        return;
+      }
+
+      const card = el("div", "card");
+      const top = el("div", "card-top");
+      top.append(el("span", "name", "Internship completion certificate"), el("span", "badge issued", "Issued " + formatDate(data.issue_date)));
+      const msg = el("span", "msg");
+      const btn = el("button", "btn", "Download certificate");
+      btn.addEventListener("click", () => download(data.certificate_file_path, msg));
+      const row = el("div", "row");
+      row.append(btn, msg);
+      card.append(top, row);
+      content.replaceChildren(card);
+    }
+
+    // ---------- Supervising professor view ----------
+    async function professorView() {
+      document.getElementById("subText").textContent = "Completion certificates issued to your students.";
+      const { data, error } = await db
+        .from("internshipcertificate")
+        .select("student_id, issue_date, certificate_file_path, student(name)")
+        .not("certificate_file_path", "is", null)
+        .order("issue_date", { ascending: false });
+      if (error) throw error;
+
+      statusText.hidden = true;
+      if (!data.length) {
+        content.replaceChildren(el("p", "empty", "No certificates have been issued for your students yet."));
+        return;
+      }
+      const list = el("div");
+      list.style.display = "grid";
+      list.style.gap = "12px";
+      data.forEach((row) => {
+        const card = el("div", "card");
+        const top = el("div", "card-top");
+        const name = row.student && row.student.name ? row.student.name : "Student " + row.student_id;
+        top.append(el("span", "name", name), el("span", "badge issued", "Issued " + formatDate(row.issue_date)));
+        const msg = el("span", "msg");
+        const btn = el("button", "btn", "Download");
+        btn.addEventListener("click", () => download(row.certificate_file_path, msg));
+        const actions = el("div", "row");
+        actions.append(btn, msg);
+        card.append(top, actions);
+        list.append(card);
+      });
+      content.replaceChildren(list);
+    }
+
+    // ---------- Training site supervisor view ----------
+    function checkFile(file) {
+      const isPdf = file.name.toLowerCase().endsWith(".pdf") && (!file.type || file.type === "application/pdf");
+      if (!isPdf) return "Please upload a PDF file.";
+      if (file.size > MAX_MB * 1024 * 1024) return "The file is larger than " + MAX_MB + " MB. Please upload a smaller file.";
+      return null;
+    }
+
+    async function uploadCertificate(student, input, msg, btn, refresh) {
+      msg.className = "msg";
+      msg.textContent = "";
+      if (!validId(student.student_id)) {
+        msg.className = "msg bad";
+        msg.textContent = "This student's student_id is missing or invalid, so the certificate was not saved.";
+        return;
+      }
+      const file = input.files[0];
+      if (!file) { msg.className = "msg bad"; msg.textContent = "Please choose a PDF file first."; return; }
+      const problem = checkFile(file);
+      if (problem) { msg.className = "msg bad"; msg.textContent = problem; return; }
+
+      btn.disabled = true;
+      msg.textContent = "Uploading...";
+      try {
+        const path = student.student_id + ".pdf";
+        const { error: upErr } = await db.storage.from(BUCKET).upload(path, file, { upsert: true, contentType: "application/pdf" });
+        if (upErr) throw upErr;
+
+        const today = new Date().toISOString().slice(0, 10);
+        const record = { issue_date: today, certificate_file_path: path, verification_status: "Issued" };
+
+        const { data: existing, error: findErr } = await db
+          .from("internshipcertificate").select("certificate_id").eq("student_id", student.student_id).limit(1).maybeSingle();
+        if (findErr) throw findErr;
+
+        const { error: saveErr } = existing
+          ? await db.from("internshipcertificate").update(record).eq("certificate_id", existing.certificate_id)
+          : await db.from("internshipcertificate").insert({ student_id: Number(student.student_id), ...record });
+        if (saveErr) throw saveErr;
+
+        msg.className = "msg good";
+        msg.textContent = "Certificate uploaded.";
+        refresh();
+      } catch (err) {
+        console.error(err);
+        msg.className = "msg bad";
+        msg.textContent = "The certificate could not be saved. Please try again later.";
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function supervisorView(place) {
+      document.getElementById("subText").textContent = "Upload a completion certificate (PDF) for each of your interns.";
+      const { data: interns, error } = await db
+        .from("student")
+        .select("student_id, name")
+        .eq("employment_place", place.place_name)
+        .order("name");
+      if (error) throw error;
+
+      statusText.hidden = true;
+      if (!interns.length) {
+        content.replaceChildren(el("p", "empty", "No interns are placed at your company yet."));
+        return;
+      }
+
+      const ids = interns.map((s) => s.student_id).filter(validId);
+      let certs = [];
+      if (ids.length) {
+        const { data, error: certErr } = await db
+          .from("internshipcertificate").select("student_id, issue_date, certificate_file_path").in("student_id", ids);
+        if (certErr) throw certErr;
+        certs = data;
+      }
+
+      const list = el("div");
+      list.style.display = "grid";
+      list.style.gap = "12px";
+      interns.forEach((student) => {
+        const cert = certs.find((c) => c.student_id === student.student_id && !isEmpty(c.certificate_file_path));
+        const card = el("div", "card");
+        const top = el("div", "card-top");
+        top.append(
+          el("span", "name", student.name || "Student " + student.student_id),
+          el("span", cert ? "badge issued" : "badge", cert ? "Issued " + formatDate(cert.issue_date) : "Not issued")
+        );
+        const input = el("input");
+        input.type = "file";
+        input.accept = ".pdf,application/pdf";
+        const btn = el("button", "btn", cert ? "Replace certificate" : "Upload certificate");
+        const msg = el("span", "msg");
+        btn.addEventListener("click", () => uploadCertificate(student, input, msg, btn, () => supervisorView(place)));
+        const row = el("div", "row");
+        row.append(input, btn, msg);
+        card.append(top, row);
+        list.append(card);
+      });
+      content.replaceChildren(list);
+    }
+
+    // ---------- Start ----------
+    async function init() {
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        showError("This page cannot connect to the database right now. Please try again later.");
+        return;
+      }
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      try {
+        const { data: { user } } = await db.auth.getUser();
+        if (!user) {
+          statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to see your certificate.';
+          return;
+        }
+
+        // Find out who is signed in: training site, professor or student
+        const [placeRes, profRes, studentRes] = await Promise.all([
+          db.from("employmentplace").select("place_id, place_name").eq("user_id", user.id).maybeSingle(),
+          db.from("supervisingprofessor").select("professor_id").eq("user_id", user.id).maybeSingle(),
+          db.from("student").select("student_id, name").eq("user_id", user.id).maybeSingle()
+        ]);
+        [placeRes, profRes, studentRes].forEach((r) => { if (r.error) console.error(r.error); });
+
+        if (placeRes.data) await supervisorView(placeRes.data);
+        else if (profRes.data) await professorView();
+        else if (studentRes.data) await studentView(studentRes.data);
+        else showError("Your account is not linked to a student, professor or training site yet. Please contact the internship coordinator.");
+      } catch (err) {
+        console.error(err);
+        showError("The certificate page could not be loaded. Please try again later.");
+      }
+    }
+
+    init();
+
+    // Side menu
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+    function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+    overlay.addEventListener("click", hideSidebar);
+  </script>
+</body>
+</html>
