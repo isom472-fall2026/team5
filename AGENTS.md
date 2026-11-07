@@ -40,8 +40,7 @@ If a task seems to need a framework or a build step, say so and stop. Do not sca
    not past them.
 2. If there is no issue, or the criteria are unclear, **stop and say so.** Do not guess.
 3. **Exception:** the proposal, the prototype, personas, the team agreement and delivery
-   notes do not need an issue.
-
+   notes do not need an issue. or sql adjustments
 ## Scope
 
 Do what the story asks and stop. Do not refactor neighbouring code, rename things that

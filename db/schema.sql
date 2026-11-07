@@ -19,6 +19,8 @@ DROP TABLE IF EXISTS SupervisingProfessor CASCADE;
 DROP TYPE IF EXISTS semester_enum CASCADE;
 DROP FUNCTION IF EXISTS public.handle_new_student CASCADE;
 DROP FUNCTION IF EXISTS public.professor_owns_student_cycle(INT);
+DROP FUNCTION IF EXISTS public.employer_owns_student(INT);
+DROP FUNCTION IF EXISTS public.get_employer_attendance_roster();
 
 -- =======================================================================================
 -- 2. CREATE CUSTOM TYPES
@@ -127,12 +129,12 @@ CREATE TABLE InternshipFeedback (
 -- Issue #25: Evaluate Training Site
 CREATE TABLE InternshipEvaluation (
     evaluation_id SERIAL PRIMARY KEY,
-    student_id INT REFERENCES Student(student_id) ON DELETE CASCADE,
-    place_name VARCHAR(150) REFERENCES EmploymentPlace(place_name) ON DELETE CASCADE,
-    professor_id INT REFERENCES SupervisingProfessor(professor_id) ON DELETE CASCADE,
-    site_rating INT,
-    supervisor_rating INT,
-    feedback_comments TEXT,
+    student_id INT NOT NULL REFERENCES Student(student_id) ON DELETE CASCADE,
+    place_name VARCHAR(150) NOT NULL REFERENCES EmploymentPlace(place_name) ON DELETE CASCADE,
+    professor_id INT NOT NULL REFERENCES SupervisingProfessor(professor_id) ON DELETE CASCADE,
+    site_rating INT NOT NULL CONSTRAINT internship_evaluation_site_rating_range CHECK (site_rating BETWEEN 1 AND 5),
+    supervisor_rating INT NOT NULL CONSTRAINT internship_evaluation_supervisor_rating_range CHECK (supervisor_rating BETWEEN 1 AND 5),
+    feedback_comments TEXT NOT NULL CONSTRAINT internship_evaluation_feedback_not_blank CHECK (length(btrim(feedback_comments)) > 0),
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -156,13 +158,22 @@ CREATE TABLE CompanyChannel (
 -- Issue #34: Log Daily Internship Hours
 CREATE TABLE DailyInternshipLog (
     log_id SERIAL PRIMARY KEY,
-    student_id INT REFERENCES Student(student_id) ON DELETE CASCADE,
-    work_date DATE,
-    check_in_time TIME,
-    check_out_time TIME,
-    total_hours DECIMAL(5,2),
+    student_id INT NOT NULL REFERENCES Student(student_id) ON DELETE CASCADE,
+    work_date DATE NOT NULL,
+    check_in_time TIME NOT NULL,
+    check_out_time TIME NOT NULL,
+    total_hours DECIMAL(5,2) GENERATED ALWAYS AS (
+        round((EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 3600)::NUMERIC, 2)
+    ) STORED,
     approval_status VARCHAR(20) DEFAULT 'Pending',
-    supervisor_notes TEXT
+    supervisor_notes TEXT,
+    CONSTRAINT daily_log_checkout_after_checkin CHECK (check_out_time > check_in_time),
+    CONSTRAINT daily_log_half_hour_time_slots CHECK (
+        EXTRACT(MINUTE FROM check_in_time) IN (0, 30)
+        AND EXTRACT(SECOND FROM check_in_time) = 0
+        AND EXTRACT(MINUTE FROM check_out_time) IN (0, 30)
+        AND EXTRACT(SECOND FROM check_out_time) = 0
+    )
 );
 
 -- Issue #26: Request Internship Certificate
@@ -304,6 +315,42 @@ AS $$
 $$;
 REVOKE ALL ON FUNCTION public.professor_owns_student_cycle(INT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.professor_owns_student_cycle(INT) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.employer_owns_student(p_student_id INT)
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.student s
+        JOIN public.employmentplace ep ON ep.user_id = auth.uid()
+        LEFT JOIN public.internshipcycle ic ON ic.cycle_id = s.internship_cycle_id
+        WHERE s.student_id = p_student_id
+          AND (s.employment_place = ep.place_name OR ic.place_name = ep.place_name)
+    );
+$$;
+REVOKE ALL ON FUNCTION public.employer_owns_student(INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.employer_owns_student(INT) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_employer_attendance_roster()
+RETURNS TABLE(student_id INT, name VARCHAR)
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+    SELECT DISTINCT s.student_id, s.name
+    FROM public.student s
+    JOIN public.employmentplace ep ON ep.user_id = auth.uid()
+    LEFT JOIN public.internshipcycle ic ON ic.cycle_id = s.internship_cycle_id
+    WHERE s.employment_place = ep.place_name OR ic.place_name = ep.place_name
+    ORDER BY s.student_id;
+$$;
+REVOKE ALL ON FUNCTION public.get_employer_attendance_roster() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_employer_attendance_roster() TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.notify_supervisor_of_weekly_report()
 RETURNS TRIGGER
@@ -747,6 +794,14 @@ USING (
           AND s.user_id = auth.uid()
     )
     OR public.professor_owns_student_cycle(DailyInternshipLog.student_id)
+    OR public.employer_owns_student(DailyInternshipLog.student_id)
+);
+
+CREATE POLICY "Workplace supervisors record attendance for their interns"
+ON DailyInternshipLog FOR INSERT TO authenticated
+WITH CHECK (
+    approval_status = 'Approved'
+    AND public.employer_owns_student(DailyInternshipLog.student_id)
 );
 
 CREATE POLICY "Students and their professors can view certificate requests"
@@ -784,27 +839,39 @@ WITH CHECK (
     )
 );
 
-CREATE POLICY "Students submit their own evaluations" ON InternshipEvaluation FOR INSERT TO authenticated
+CREATE POLICY "Students submit evaluations for their assigned cycle" ON InternshipEvaluation FOR INSERT TO authenticated
 WITH CHECK (
     EXISTS (
-        SELECT 1 FROM Student s
+        SELECT 1
+        FROM Student s
+        JOIN InternshipCycle ic ON ic.cycle_id = s.internship_cycle_id
         WHERE s.student_id = InternshipEvaluation.student_id
           AND s.user_id = auth.uid()
+          AND ic.place_name = InternshipEvaluation.place_name
+          AND ic.professor_id = InternshipEvaluation.professor_id
     )
 );
-CREATE POLICY "Students update their own evaluations" ON InternshipEvaluation FOR UPDATE TO authenticated
+CREATE POLICY "Students update evaluations for their assigned cycle" ON InternshipEvaluation FOR UPDATE TO authenticated
 USING (
     EXISTS (
-        SELECT 1 FROM Student s
+        SELECT 1
+        FROM Student s
+        JOIN InternshipCycle ic ON ic.cycle_id = s.internship_cycle_id
         WHERE s.student_id = InternshipEvaluation.student_id
           AND s.user_id = auth.uid()
+          AND ic.place_name = InternshipEvaluation.place_name
+          AND ic.professor_id = InternshipEvaluation.professor_id
     )
 )
 WITH CHECK (
     EXISTS (
-        SELECT 1 FROM Student s
+        SELECT 1
+        FROM Student s
+        JOIN InternshipCycle ic ON ic.cycle_id = s.internship_cycle_id
         WHERE s.student_id = InternshipEvaluation.student_id
           AND s.user_id = auth.uid()
+          AND ic.place_name = InternshipEvaluation.place_name
+          AND ic.professor_id = InternshipEvaluation.professor_id
     )
 );
 
@@ -838,6 +905,90 @@ WITH CHECK (
 CREATE POLICY "Professors review logs for their students" ON DailyInternshipLog FOR UPDATE TO authenticated
 USING (public.professor_owns_student_cycle(DailyInternshipLog.student_id))
 WITH CHECK (public.professor_owns_student_cycle(DailyInternshipLog.student_id));
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'student-documents',
+    'student-documents',
+    FALSE,
+    5242880,
+    ARRAY['application/pdf', 'image/jpeg', 'image/png']::TEXT[]
+)
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name,
+    public = EXCLUDED.public,
+    file_size_limit = EXCLUDED.file_size_limit,
+    allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+DROP POLICY IF EXISTS "Students upload documents for approved companies" ON storage.objects;
+CREATE POLICY "Students upload documents for approved companies"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+    AND EXISTS (
+        SELECT 1
+        FROM public.student s
+        WHERE s.user_id = auth.uid()
+          AND s.credits_passed >= 90
+    )
+    AND EXISTS (
+        SELECT 1
+        FROM public.employmentplace ep
+        WHERE ep.place_id::TEXT = (storage.foldername(name))[2]
+          AND ep.is_approved = TRUE
+    )
+);
+
+DROP POLICY IF EXISTS "Students view their own documents" ON storage.objects;
+CREATE POLICY "Students view their own documents"
+ON storage.objects FOR SELECT TO authenticated
+USING (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+);
+
+DROP POLICY IF EXISTS "Companies view submitted student documents" ON storage.objects;
+CREATE POLICY "Companies view submitted student documents"
+ON storage.objects FOR SELECT TO authenticated
+USING (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND EXISTS (
+        SELECT 1
+        FROM public.employmentplace ep
+        WHERE ep.place_id::TEXT = (storage.foldername(name))[2]
+          AND ep.user_id = auth.uid()
+    )
+);
+
+DROP POLICY IF EXISTS "Students update their own documents" ON storage.objects;
+CREATE POLICY "Students update their own documents"
+ON storage.objects FOR UPDATE TO authenticated
+USING (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+)
+WITH CHECK (
+    bucket_id = 'student-documents'
+    AND array_length(storage.foldername(name), 1) = 2
+    AND (storage.foldername(name))[1] = auth.uid()::TEXT
+    AND EXISTS (
+        SELECT 1
+        FROM public.student s
+        WHERE s.user_id = auth.uid()
+          AND s.credits_passed >= 90
+    )
+    AND EXISTS (
+        SELECT 1
+        FROM public.employmentplace ep
+        WHERE ep.place_id::TEXT = (storage.foldername(name))[2]
+          AND ep.is_approved = TRUE
+    )
+);
 
 -- =======================================================================================
 -- 7. AUTOMATED USER SIGNUP TRIGGER
