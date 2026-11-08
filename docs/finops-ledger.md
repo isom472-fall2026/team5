@@ -66,10 +66,15 @@ We work using the agents feature in VS Code + Antigravity and record token usage
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
 |---|---|---|---|---|
-| View Internship Attendance Logs #22 | VS Code Copilot agent | Not recorded | Issue #22, acceptance criteria, db/schema.sql and attendance page | Test the seed and schema against PostgreSQL, not just with structural checks |
-| Evaluate Training Site #25 | VS Code Copilot agent | Not recorded | Issue #25, acceptance criteria, InternshipEvaluation schema and application code | Verify the evaluation flow with a signed-in student and assigned cycle |
-| Phase 4 FinOps ledger update | ChatGPT | Usage not yet measured | Phase 4 requirements and existing ledger | Record actual usage and costs after each session |
-|  |  |  |  |  |
+| View Internship Attendance Logs #22 | VS Code Copilot agent | Estimate: about [N] requests | Issue #22, acceptance criteria, db/schema.sql and the attendance page | Test the seed and schema against PostgreSQL, not just with structural checks |
+| Evaluate Training Site #25 | VS Code Copilot agent | Estimate: about [N] requests | Issue #25, acceptance criteria, InternshipEvaluation schema and application code | Verify the evaluation flow with a signed-in student and assigned cycle |
+| Log Daily Internship Hours #34 | Claude | Estimate: about [N] messages | Issue #34, acceptance criteria and the old internship log page | Build pages in HTML and JavaScript from the start, since GitHub Pages cannot run Python or Java |
+| View Internship Grade and Evaluation #44 | Claude | Estimate: about [N] messages | Issue #44, acceptance criteria and db/schema.sql | Check the field names against db/schema.sql before testing |
+| Access Main Navigation Menu #46 | Antigravity (Gemini) | Estimate: about [N] requests; the weekly free quota ran out | Issue #46, pages/evaluation-criteria.html as the template, all pages and index.html | Give the agent one clear task per session and stop it from reading git history, which wasted requests |
+| Fixes to #15, #20, #21, #31, #140, #141 | Claude | Estimate: about [N] messages | The page code, db/schema.sql and the instructor's Phase 3 feedback | Test each page at the public address before asking for review |
+| Phase 4 FinOps ledger update | ChatGPT | Estimate: about [N] messages | Phase 4 requirements and the existing ledger | Record usage after each session instead of at the end of the phase |
+
+
 ## Phase 5
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
