@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Training opportunities | Field Training</title>
+  <title>OSTA Field Training | Kuwait University</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     :root {
@@ -108,6 +108,8 @@
       display: flex;
       align-items: center;
     }
+
+    .profile-nav-wrap[hidden] { display: none; }
 
     #profile-nav-btn {
       width: 38px;
@@ -220,13 +222,6 @@
       letter-spacing: .6px;
     }
 
-    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
-    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; min-height: unset; padding: 0; line-height: 1; }
-    .header-account { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-left: auto; }
-    .header-user-icon { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; }
-    .header-user-icon svg { width: 20px; height: 20px; }
-    #signed-in-label { max-width: 34vw; overflow-wrap: anywhere; font-size: 14px; }
-    .header-auth-actions { display: flex; gap: 8px; }
     .pd-field-input {
       width: 100%;
       padding: 5px 8px;
@@ -295,9 +290,269 @@
       margin: 40px auto;
     }
 
-    .auth-section { max-width: 480px; margin: 12vh auto; }
+    body.show-sunburst main {
+      width: min(1040px, calc(100% - 40px));
+      margin-top: clamp(28px, 6vh, 64px);
+    }
 
-    .auth-body { padding: 24px; }
+    .auth-section {
+      display: grid;
+      grid-template-columns: minmax(300px, .9fr) minmax(420px, 1.1fr);
+      max-width: 960px;
+      min-height: 600px;
+      margin: 0 auto;
+      border: 0 !important;
+      border-radius: 18px !important;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(15,31,61,.22);
+    }
+
+    .auth-section[hidden] { display: none; }
+
+    .auth-intro {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      padding: 44px 40px;
+      background:
+        radial-gradient(circle at 88% 10%, rgba(255,255,255,.24), transparent 25%),
+        conic-gradient(
+          from 0deg at 50% 100%,
+          #f4ca37 0deg, #e9b923 7deg,
+          #f4ca37 14deg, #e9b923 21deg,
+          #f4ca37 28deg, #e9b923 35deg,
+          #f4ca37 42deg, #e9b923 49deg,
+          #f4ca37 56deg, #e9b923 63deg,
+          #f4ca37 70deg, #e9b923 77deg,
+          #f4ca37 84deg, #e9b923 91deg,
+          #f4ca37 98deg, #e9b923 105deg,
+          #f4ca37 112deg, #e9b923 119deg,
+          #f4ca37 126deg, #e9b923 133deg,
+          #f4ca37 140deg, #e9b923 147deg,
+          #f4ca37 154deg, #e9b923 161deg,
+          #f4ca37 168deg, #e9b923 175deg,
+          #f4ca37 182deg, #e9b923 189deg,
+          #f4ca37 196deg, #e9b923 203deg,
+          #f4ca37 210deg, #e9b923 217deg,
+          #f4ca37 224deg, #e9b923 231deg,
+          #f4ca37 238deg, #e9b923 245deg,
+          #f4ca37 252deg, #e9b923 259deg,
+          #f4ca37 266deg, #e9b923 273deg,
+          #f4ca37 280deg, #e9b923 287deg,
+          #f4ca37 294deg, #e9b923 301deg,
+          #f4ca37 308deg, #e9b923 315deg,
+          #f4ca37 322deg, #e9b923 329deg,
+          #f4ca37 336deg, #e9b923 343deg,
+          #f4ca37 350deg, #e9b923 357deg,
+          #f4ca37 360deg
+        );
+      color: var(--navy);
+    }
+
+    .auth-intro::after {
+      position: absolute;
+      right: -95px;
+      bottom: -105px;
+      width: 250px;
+      height: 250px;
+      border: 1px solid rgba(15,31,61,.1);
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 38px rgba(15,31,61,.035),
+        0 0 0 76px rgba(15,31,61,.02);
+      content: "";
+    }
+
+    .auth-logos {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 138px;
+    }
+
+    .auth-logo-ku {
+      width: auto;
+      height: 132px;
+      object-fit: contain;
+    }
+
+    .auth-intro-copy {
+      position: relative;
+      z-index: 1;
+      margin: auto 0;
+      padding: 38px 0;
+    }
+
+    .auth-kicker {
+      margin: 0 0 14px;
+      color: rgba(15,31,61,.75);
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .auth-intro h2 {
+      margin: 0 0 12px;
+      color: var(--navy);
+      font-size: clamp(48px, 5vw, 64px);
+      font-weight: 800;
+      letter-spacing: .08em;
+      line-height: 1;
+    }
+
+    .auth-intro-copy > p:last-child {
+      max-width: 34ch;
+      margin: 0;
+      color: rgba(15,31,61,.82);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .auth-security-note {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0;
+      color: rgba(15,31,61,.72);
+      font-size: 12px;
+    }
+
+    .auth-security-note::before {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--navy);
+      box-shadow: 0 0 0 4px rgba(15,31,61,.1);
+      content: "";
+    }
+
+    .auth-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 36px clamp(30px, 5vw, 62px);
+    }
+
+    .auth-section .section-heading {
+      padding: 0 0 28px;
+      border: 0;
+    }
+
+    .auth-section .heading-copy { gap: 9px; }
+
+    .auth-section h1 {
+      color: var(--navy);
+      font-size: 30px;
+      font-weight: 720;
+    }
+
+    .auth-section #auth-description {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .auth-body { padding: 0; }
+
+    .auth-section .btn-group {
+      display: flex;
+      gap: 5px;
+      width: 100%;
+      margin-bottom: 24px !important;
+      padding: 5px;
+      border-radius: 10px;
+      background: #f0f3f7;
+    }
+
+    .auth-section .btn-group > .btn {
+      flex: 1;
+      border: 0;
+      border-radius: 7px !important;
+      color: #53617a;
+      font-weight: 650;
+    }
+
+    .auth-section .btn-group > .btn-success {
+      background: #fff;
+      color: var(--navy);
+      box-shadow: 0 2px 8px rgba(15,31,61,.12);
+    }
+
+    .auth-section .btn-group > .btn-outline-success { background: transparent; }
+
+    .auth-section .form-label {
+      margin-bottom: 8px;
+      color: #2a3955;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .auth-section .form-control {
+      display: block;
+      width: 100%;
+      min-height: 48px;
+      padding: 10px 13px;
+      border: 1px solid #cfd7e3;
+      border-radius: 9px;
+      background: #fbfcfe;
+      color: var(--navy);
+      box-shadow: none;
+    }
+
+    .auth-section .form-control:focus {
+      border-color: #176b56;
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(23,107,86,.12);
+    }
+
+    .auth-section form .mb-3 {
+      display: grid;
+      margin-bottom: 18px !important;
+    }
+
+    .auth-section form > .btn-success {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 9px;
+      background: #176b56;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(23,107,86,.2);
+    }
+
+    .auth-section form > .btn-success:hover {
+      background: #115743;
+      transform: translateY(-1px);
+    }
+
+    .auth-support {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .auth-support .btn {
+      min-height: auto;
+      padding: 2px 4px;
+      border: 0;
+      color: #176b56;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .auth-support .btn:hover { text-decoration: underline; }
 
     /* account-bar hidden — replaced by profile dropdown */
     .account-bar { display: none; }
@@ -309,38 +564,56 @@
       background: #fff;
     }
 
-    /* Sign-in card: semi-transparent so sunburst shows through */
+    /* Sign-in card sits above the existing sunburst background. */
     body.show-sunburst #auth-section {
-      background: rgba(255,255,255,0.93);
-      backdrop-filter: blur(2px);
-      box-shadow: 0 8px 32px rgba(15,31,61,.18);
+      background: #fff;
     }
 
     /* ── Sign-in page minimal footer ── */
     #signin-footer {
       display: none;
-      text-align: center;
-      padding: 18px 0 28px;
-      font-size: 13px;
-      color: rgba(15,31,61,0.75);
-      gap: 18px;
+      padding: 16px 0 28px;
+      color: var(--navy);
+      gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
     }
 
     body.show-sunburst #signin-footer { display: flex; }
 
+    #signin-footer .support-item {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 9px 14px;
+      border: 1px solid rgba(15,31,61,.12);
+      border-radius: 999px;
+      background: rgba(255,255,255,.78);
+      box-shadow: 0 5px 18px rgba(15,31,61,.08);
+      backdrop-filter: blur(5px);
+    }
+
+    #signin-footer .support-label {
+      color: rgba(15,31,61,.62);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
     #signin-footer a {
       color: var(--navy);
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 750;
+      letter-spacing: .01em;
       text-decoration: none;
     }
 
     #signin-footer a:hover { text-decoration: underline; }
 
-    #signin-footer .sf-sep {
-      opacity: .4;
-      user-select: none;
+    body:not(.show-sunburst) main {
+      width: min(1400px, calc(100% - 48px));
+      margin: 32px auto;
     }
 
     .section-heading {
@@ -408,7 +681,75 @@
       color: var(--white) !important;
     }
 
-    /* ── Filters ── */
+    /* ── Training opportunities ── */
+    #opportunities-view {
+      border: 0 !important;
+      border-radius: 16px !important;
+      box-shadow: 0 18px 50px rgba(15,31,61,.12);
+    }
+
+    #opportunities-view .section-heading {
+      align-items: flex-start;
+      padding: 28px;
+      border: 0;
+      background:
+        radial-gradient(circle at 92% 0%, rgba(242,194,48,.2), transparent 26%),
+        linear-gradient(135deg, var(--navy), #1d3765);
+      color: #fff;
+    }
+
+    #opportunities-view .heading-copy { gap: 8px; }
+
+    #opportunities-view h1 {
+      color: #fff;
+      font-size: 28px;
+      font-weight: 750;
+      letter-spacing: -.02em;
+    }
+
+    #opportunities-view #cycle-label {
+      color: #cbd5e5;
+      font-size: 13px;
+    }
+
+    .opportunity-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      max-width: 720px;
+    }
+
+    #opportunities-view .opportunity-actions .btn {
+      min-height: 40px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    #opportunities-view #open-weekly-report {
+      border-color: var(--gold) !important;
+      background: var(--gold) !important;
+      color: var(--navy) !important;
+    }
+
+    #opportunities-view .opportunity-actions .btn-outline-success {
+      border-color: rgba(255,255,255,.62) !important;
+      color: #fff !important;
+    }
+
+    #opportunities-view .opportunity-actions .btn-outline-success:hover {
+      border-color: var(--gold) !important;
+      background: var(--gold) !important;
+      color: var(--navy) !important;
+    }
+
+    #opportunities-view #refresh-button {
+      border-color: #fff !important;
+      background: #fff !important;
+      color: var(--navy) !important;
+    }
+
     .filters {
       display: flex;
       flex-wrap: wrap;
@@ -417,6 +758,46 @@
     }
 
     .filter-control { display: grid; gap: 6px; min-width: 220px; }
+
+    #opportunities-view .filters {
+      align-items: end;
+      gap: 16px;
+      padding: 22px 28px;
+      border-bottom: 1px solid #e2e7ef;
+      background: #f7f9fc;
+    }
+
+    #opportunities-view .filters::before {
+      align-self: center;
+      margin-right: 4px;
+      color: var(--navy);
+      content: "Filter opportunities";
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    #opportunities-view .filter-control {
+      min-width: 230px;
+      gap: 7px;
+    }
+
+    #opportunities-view .filter-control label {
+      color: #53617a;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    #opportunities-view .filter-control select {
+      min-height: 44px;
+      border: 1px solid #cad3e0;
+      border-radius: 8px;
+      background-color: #fff;
+      color: var(--navy);
+      box-shadow: 0 2px 7px rgba(15,31,61,.04);
+    }
 
     label { color: #34483f; font-size: 13px; font-weight: 650; }
 
@@ -440,13 +821,56 @@
       font-size: 14px;
     }
 
+    #opportunities-view #table-status {
+      min-height: 0;
+      margin: 20px 28px 12px;
+      padding: 9px 12px;
+      border: 1px solid #dce4ee;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #53617a;
+      font-size: 13px;
+    }
+
+    #opportunities-view #data-errors {
+      padding: 0 28px 12px !important;
+      color: #a12b2b;
+      font-size: 13px;
+    }
+
+    .table-hint {
+      display: none;
+      margin: 0 16px 10px;
+      color: #68758b;
+      font-size: 12px;
+    }
+
     .table-wrap { overflow-x: auto; padding: 8px 24px 24px; }
+
+    #opportunities-view .table-wrap {
+      max-height: 560px;
+      margin: 0 28px 28px;
+      padding: 0;
+      overflow: auto;
+      border: 1px solid #dfe5ed;
+      border-radius: 10px;
+      background: #fff;
+      scrollbar-color: #aab5c5 #eef1f5;
+      scrollbar-width: thin;
+    }
 
     table {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
       font-size: 14px;
+    }
+
+    #opportunities-view table {
+      min-width: 2200px;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
     }
 
     th, td {
@@ -456,6 +880,16 @@
       vertical-align: top;
     }
 
+    #opportunities-view th,
+    #opportunities-view td {
+      min-width: 145px;
+      padding: 15px 14px;
+      border-right: 1px solid #edf0f4;
+      border-bottom: 1px solid #e6eaf0;
+      color: #37445a;
+      line-height: 1.45;
+    }
+
     th {
       background: #f4f6f3;
       color: #34483f;
@@ -463,19 +897,126 @@
       font-weight: 650;
     }
 
+    #opportunities-view th {
+      position: sticky;
+      z-index: 3;
+      top: 0;
+      background: #eef2f7;
+      color: #53617a;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    #opportunities-view tbody tr:nth-child(even) td { background: #fafbfd; }
+    #opportunities-view tbody tr:hover td { background: #fff9e5; }
+
+    #opportunities-view th:first-child,
+    #opportunities-view td:first-child {
+      position: sticky;
+      left: 0;
+      min-width: 200px;
+      max-width: 240px;
+      padding-left: 18px;
+      font-weight: 750;
+    }
+
+    #opportunities-view th:first-child {
+      z-index: 4;
+      background: #e6ebf2;
+    }
+
+    #opportunities-view tbody td:first-child { background: #fff; }
+    #opportunities-view tbody tr:nth-child(even) td:first-child { background: #fafbfd; }
+    #opportunities-view tbody tr:hover td:first-child { background: #fff9e5; }
+
+    #opportunities-view .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    #opportunities-view .status-badge::before {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      content: "";
+    }
+
+    #opportunities-view .status-badge.is-approved {
+      background: #e6f5ef;
+      color: #176b56;
+    }
+
+    #opportunities-view .status-badge.is-approved::before { background: #176b56; }
+
+    #opportunities-view .status-badge.is-pending {
+      background: #fff3cf;
+      color: #7b5b00;
+    }
+
+    #opportunities-view .status-badge.is-pending::before { background: #c18a00; }
+
+    #opportunities-view td:last-child { min-width: 210px; }
+
+    #opportunities-view td:last-child .form-control {
+      min-height: 38px;
+      padding: 5px;
+      border: 1px dashed #aeb9c8;
+      border-radius: 7px;
+      background: #f8fafc;
+      font-size: 11px;
+    }
+
+    #opportunities-view td:last-child .form-control::file-selector-button {
+      margin-right: 8px;
+      padding: 6px 9px;
+      border: 0;
+      border-radius: 5px;
+      background: var(--navy);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     td:first-child, th:first-child { padding-left: 16px; }
 
+    @media (max-width: 780px) {
+      body.show-sunburst main {
+        width: min(100% - 28px, 560px);
+        margin-top: 24px;
+      }
+
+      .auth-section {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .auth-intro { padding: 28px 26px; }
+      .auth-logos { min-height: 108px; }
+      .auth-logo-ku { height: 102px; }
+      .auth-intro-copy { padding: 26px 0 12px; }
+
+      .auth-intro h2 {
+        margin-bottom: 10px;
+        font-size: 46px;
+      }
+
+      .auth-security-note { display: none; }
+      .auth-panel { padding: 32px 26px 30px; }
+    }
+
     @media (max-width: 600px) {
-      header { gap: 8px; padding: 12px; }
-      header > strong { font-size: 14px; }
-      .header-account { gap: 6px; }
-      .header-user-icon { width: 30px; height: 30px; }
-      #signed-in-label { max-width: 32vw; font-size: 12px; }
-      .header-auth-actions { gap: 4px; }
-      .header-auth-actions .btn, #signout-button { padding: 4px 6px; font-size: 12px; }
       main { width: min(100% - 24px, 1120px); margin: 20px auto; }
-      .auth-section { margin-top: 8vh; }
-      .auth-body { padding: 18px; }
+      .auth-section { margin-top: 0; }
       .section-heading { padding: 16px; }
       .filters { padding: 14px 16px 8px; }
       .filter-control { min-width: 100%; }
@@ -483,7 +1024,78 @@
       .table-wrap { padding: 8px 12px 16px; }
       h1 { font-size: 19px; }
       #profile-dropdown { right: -4px; min-width: 210px; }
+      #signin-footer {
+        align-items: center;
+        flex-direction: column;
+      }
+
+      body:not(.show-sunburst) main {
+        width: min(100% - 24px, 1400px);
+        margin: 20px auto;
+      }
+
+      #opportunities-view .section-heading {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 22px 18px;
+      }
+
+      #opportunities-view h1 { font-size: 24px; }
+
+      .opportunity-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        max-width: none;
+      }
+
+      #opportunities-view .opportunity-actions .btn {
+        width: 100%;
+        min-height: 44px;
+        padding: 7px 10px;
+        line-height: 1.2;
+      }
+
+      #opportunities-view .filters {
+        align-items: stretch;
+        padding: 18px;
+      }
+
+      #opportunities-view .filters::before { width: 100%; }
+      #opportunities-view .filter-control { min-width: 100%; }
+      #opportunities-view #table-status { margin: 16px 16px 10px; }
+      #opportunities-view #data-errors { padding: 0 16px 10px !important; }
+      .table-hint { display: block; }
+
+      #opportunities-view .table-wrap {
+        max-height: 540px;
+        margin: 0 16px 20px;
+      }
     }
+  
+
+    /* Header account controls retained from the latest project version. */
+    .header-account {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .header-account[hidden],
+    .header-auth-actions[hidden] { display: none; }
+
+    #signed-in-label { max-width: 34vw; overflow-wrap: anywhere; font-size: 14px; }
+    .header-auth-actions { display: flex; gap: 8px; }
+
+    @media (max-width: 600px) {
+      .header-account { gap: 6px; }
+      #signed-in-label { max-width: 32vw; font-size: 12px; }
+      .header-auth-actions { gap: 4px; }
+      .header-auth-actions .btn,
+      #signout-button { padding: 4px 6px; font-size: 12px; }
+    }
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
@@ -491,23 +1103,15 @@
 <body class="show-sunburst">
   <header>
     <button id="menuToggle">&#9776;</button>
-    <strong>Internship Platform</strong>
+    <span class="header-title">Internship Platform</span>
     <div id="header-account" class="header-account" hidden>
-      <span class="header-user-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="8" r="3.5"></circle>
-          <path d="M5 20c.7-3.5 3.2-5.5 7-5.5s6.3 2 7 5.5"></path>
-        </svg>
-      </span>
       <span id="signed-in-label" hidden></span>
       <div id="header-auth-actions" class="header-auth-actions" hidden>
         <button id="header-signin-button" class="btn btn-outline-light btn-sm" type="button">Log in</button>
         <button id="header-signup-button" class="btn btn-warning btn-sm" type="button">Sign up</button>
       </div>
       <button id="signout-button" class="btn btn-outline-light btn-sm" type="button" hidden>Log out</button>
-    <span class="header-title">Internship Platform</span>
-
-    <!-- Profile icon — far right of nav bar (shown when signed in) -->
+    </div>
     <div class="profile-nav-wrap" id="profile-nav-wrap" hidden>
       <button id="profile-nav-btn" aria-label="Student profile" aria-expanded="false" aria-haspopup="true">&#128100;</button>
       <div id="profile-dropdown" role="menu" aria-label="Student profile menu">
@@ -564,61 +1168,72 @@
 
   <main>
     <p id="auth-loading" class="alert alert-secondary" role="status">Checking your sign-in status...</p>
-    <section id="auth-section" class="auth-section border rounded bg-white overflow-hidden" aria-labelledby="auth-heading" hidden>
-      <div class="section-heading">
-        <div class="heading-copy">
-          <h1 id="auth-heading">Field Training</h1>
-          <p id="auth-description">Sign in with your university email.</p>
+    <section id="auth-section" class="auth-section" aria-labelledby="auth-heading" hidden>
+      <div class="auth-intro">
+        <div class="auth-logos" aria-label="Kuwait University">
+          <img class="auth-logo-ku" src="assets/kuwait-university-logo.png" alt="Kuwait University">
         </div>
+        <div class="auth-intro-copy">
+          <p class="auth-kicker">Kuwait University</p>
+          <h2>OSTA</h2>
+          <p>Office of Student Training and Alumni<br>College of Business Administration</p>
+        </div>
+        <p class="auth-security-note">Secure access for Kuwait University students</p>
       </div>
-      <div class="auth-body">
-        <div class="btn-group w-100 mb-4" role="group" aria-label="Account access">
-          <button id="show-signin" class="btn btn-success" type="button" aria-pressed="true">Sign in</button>
-          <button id="show-signup" class="btn btn-outline-success" type="button" aria-pressed="false">Create account</button>
+      <div class="auth-panel">
+        <div class="section-heading">
+          <div class="heading-copy">
+            <h1 id="auth-heading">OSTA Field Training</h1>
+            <p id="auth-description">Sign in with your university email.</p>
+          </div>
         </div>
-        <p id="auth-error" class="alert alert-danger" role="alert" hidden></p>
-        <p id="auth-notice" class="alert alert-info" role="status" hidden></p>
-        <form id="signin-form">
-          <div class="mb-3">
-            <label class="form-label" for="signin-email">University email</label>
-            <input class="form-control" id="signin-email" name="email" type="email" autocomplete="username" required>
+        <div class="auth-body">
+          <div class="btn-group w-100 mb-4" role="group" aria-label="Account access">
+            <button id="show-signin" class="btn btn-success" type="button" aria-pressed="true">Sign in</button>
+            <button id="show-signup" class="btn btn-outline-success" type="button" aria-pressed="false">Create account</button>
           </div>
-          <div class="mb-3">
-            <label class="form-label" for="signin-password">Password</label>
-            <input class="form-control" id="signin-password" name="password" type="password" autocomplete="current-password" required>
+          <p id="auth-error" class="alert alert-danger" role="alert" hidden></p>
+          <p id="auth-notice" class="alert alert-info" role="status" hidden></p>
+          <form id="signin-form">
+            <div class="mb-3">
+              <label class="form-label" for="signin-email">University email</label>
+              <input class="form-control" id="signin-email" name="email" type="email" autocomplete="username" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="signin-password">Password</label>
+              <input class="form-control" id="signin-password" name="password" type="password" autocomplete="current-password" required>
+            </div>
+            <button class="btn btn-success w-100" type="submit">Sign in</button>
+          </form>
+          <form id="signup-form" hidden>
+            <div class="mb-3">
+              <label class="form-label" for="signup-name">Name <span class="text-secondary">(optional)</span></label>
+              <input class="form-control" id="signup-name" name="name" type="text" autocomplete="name">
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="signup-email">University email</label>
+              <input class="form-control" id="signup-email" name="email" type="email" autocomplete="username" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="signup-password">Password</label>
+              <input class="form-control" id="signup-password" name="password" type="password" autocomplete="new-password" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="signup-confirm-password">Confirm password</label>
+              <input class="form-control" id="signup-confirm-password" name="confirm-password" type="password" autocomplete="new-password" required>
+            </div>
+            <button class="btn btn-success w-100" type="submit">Create account</button>
+          </form>
+          <div class="auth-support">
+            <span>Need help?</span>
+            <a href="mailto:cba@ku.edu.kw" class="btn btn-sm">Contact Support</a>
           </div>
-          <button class="btn btn-success w-100" type="submit">Sign in</button>
-        </form>
-        <form id="signup-form" hidden>
-          <div class="mb-3">
-            <label class="form-label" for="signup-name">Name <span class="text-secondary">(optional)</span></label>
-            <input class="form-control" id="signup-name" name="name" type="text" autocomplete="name">
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="signup-email">University email</label>
-            <input class="form-control" id="signup-email" name="email" type="email" autocomplete="username" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="signup-password">Password</label>
-            <input class="form-control" id="signup-password" name="password" type="password" autocomplete="new-password" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="signup-confirm-password">Confirm password</label>
-            <input class="form-control" id="signup-confirm-password" name="confirm-password" type="password" autocomplete="new-password" required>
-          </div>
-          <button class="btn btn-success w-100" type="submit">Create account</button>
-        </form>
-        <div class="mt-3">
-          <a href="mailto:cba@ku.edu.kw" class="btn btn-outline-success btn-sm">Contact Support</a>
         </div>
       </div>
     </section>
 
     <!-- account-bar kept for JS compatibility but visually hidden -->
-    <div id="account-bar" class="account-bar" hidden>
-      <span id="signed-in-label"></span>
-      <button id="signout-button" class="btn btn-outline-secondary btn-sm" type="button">Sign out</button>
-    </div>
+    
     <p id="account-status" class="small text-danger text-end" role="status" aria-live="polite" hidden></p>
 
     <section id="opportunities-view" class="border rounded bg-white overflow-hidden" aria-labelledby="employment-places-heading" hidden>
@@ -627,7 +1242,7 @@
           <h1 id="employment-places-heading" tabindex="-1">Training opportunities</h1>
           <p id="cycle-label"></p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="opportunity-actions">
           <button id="open-weekly-report" class="btn btn-success" type="button">Submit weekly report</button>
           <button id="open-internship-evaluation" class="btn btn-outline-success" type="button">Evaluate training site</button>
           <button id="open-internship-issue" class="btn btn-outline-success" type="button">Report an internship issue</button>
@@ -647,7 +1262,8 @@
         </div>
       </div>
       <p id="table-status" role="status" aria-live="polite">Loading approved training opportunities...</p>
-      <div id="data-errors" style="padding: 8px 24px 0;"></div>
+      <div id="data-errors"></div>
+      <p class="table-hint">Scroll horizontally to review every opportunity detail.</p>
       <div class="table-wrap">
         <table class="table table-hover align-middle mb-0">
           <thead>
@@ -675,9 +1291,14 @@
 
     <!-- Sign-in minimal footer — only visible when sunburst is active -->
     <footer id="signin-footer" aria-label="Support contacts">
-      <span>&#128247; Instagram: <a href="https://instagram.com/osta_cba" target="_blank" rel="noopener">@osta_cba</a></span>
-      <span class="sf-sep">|</span>
-      <span>&#9993; Email: <a href="mailto:cba@ku.edu.kw">cba@ku.edu.kw</a></span>
+      <span class="support-item">
+        <span class="support-label">Instagram</span>
+        <a href="https://instagram.com/osta_cba" target="_blank" rel="noopener">@osta_cba</a>
+      </span>
+      <span class="support-item">
+        <span class="support-label">Email</span>
+        <a href="mailto:cba@ku.edu.kw">cba@ku.edu.kw</a>
+      </span>
     </footer>
   </main>
 
@@ -1540,7 +2161,10 @@
         const value = place[column];
 
         if (column === "is_approved") {
-          cell.textContent = value ? "Approved" : "Pending";
+          const badge = document.createElement("span");
+          badge.className = `status-badge ${value ? "is-approved" : "is-pending"}`;
+          badge.textContent = value ? "Approved" : "Pending";
+          cell.append(badge);
         } else if (column === "last_updated_at" && value) {
           cell.textContent = new Date(value).toLocaleString();
         } else {
