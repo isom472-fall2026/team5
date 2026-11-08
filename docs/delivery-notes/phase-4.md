@@ -33,7 +33,7 @@ the full story list at this tag is saved in ../backlog.md — do not repeat it h
 `phase-4`
 
 
-## Anything not finished, and where it went
+
 
 ## Anything not finished, and where it went
 
