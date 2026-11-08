@@ -73,8 +73,15 @@ the story ID, the title, who built it, and what happened to it.
 
 | Story | Title | Who | State at the tag |
 |---|---|---|---|
-|  |  |  |  |
-|  |  |  |  |
+| #46 | Access Main Navigation Menu | Nouf | fixed after phase 3 review | done |
+| #34 | Log Daily Internship Hours | Manar | fixed after phase 3 review |done |
+| #44 | View Internship Grade and Evaluation | Manar | fixed after phase 3 review  |done |
+| #35 | Optionally Define Learning Objectives | Manar | reopened after phase 3 review| moved to phase 5 |
+| #36 | Receive Internship-Related University Notifications | Manar | reopened after phase 3 review | moved to phase 5 |
+| #37 | Select Suitable Internship Site | Manar | reopened after phase 3 review | moved to phase 5 |
+| #39 | Create Company-Specific Internship Channels | Manar | reopened after phase 3 review | moved to phase 5 |
+
+
 ## Phase 5 — saved 18 November
 
 | Story | Title | Who | State at the tag |
