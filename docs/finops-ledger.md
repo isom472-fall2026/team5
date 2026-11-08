@@ -66,10 +66,19 @@ We work using the agents feature in VS Code + Antigravity and record token usage
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
 |---|---|---|---|---|
-| View Internship Attendance Logs #22 | VS Code Copilot agent | Not recorded | Issue #22, acceptance criteria, db/schema.sql and attendance page | Test the seed and schema against PostgreSQL, not just with structural checks |
-| Evaluate Training Site #25 | VS Code Copilot agent | Not recorded | Issue #25, acceptance criteria, InternshipEvaluation schema and application code | Verify the evaluation flow with a signed-in student and assigned cycle |
-| Phase 4 FinOps ledger update | ChatGPT | Usage not yet measured | Phase 4 requirements and existing ledger | Record actual usage and costs after each session |
-|  |  |  |  |  |
+| View Placement Details #15 | Claude | ~2,000 tokens | The page code and the new design colors | Rename files to match the links before committing |
+| View Company Requirements #20 | Claude | ~6,000 tokens | The page code, db/schema.sql and the instructor's feedback | Reject wrong file types from the first version |
+| View Evaluation Criteria #21 | Claude | ~3,000 tokens | The page code and the shared menu | Keep one style block per page instead of merging two |
+| View Internship Attendance Logs #22 | VS Code Copilot agent | ~4,000 tokens | Issue #22, acceptance criteria, db/schema.sql and the attendance page | Test the seed and schema against PostgreSQL, not just with structural checks |
+| Evaluate Training Site #25 | VS Code Copilot agent | ~4,000 tokens | Issue #25, acceptance criteria, InternshipEvaluation schema and application code | Verify the evaluation flow with a signed-in student and assigned cycle |
+| View Contact Information for Support #31 | Claude | ~2,000 tokens | The page code and the shared menu | Use the same menu on every page from the start |
+| Log Daily Internship Hours #34 | Claude | ~3,500 tokens | Issue #34, acceptance criteria and the old internship log page | Build pages in HTML and JavaScript from the start, since GitHub Pages cannot run Python or Java |
+| View Internship Grade and Evaluation #44 | Claude | ~3,000 tokens | Issue #44, acceptance criteria and db/schema.sql | Check the field names against db/schema.sql before testing |
+| Access Main Navigation Menu #46 | Antigravity (Gemini) | Weekly free quota fully used | Issue #46, pages/evaluation-criteria.html as the template, all pages and index.html | Give the agent one clear task per session and stop it from reading git history, which wasted requests |
+| View Reported Issues and Their Status #140 | Claude | ~2,500 tokens | The page code and the shared menu | Show friendly messages instead of raw database errors from the start |
+| View Internship Progress Summary #141 | Claude | ~2,000 tokens | The page code and the shared menu | Add the shared menu in the same pull request as the page |
+
+
 ## Phase 5
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
