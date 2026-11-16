@@ -1072,4 +1072,27 @@ USING (
     OR public.employer_owns_student(StudentInquiry.student_id)
 );
 
+-- =======================================================================================
+-- 10. ISSUE #43: VIEW INTERNSHIP SITE REVIEWS
+-- =======================================================================================
+-- Students may only read their own InternshipEvaluation rows (RLS), so this function
+-- returns every review of approved sites WITHOUT student_id or names.
+CREATE OR REPLACE FUNCTION public.get_site_reviews()
+RETURNS TABLE(place_name VARCHAR, site_rating INT, feedback_comments TEXT, submitted_at TIMESTAMP)
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+    SELECT e.place_name, e.site_rating, e.feedback_comments, e.submitted_at
+    FROM public.internshipevaluation e
+    JOIN public.employmentplace ep ON ep.place_name = e.place_name
+    WHERE ep.is_approved = TRUE
+    ORDER BY e.submitted_at DESC;
+$$;
+REVOKE ALL ON FUNCTION public.get_site_reviews() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_site_reviews() TO authenticated;
+
+
+
 
