@@ -1,1 +1,291 @@
-pages/internship_log.html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Internship site reviews | Field Training</title>
+  <style>
+    :root {
+      --navy: #0f1f3d;
+      --navy-soft: #33415c;
+      --gold: #f2c230;
+      --white: #ffffff;
+      --line: #e3e8f0;
+      --muted: #5a6785;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+    .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+    .sidebar.open { left: 0; }
+    .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+    .sidebar a:hover { color: var(--gold); }
+    .sidebar a.current { font-weight: bold; color: var(--gold); }
+    .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar .nav-section + a { margin-top: 4px; }
+    #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+    .overlay.active { display: block; }
+    main { max-width: 860px; margin: 28px auto; padding: 0 16px; display: grid; gap: 16px; }
+    h1 { margin-bottom: 6px; }
+    .hint { color: var(--muted); font-size: 14px; }
+    .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px 18px; }
+    .filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .filter label { font-weight: 600; }
+    select { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); }
+    .sites { list-style: none; display: grid; gap: 14px; }
+    .site { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px 20px; display: grid; gap: 10px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .site-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .site-name { font-weight: 600; font-size: 17px; }
+    .tag { display: inline-block; background: var(--navy); color: var(--white); border-radius: 999px; padding: 2px 10px; font-size: 12px; margin-left: 8px; text-transform: capitalize; }
+    .average { font-weight: 600; }
+    .stars { color: #c99a06; letter-spacing: 1px; }
+    .reviews { list-style: none; display: grid; gap: 8px; }
+    .review { background: #f7f9fc; border-radius: 8px; padding: 10px 14px; display: grid; gap: 4px; }
+    .review-meta { color: var(--muted); font-size: 13px; }
+    .empty { color: var(--muted); font-style: italic; }
+    a { color: var(--navy); font-weight: bold; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menuToggle" aria-label="Open menu">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <button id="closeSidebar" aria-label="Close menu">&times;</button>
+    <a href="../index.html">Home</a>
+    <a href="update-student-profile.html">My Profile</a>
+
+    <p class="nav-section">Placement</p>
+    <a href="placement-details.html">Placement Details</a>
+    <a href="company-requirements.html">Company Requirements</a>
+    <a href="internship-selection.html">Select Internship Site</a>
+    <a href="acceptance-documents.html">Acceptance Documents</a>
+
+    <p class="nav-section">Reports</p>
+    <a href="internship_log.html">Internship Attendance</a>
+    <a href="progress-summary.html">Progress Summary</a>
+    <a href="reported-issues.html">Reported Issues</a>
+    <a href="learning_objectives.html">Learning Objectives</a>
+    <a href="university-notifications.html">University Notifications</a>
+
+    <p class="nav-section">Evaluation</p>
+    <a href="evaluation-criteria.html">Evaluation Criteria</a>
+    <a href="internship_reviews.html" class="current">Site Reviews</a>
+    <a href="internship_grade.html">Grade &amp; Evaluation</a>
+    <a href="certificate.html">Internship Certificate</a>
+
+    <p class="nav-section">Communication</p>
+    <a href="chanel.html">Company Channels</a>
+    <a href="contact.html">Contact Supervisor</a>
+    <a href="contact-support.html">Contact Support</a>
+  </nav>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <h1>Internship Site Reviews</h1>
+    <p class="hint">Ratings and comments that previous interns left about each training site. Reviewer names and student IDs are never shown.</p>
+
+    <p id="status-text" class="hint" role="status">Loading reviews...</p>
+    <p id="error-box" class="error" role="alert" hidden></p>
+
+    <div class="filter" id="filter-box" hidden>
+      <label for="site-filter">Training site</label>
+      <select id="site-filter">
+        <option value="all">All sites</option>
+      </select>
+    </div>
+
+    <ul class="sites" id="site-list"></ul>
+  </main>
+
+  <script>
+    // Database names (see db/schema.sql)
+    const PLACE_TABLE = "employmentplace";
+    const REVIEWS_FUNCTION = "get_site_reviews"; // returns reviews without student_id
+    const LOAD_ERROR = "Could not load reviews. Please try again.";
+
+    const statusText = document.getElementById("status-text");
+    const errorBox = document.getElementById("error-box");
+    const filterBox = document.getElementById("filter-box");
+    const siteFilter = document.getElementById("site-filter");
+    const siteList = document.getElementById("site-list");
+
+    let sites = [];
+
+    function isEmpty(value) {
+      return value === null || value === undefined || String(value).trim() === "";
+    }
+
+    function clean(value) {
+      return isEmpty(value) ? "" : String(value).trim();
+    }
+
+    function showError(message) {
+      statusText.hidden = true;
+      filterBox.hidden = true;
+      siteList.replaceChildren();
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    }
+
+    function validRating(value) {
+      const n = Number(value);
+      return Number.isInteger(n) && n >= 1 && n <= 5;
+    }
+
+    function stars(rating) {
+      const full = Math.round(rating);
+      return "\u2605".repeat(full) + "\u2606".repeat(5 - full);
+    }
+
+    function formatDate(value) {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? "Date not provided" : date.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    }
+
+    function buildSite(site) {
+      const item = document.createElement("li");
+      item.className = "site";
+
+      const head = document.createElement("div");
+      head.className = "site-head";
+      const name = document.createElement("span");
+      name.className = "site-name";
+      name.textContent = site.name;
+      if (!isEmpty(site.sector)) {
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = clean(site.sector).toLowerCase();
+        name.append(tag);
+      }
+      head.append(name);
+
+      const reviews = site.reviews;
+      if (reviews.length) {
+        const sum = reviews.reduce((total, r) => total + Number(r.site_rating), 0);
+        const average = sum / reviews.length;
+        const avg = document.createElement("span");
+        avg.className = "average";
+        const starSpan = document.createElement("span");
+        starSpan.className = "stars";
+        starSpan.textContent = stars(average) + " ";
+        avg.append(starSpan, document.createTextNode(average.toFixed(1) + " / 5 (" + reviews.length + (reviews.length === 1 ? " review)" : " reviews)")));
+        head.append(avg);
+      }
+      item.append(head);
+
+      if (!reviews.length) {
+        const empty = document.createElement("p");
+        empty.className = "empty";
+        empty.textContent = "No reviews yet for this site.";
+        item.append(empty);
+        return item;
+      }
+
+      const list = document.createElement("ul");
+      list.className = "reviews";
+      reviews.forEach((review) => {
+        const row = document.createElement("li");
+        row.className = "review";
+        const meta = document.createElement("span");
+        meta.className = "review-meta";
+        meta.textContent = "Rating " + Number(review.site_rating) + " / 5 - " + formatDate(review.submitted_at);
+        const text = document.createElement("span");
+        text.textContent = isEmpty(review.feedback_comments) ? "No comment." : clean(review.feedback_comments);
+        row.append(meta, text);
+        list.append(row);
+      });
+      item.append(list);
+      return item;
+    }
+
+    function render() {
+      const chosen = siteFilter.value;
+      const shown = sites.filter((site) => chosen === "all" || site.name === chosen);
+      siteList.replaceChildren(...shown.map(buildSite));
+    }
+
+    async function init() {
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        showError(LOAD_ERROR);
+        return;
+      }
+      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      try {
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        const user = sessionData && sessionData.session ? sessionData.session.user : null;
+        if (sessionError || !user) {
+          statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to read internship site reviews.';
+          return;
+        }
+
+        const [placesResult, reviewsResult] = await Promise.all([
+          supabaseClient.from(PLACE_TABLE).select("place_name, sector").eq("is_approved", true).order("place_name"),
+          supabaseClient.rpc(REVIEWS_FUNCTION)
+        ]);
+
+        if (placesResult.error || reviewsResult.error) {
+          console.error(placesResult.error || reviewsResult.error);
+          showError(LOAD_ERROR);
+          return;
+        }
+
+        const byPlace = {};
+        (reviewsResult.data || []).forEach((review) => {
+          if (isEmpty(review.place_name) || !validRating(review.site_rating)) return;
+          const key = clean(review.place_name);
+          if (!byPlace[key]) byPlace[key] = [];
+          byPlace[key].push(review);
+        });
+
+        sites = (placesResult.data || [])
+          .filter((place) => !isEmpty(place.place_name))
+          .map((place) => {
+            const name = clean(place.place_name);
+            const reviews = (byPlace[name] || []).slice().sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+            return { name: name, sector: place.sector, reviews: reviews };
+          });
+
+        statusText.hidden = true;
+        if (!sites.length) {
+          statusText.textContent = "There are no approved training sites yet.";
+          statusText.hidden = false;
+          return;
+        }
+
+        sites.forEach((site) => {
+          const option = document.createElement("option");
+          option.value = site.name;
+          option.textContent = site.name;
+          siteFilter.append(option);
+        });
+        filterBox.hidden = false;
+        render();
+      } catch (err) {
+        console.error(err);
+        showError(LOAD_ERROR);
+      }
+    }
+
+    siteFilter.addEventListener("change", render);
+    init();
+
+    // Side menu
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+    function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+    overlay.addEventListener("click", hideSidebar);
+  </script>
+</body>
+</html>
