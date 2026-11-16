@@ -1012,3 +1012,25 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_student();
+-- =======================================================================================
+-- 8. ISSUE #36: UNIVERSITY NOTIFICATIONS
+-- =======================================================================================
+DROP TABLE IF EXISTS UniversityAnnouncement CASCADE;
+
+CREATE TABLE UniversityAnnouncement (
+    announcement_id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL CHECK (length(btrim(title)) > 0),
+    event_date DATE NOT NULL,
+    event_time TIME,
+    location VARCHAR(200),
+    audience VARCHAR(50) NOT NULL DEFAULT 'interns',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE UniversityAnnouncement ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Signed-in users can view university announcements"
+ON UniversityAnnouncement FOR SELECT TO authenticated
+USING (true);
+
+
