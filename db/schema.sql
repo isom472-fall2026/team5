@@ -1032,5 +1032,44 @@ ALTER TABLE UniversityAnnouncement ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Signed-in users can view university announcements"
 ON UniversityAnnouncement FOR SELECT TO authenticated
 USING (true);
+-- =======================================================================================
+-- 9. ISSUE #38: CONTACT SUPERVISOR OR COORDINATOR
+-- =======================================================================================
+ALTER TABLE SupervisingProfessor ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30);
+
+DROP TABLE IF EXISTS StudentInquiry CASCADE;
+
+CREATE TABLE StudentInquiry (
+    inquiry_id SERIAL PRIMARY KEY,
+    student_id INT NOT NULL REFERENCES Student(student_id) ON DELETE CASCADE,
+    recipient_role VARCHAR(20) NOT NULL CHECK (recipient_role IN ('supervisor', 'coordinator')),
+    recipient_email VARCHAR(255) NOT NULL CHECK (recipient_email ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+    message_content TEXT NOT NULL CHECK (length(btrim(message_content)) BETWEEN 1 AND 2000),
+    sent_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE StudentInquiry ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Students send inquiries for themselves"
+ON StudentInquiry FOR INSERT TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = StudentInquiry.student_id
+          AND s.user_id = auth.uid()
+    )
+);
+
+CREATE POLICY "Students, supervisors and coordinators view inquiries"
+ON StudentInquiry FOR SELECT TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM Student s
+        WHERE s.student_id = StudentInquiry.student_id
+          AND s.user_id = auth.uid()
+    )
+    OR public.professor_owns_student_cycle(StudentInquiry.student_id)
+    OR public.employer_owns_student(StudentInquiry.student_id)
+);
 
 
