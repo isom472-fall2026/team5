@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Select internship site | Field Training</title>
+  <style>
+    :root {
+      --navy: #0f1f3d;
+      --navy-soft: #33415c;
+      --gold: #f2c230;
+      --white: #ffffff;
+      --line: #e3e8f0;
+      --muted: #5a6785;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+    .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+    .sidebar.open { left: 0; }
+    .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+    .sidebar a:hover { color: var(--gold); }
+    .sidebar a.current { font-weight: bold; color: var(--gold); }
+    .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar .nav-section + a { margin-top: 4px; }
+    #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+    .overlay.active { display: block; }
+    main { max-width: 860px; margin: 28px auto; padding: 0 16px; display: grid; gap: 14px; }
+    h1 { margin-bottom: 6px; }
+    .hint { color: var(--muted); font-size: 14px; }
+    .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px 18px; }
+    .success { background: #e8f6ec; color: #1d5e33; border-radius: 10px; padding: 14px 18px; }
+    .current-choice { background: #fff7da; border-left: 4px solid var(--gold); border-radius: 10px; padding: 12px 16px; }
+    .filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .filter label { font-weight: 600; }
+    select, button.select-btn { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); }
+    ul { list-style: none; display: grid; gap: 12px; }
+    .site { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px 20px; display: grid; gap: 8px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .site.chosen { border-left-color: #2e8b57; background: #f4fbf6; }
+    .site-name { font-weight: 600; font-size: 17px; }
+    .tag { display: inline-block; background: var(--navy); color: var(--white); border-radius: 999px; padding: 2px 10px; font-size: 12px; margin-left: 8px; text-transform: capitalize; }
+    dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; }
+    dt { font-weight: 600; color: var(--navy-soft); font-size: 14px; }
+    dd { overflow-wrap: anywhere; }
+    button.select-btn { background: var(--navy); color: var(--white); border: none; cursor: pointer; justify-self: start; }
+    button.select-btn:disabled { background: #9aa4b8; cursor: not-allowed; }
+    .row-error { color: #8a1c1c; font-size: 14px; }
+    a { color: var(--navy); font-weight: bold; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menuToggle" aria-label="Open menu">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <button id="closeSidebar" aria-label="Close menu">&times;</button>
+    <a href="../index.html">Home</a>
+    <a href="update-student-profile.html">My Profile</a>
+
+    <p class="nav-section">Placement</p>
+    <a href="placement-details.html">Placement Details</a>
+    <a href="company-requirements.html">Company Requirements</a>
+    <a href="internship-selection.html" class="current">Select Internship Site</a>
+    <a href="acceptance-documents.html">Acceptance Documents</a>
+
+    <p class="nav-section">Reports</p>
+    <a href="internship_log.html">Internship Attendance</a>
+    <a href="progress-summary.html">Progress Summary</a>
+    <a href="reported-issues.html">Reported Issues</a>
+    <a href="learning_objectives.html">Learning Objectives</a>
+    <a href="university-notifications.html">University Notifications</a>
+
+    <p class="nav-section">Evaluation</p>
+    <a href="evaluation-criteria.html">Evaluation Criteria</a>
+    <a href="internship_reviews.html">Site Reviews</a>
+    <a href="internship_grade.html">Grade &amp; Evaluation</a>
+    <a href="certificate.html">Internship Certificate</a>
+
+    <p class="nav-section">Communication</p>
+    <a href="chanel.html">Company Channels</a>
+    <a href="contact.html">Contact Supervisor</a>
+    <a href="contact-support.html">Contact Support</a>
+  </nav>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <h1>Select Internship Site</h1>
+    <p class="hint">Choose an approved training site in your sector of interest. Only sites that match your major are listed.</p>
+
+    <p id="status-text" class="hint" role="status">Loading internship sites...</p>
+    <p id="error-box" class="error" role="alert" hidden></p>
+    <p id="success-box" class="success" role="status" hidden></p>
+    <p id="current-box" class="current-choice" hidden></p>
+
+    <div class="filter" id="filter-box" hidden>
+      <label for="sector-filter">Sector</label>
+      <select id="sector-filter">
+        <option value="all">All sectors</option>
+        <option value="public">Public</option>
+        <option value="private">Private</option>
+        <option value="government">Government</option>
+      </select>
+      <span id="count-text" class="hint"></span>
+    </div>
+
+    <ul id="site-list"></ul>
+  </main>
+
+  <script>
+    // Database names (see db/schema.sql)
+    const PLACE_TABLE = "employmentplace";
+    const STUDENT_TABLE = "student";
+    const SECTORS = ["public", "private", "government"];
+
+    const statusText = document.getElementById("status-text");
+    const errorBox = document.getElementById("error-box");
+    const successBox = document.getElementById("success-box");
+    const currentBox = document.getElementById("current-box");
+    const filterBox = document.getElementById("filter-box");
+    const sectorFilter = document.getElementById("sector-filter");
+    const countText = document.getElementById("count-text");
+    const siteList = document.getElementById("site-list");
+
+    let supabaseClient = null;
+    let student = null;
+    let matchingSites = [];
+
+    function isEmpty(value) {
+      return value === null || value === undefined || String(value).trim() === "";
+    }
+
+    function normalize(value) {
+      return isEmpty(value) ? "" : String(value).trim().toLowerCase();
+    }
+
+    function validId(value) {
+      return !isEmpty(value) && Number.isInteger(Number(value)) && Number(value) > 0;
+    }
+
+    function validSector(value) {
+      return SECTORS.includes(normalize(value));
+    }
+
+    function showError(message) {
+      successBox.hidden = true;
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    }
+
+    function stopWithError(message) {
+      statusText.hidden = true;
+      filterBox.hidden = true;
+      siteList.replaceChildren();
+      showError(message);
+    }
+
+    function showSuccess(message) {
+      errorBox.hidden = true;
+      successBox.textContent = message;
+      successBox.hidden = false;
+    }
+
+    function showCurrentChoice() {
+      if (isEmpty(student.employment_preference)) {
+        currentBox.hidden = true;
+        return;
+      }
+      currentBox.textContent = "Your selected internship site: " + String(student.employment_preference).trim();
+      currentBox.hidden = false;
+    }
+
+    // Returns the reason a site cannot be selected, or "" if it is fine
+    function rowProblem(site) {
+      if (!validId(site.place_id)) return "This site has a missing or invalid employment ID, so it cannot be selected.";
+      if (isEmpty(site.place_name)) return "This site has no name, so it cannot be selected.";
+      if (!validSector(site.sector)) return "This site has a missing or wrong sector, so it cannot be selected.";
+      return "";
+    }
+
+    function addRow(list, label, value) {
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+      const dd = document.createElement("dd");
+      dd.textContent = isEmpty(value) ? "Not provided" : String(value).trim();
+      list.append(dt, dd);
+    }
+
+    function buildSite(site) {
+      const item = document.createElement("li");
+      const chosen = normalize(student.employment_preference) === normalize(site.place_name);
+      item.className = "site" + (chosen ? " chosen" : "");
+
+      const title = document.createElement("div");
+      title.className = "site-name";
+      title.textContent = isEmpty(site.place_name) ? "Unnamed site" : String(site.place_name).trim();
+      if (validSector(site.sector)) {
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = normalize(site.sector);
+        title.append(tag);
+      }
+
+      const details = document.createElement("dl");
+      addRow(details, "Available positions", site.available_departments);
+      addRow(details, "Opportunity", site.opportunity_description);
+      addRow(details, "Requirements", site.requirements);
+      addRow(details, "Major", site.target_major);
+      addRow(details, "Contact", site.email);
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "select-btn";
+      button.textContent = chosen ? "Selected" : "Select this site";
+      button.disabled = chosen;
+      button.addEventListener("click", () => selectSite(site, button));
+
+      item.append(title, details);
+      const problem = rowProblem(site);
+      if (problem) {
+        const note = document.createElement("p");
+        note.className = "row-error";
+        note.textContent = problem;
+        item.append(note);
+      }
+      item.append(button);
+      return item;
+    }
+
+    function render() {
+      const chosenSector = sectorFilter.value;
+      if (chosenSector !== "all" && !validSector(chosenSector)) {
+        showError("The selected sector is not valid. Please choose public, private or government.");
+        siteList.replaceChildren();
+        return;
+      }
+      const shown = matchingSites.filter((site) => chosenSector === "all" || normalize(site.sector) === chosenSector);
+      siteList.replaceChildren(...shown.map(buildSite));
+      countText.textContent = shown.length + (shown.length === 1 ? " site" : " sites");
+      if (!shown.length) {
+        const empty = document.createElement("li");
+        empty.className = "hint";
+        empty.textContent = "No approved sites for your major in this sector.";
+        siteList.append(empty);
+      }
+    }
+
+    async function selectSite(site, button) {
+      // Re-check everything before saving
+      if (!student || !validId(student.student_id)) {
+        showError("Your student_id is missing or invalid, so the site cannot be selected.");
+        return;
+      }
+      const problem = rowProblem(site);
+      if (problem) {
+        showError(problem);
+        return;
+      }
+      if (normalize(site.target_major) !== normalize(student.major)) {
+        showError("This site does not match your major, so it cannot be selected.");
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "Saving...";
+      const { data, error } = await supabaseClient
+        .from(STUDENT_TABLE)
+        .update({ employment_preference: String(site.place_name).trim() })
+        .eq("student_id", Number(student.student_id))
+        .select("employment_preference");
+
+      if (error || !data || !data.length) {
+        if (error) console.error(error);
+        showError("Your selection could not be saved. Please try again later.");
+        button.disabled = false;
+        button.textContent = "Select this site";
+        return;
+      }
+
+      student.employment_preference = data[0].employment_preference;
+      showCurrentChoice();
+      showSuccess("You selected " + String(site.place_name).trim() + " as your internship site.");
+      render();
+    }
+
+    async function init() {
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        stopWithError("This page cannot connect to the database right now. Please try again later.");
+        return;
+      }
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      try {
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        const user = sessionData && sessionData.session ? sessionData.session.user : null;
+        if (sessionError || !user) {
+          statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to select an internship site.';
+          return;
+        }
+
+        const { data: studentRow, error: studentError } = await supabaseClient
+          .from(STUDENT_TABLE)
+          .select("student_id, major, employment_preference")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (studentError) {
+          console.error(studentError);
+          stopWithError("Your student record could not be loaded. Please try again later.");
+          return;
+        }
+        if (!studentRow || !validId(studentRow.student_id)) {
+          stopWithError("Your student_id is missing or invalid, so internship sites cannot be selected.");
+          return;
+        }
+        if (isEmpty(studentRow.major)) {
+          stopWithError("Your major is missing from your profile, so suitable internship sites cannot be matched. Please update your profile first.");
+          return;
+        }
+        student = studentRow;
+
+        const { data: places, error: placesError } = await supabaseClient
+          .from(PLACE_TABLE)
+          .select("place_id, place_name, sector, target_major, available_departments, opportunity_description, requirements, email")
+          .eq("is_approved", true)
+          .order("place_name");
+
+        if (placesError) {
+          console.error(placesError);
+          stopWithError("Internship sites could not be loaded. Please try again later.");
+          return;
+        }
+
+        matchingSites = (places || []).filter((site) => normalize(site.target_major) === normalize(student.major));
+
+        statusText.hidden = true;
+        filterBox.hidden = false;
+        showCurrentChoice();
+        render();
+      } catch (err) {
+        console.error(err);
+        stopWithError("Internship sites could not be loaded. Please try again later.");
+      }
+    }
+
+    sectorFilter.addEventListener("change", () => {
+      errorBox.hidden = true;
+      render();
+    });
+
+    init();
+
+    // Side menu
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
+    function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+    overlay.addEventListener("click", hideSidebar);
+  </script>
+</body>
+</html>
