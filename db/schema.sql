@@ -1093,6 +1093,136 @@ $$;
 REVOKE ALL ON FUNCTION public.get_site_reviews() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_site_reviews() TO authenticated;
 
+-- =======================================================================================
+-- 11. ISSUE #42: APPLICATION STATUS NOTIFICATIONS
+-- =======================================================================================
+DROP TABLE IF EXISTS ApplicationNotification CASCADE;
+DROP TABLE IF EXISTS NotificationPreference CASCADE;
+DROP TABLE IF EXISTS InternshipApplication CASCADE;
+
+-- One row per application a student makes to a training site
+CREATE TABLE InternshipApplication (
+    application_id SERIAL PRIMARY KEY,
+    student_id INT NOT NULL REFERENCES Student(student_id) ON DELETE CASCADE,
+    place_name VARCHAR(150) NOT NULL REFERENCES EmploymentPlace(place_name) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Rejected')),
+    decision_note TEXT,
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    decided_at TIMESTAMPTZ,
+    UNIQUE (student_id, place_name)
+);
+
+-- Notifications created automatically when an application is approved or rejected
+CREATE TABLE ApplicationNotification (
+    notification_id SERIAL PRIMARY KEY,
+    student_id INT NOT NULL REFERENCES Student(student_id) ON DELETE CASCADE,
+    application_id INT NOT NULL REFERENCES InternshipApplication(application_id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Which status updates each student wants to be notified about (no row = notify on both)
+CREATE TABLE NotificationPreference (
+    student_id INT PRIMARY KEY REFERENCES Student(student_id) ON DELETE CASCADE,
+    notify_approved BOOLEAN NOT NULL DEFAULT TRUE,
+    notify_rejected BOOLEAN NOT NULL DEFAULT TRUE,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Creates the notification immediately when the status changes to Approved or Rejected.
+-- Wrong data stops the change with an explicit error, so no notification is generated.
+CREATE OR REPLACE FUNCTION public.notify_application_status()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    place_ok BOOLEAN;
+    wants_it BOOLEAN;
+BEGIN
+    IF NEW.status IS NOT DISTINCT FROM OLD.status OR NEW.status NOT IN ('Approved', 'Rejected') THEN
+        RETURN NEW;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM public.student s WHERE s.student_id = NEW.student_id) THEN
+        RAISE EXCEPTION 'Invalid student_id %: application status notification was not generated', NEW.student_id;
+    END IF;
+
+    SELECT ep.is_approved INTO place_ok FROM public.employmentplace ep WHERE ep.place_name = NEW.place_name;
+    IF place_ok IS NULL THEN
+        RAISE EXCEPTION 'Training site "%" has no is_approved value: application status notification was not generated', NEW.place_name;
+    END IF;
+    IF NEW.status = 'Approved' AND place_ok = FALSE THEN
+        RAISE EXCEPTION 'Training site "%" is not approved, so the application cannot be approved: notification was not generated', NEW.place_name;
+    END IF;
+
+    NEW.decided_at := CURRENT_TIMESTAMP;
+
+    SELECT CASE WHEN NEW.status = 'Approved' THEN np.notify_approved ELSE np.notify_rejected END
+    INTO wants_it FROM public.notificationpreference np WHERE np.student_id = NEW.student_id;
+    IF COALESCE(wants_it, TRUE) THEN
+        INSERT INTO public.applicationnotification (student_id, application_id, message)
+        VALUES (
+            NEW.student_id,
+            NEW.application_id,
+            format('Your internship application to %s was %s.%s',
+                   NEW.place_name,
+                   lower(NEW.status),
+                   CASE WHEN NULLIF(btrim(NEW.decision_note), '') IS NULL THEN '' ELSE ' Note: ' || btrim(NEW.decision_note) END)
+        );
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_application_status_changed
+BEFORE UPDATE OF status ON InternshipApplication
+FOR EACH ROW
+EXECUTE FUNCTION public.notify_application_status();
+
+ALTER TABLE InternshipApplication ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ApplicationNotification ENABLE ROW LEVEL SECURITY;
+ALTER TABLE NotificationPreference ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Students and their professors view applications"
+ON InternshipApplication FOR SELECT TO authenticated
+USING (
+    EXISTS (SELECT 1 FROM Student s WHERE s.student_id = InternshipApplication.student_id AND s.user_id = auth.uid())
+    OR public.professor_owns_student_cycle(InternshipApplication.student_id)
+);
+
+CREATE POLICY "Students apply for themselves"
+ON InternshipApplication FOR INSERT TO authenticated
+WITH CHECK (
+    status = 'Pending'
+    AND EXISTS (SELECT 1 FROM Student s WHERE s.student_id = InternshipApplication.student_id AND s.user_id = auth.uid())
+);
+
+CREATE POLICY "Professors decide applications of their students"
+ON InternshipApplication FOR UPDATE TO authenticated
+USING (EXISTS (SELECT 1 FROM Student s WHERE s.student_id = InternshipApplication.student_id AND public.professor_owns_student_cycle(s.student_id)))
+WITH CHECK (EXISTS (SELECT 1 FROM Student s WHERE s.student_id = InternshipApplication.student_id AND public.professor_owns_student_cycle(s.student_id)));
+
+CREATE POLICY "Students view their own notifications"
+ON ApplicationNotification FOR SELECT TO authenticated
+USING (EXISTS (SELECT 1 FROM Student s WHERE s.student_id = ApplicationNotification.student_id AND s.user_id = auth.uid()));
+
+CREATE POLICY "Students mark their own notifications as read"
+ON ApplicationNotification FOR UPDATE TO authenticated
+USING (EXISTS (SELECT 1 FROM Student s WHERE s.student_id = ApplicationNotification.student_id AND s.user_id = auth.uid()))
+WITH CHECK (EXISTS (SELECT 1 FROM Student s WHERE s.student_id = ApplicationNotification.student_id AND s.user_id = auth.uid()));
+REVOKE UPDATE ON TABLE public.ApplicationNotification FROM authenticated;
+GRANT UPDATE (is_read) ON TABLE public.ApplicationNotification TO authenticated;
+
+CREATE POLICY "Students manage their own notification preferences"
+ON NotificationPreference FOR ALL TO authenticated
+USING (EXISTS (SELECT 1 FROM Student s WHERE s.student_id = NotificationPreference.student_id AND s.user_id = auth.uid()))
+WITH CHECK (EXISTS (SELECT 1 FROM Student s WHERE s.student_id = NotificationPreference.student_id AND s.user_id = auth.uid()));
+
+
+
 
 
 
