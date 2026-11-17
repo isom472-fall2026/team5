@@ -95,6 +95,8 @@
     { label: 'Home', href: 'index.html' },
 
     { section: 'Placement' },
+    { label: 'Training Opportunities', href: 'pages/training-opportunities.html' },
+    { label: 'Select Internship Site', href: 'intenrship_selection.html' },
     { label: 'Placement Details',    href: 'pages/placement-details.html' },
     { label: 'Company Requirements', href: 'pages/company-requirements.html' },
     { label: 'Company Channels',     href: 'chanel.html' },
