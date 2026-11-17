@@ -1426,6 +1426,8 @@
     .events-link { font-size: 13px; font-weight: 700; color: var(--navy); text-decoration: none; }
     .events-link:hover { text-decoration: underline; }
     a.shortcut-card { text-decoration: none; color: inherit; }
+    a.stat-card { display: block; text-decoration: none; color: inherit; transition: border-color .15s, box-shadow .15s; }
+    a.stat-card:hover, a.stat-card:focus-visible { border-color: var(--gold); box-shadow: 0 8px 22px rgba(15,31,61,.10); }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
@@ -1587,22 +1589,22 @@
       </div>
 
       <div class="stats-grid" aria-label="Field training summary">
-        <article class="stat-card">
+        <a class="stat-card" href="pages/internship_log.html">
           <div class="stat-topline"><p class="stat-label">Hours completed</p><span class="icon-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg></span></div>
           <p class="stat-value" id="stat-hours">—</p><p class="stat-subtitle" id="stat-hours-sub">Approved hours</p>
-        </article>
-        <article class="stat-card">
+        </a>
+        <a class="stat-card" href="pages/progress-summary.html">
           <div class="stat-topline"><p class="stat-label">Weekly reports</p><span class="icon-box"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"></path><path d="M14 3v5h5M10 12h5M10 16h5"></path></svg></span></div>
           <p class="stat-value" id="stat-reports">—</p><p class="stat-subtitle" id="stat-reports-sub">No reports yet</p>
-        </article>
-        <article class="stat-card">
+        </a>
+        <a class="stat-card" href="pages/reported-issues.html">
           <div class="stat-topline"><p class="stat-label">Open issues</p><span class="icon-box"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3.5 19h17z"></path><path d="M12 9v4M12 17h.01"></path></svg></span></div>
           <p class="stat-value" id="stat-issues">—</p><p class="stat-subtitle" id="stat-issues-sub">Not resolved yet</p>
-        </article>
-        <article class="stat-card">
+        </a>
+        <a class="stat-card" href="pages/placement-details.html">
           <div class="stat-topline"><p class="stat-label">Placement</p><span class="icon-box"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20V8h12v12M9 8V4h6v4M9 12h2M13 12h2M9 16h2M13 16h2"></path></svg></span></div>
           <p class="stat-value" id="stat-placement">—</p><p class="stat-subtitle" id="stat-placement-sub">Not assigned yet</p>
-        </article>
+        </a>
       </div>
 
       <div class="dashboard-layout">
