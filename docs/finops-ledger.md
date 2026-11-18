@@ -77,6 +77,7 @@ We work using the agents feature in VS Code + Antigravity and record token usage
 | Access Main Navigation Menu #46 | Antigravity (Gemini) | Weekly free quota fully used | Issue #46, pages/evaluation-criteria.html as the template, all pages and index.html | Give the agent one clear task per session and stop it from reading git history, which wasted requests |
 | View Reported Issues and Their Status #140 | Claude | ~2,500 tokens | The page code and the shared menu | Show friendly messages instead of raw database errors from the start |
 | View Internship Progress Summary #141 | Claude | ~2,000 tokens | The page code and the shared menu | Add the shared menu in the same pull request as the page |
+| Select Preferred Internship Sites #33 | GPT-Luna | 1 prompt; weekly limit 100% → 97%; token count unavailable | AGENTS.md, issue #33, db/schema.sql and the selection page | None |
 
 
 ## Phase 5

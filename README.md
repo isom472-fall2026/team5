@@ -32,6 +32,18 @@ TODO: This system addresses the frequent loss of daily evaluation forms
 | write the note for this phase | [docs/delivery-notes/](docs/delivery-notes/) |
 | get unstuck | [docs/how-we-work.md](docs/how-we-work.md#when-you-are-stuck) |
 
+## Testing accounts
+
+Run [`db/testing_accounts.sql`](db/testing_accounts.sql) in the Supabase SQL Editor after
+the schema and seed scripts. These accounts are confirmed and ready for password sign-in.
+They are test-only credentials and must not be used for real personal or production data.
+
+| Persona | Email | Password |
+|---|---|---|
+| Student | `amina.sample.test@example.test` | `Student-7mK4!nR2pX9q` |
+| Supervising professor | `lina.sample.test@example.test` | `Professor-4D!vN8cT3hR6` |
+| Internship site | `training.test@example.test` | `InternSite-9K!bL5wV2xQ7` |
+
 `AGENTS.md` holds the same rules, written for your AI assistant. You do not need to read
 it. Do not delete it.
 
