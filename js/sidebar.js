@@ -96,6 +96,7 @@
 
     { section: 'Placement' },
     { label: 'Placement Details',    href: 'pages/placement-details.html' },
+    { label: 'Choose Internship Site', href: 'pages/internship-selection.html' },
     { label: 'Company Requirements', href: 'pages/company-requirements.html' },
     { label: 'Company Channels',     href: 'chanel.html' },
     { label: 'Acceptance Documents', href: 'pages/acceptance-documents.html' },
