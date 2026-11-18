@@ -83,6 +83,7 @@ We work using the agents feature in VS Code + Antigravity and record token usage
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
 |---|---|---|---|---|
+| Review Student Internship Status #47 | GPT-Luna | 1 prompt; weekly limit 96% → 94%; token count unavailable | Issue #47, AGENTS.md, db/schema.sql and related page patterns | Apply the migration and test the RPCs with professor and student accounts before the PR |
 |  |  |  |  |  |
 
 ## Phase 6

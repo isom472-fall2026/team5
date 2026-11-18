@@ -97,6 +97,7 @@
     { section: 'Placement' },
     { label: 'Placement Details',    href: 'pages/placement-details.html' },
     { label: 'Company Requirements', href: 'pages/company-requirements.html' },
+    { label: 'Review Student Status', href: 'pages/review-student-status.html' },
     { label: 'Company Channels',     href: 'chanel.html' },
     { label: 'Acceptance Documents', href: 'pages/acceptance-documents.html' },
     { label: 'Application Status',   href: 'pages/application-notifications.html' },

@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Review student internship status | Field Training</title>
+  <style>
+    :root {
+      --navy: #0f1f3d;
+      --gold: #f2c230;
+      --line: #d5ddd7;
+      --muted: #5a6785;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f4f6f3; color: #202b27; font-family: "Segoe UI", sans-serif; }
+    header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 4px solid var(--gold); background: var(--navy); color: #fff; }
+    #menuToggle { border: 0; background: none; color: inherit; font-size: 24px; cursor: pointer; }
+    main { width: min(1120px, calc(100% - 32px)); margin: 28px auto; }
+    .panel { overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .panel-heading, .panel-body { padding: 20px 24px; }
+    .panel-heading { border-bottom: 1px solid var(--line); }
+    h1 { margin: 0; font-size: 22px; }
+    .intro { margin: 6px 0 0; color: var(--muted); }
+    .panel-body { display: grid; gap: 16px; }
+    .filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    label { font-weight: 600; }
+    select, button { font: inherit; }
+    select { max-width: 100%; padding: 8px 10px; border: 1px solid #bac4d0; border-radius: 6px; background: #fff; color: var(--navy); }
+    button { padding: 8px 12px; border: 0; border-radius: 6px; background: var(--navy); color: #fff; cursor: pointer; font-weight: 600; }
+    button:hover:not(:disabled) { background: #263d65; }
+    button.secondary { background: #fff; border: 1px solid var(--navy); color: var(--navy); }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .message { margin: 0; padding: 12px 14px; border-radius: 6px; }
+    .message.info { background: #edf2f8; color: #263d65; }
+    .message.error { background: #fdecec; color: #8a1c1c; }
+    .message.success { background: #e8f6ee; color: #1d5a36; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #f4f6f3; color: var(--navy); white-space: nowrap; }
+    td.actions { min-width: 290px; }
+    .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .row-actions select { min-width: 150px; }
+    .status-badge { display: inline-block; padding: 3px 9px; border-radius: 999px; background: #fff4d1; color: #6b5317; font-weight: 600; }
+    .status-badge.assigned { background: #e8f6ee; color: #1d5a36; }
+    [hidden] { display: none !important; }
+    @media (max-width: 600px) {
+      main { width: calc(100% - 24px); margin: 16px auto; }
+      .panel-heading, .panel-body { padding: 16px; }
+      h1 { font-size: 19px; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menuToggle" type="button" aria-label="Open navigation">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+  <div id="sidebar"></div>
+  <script src="../js/sidebar.js"></script>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <section class="panel" aria-labelledby="page-heading">
+      <div class="panel-heading">
+        <h1 id="page-heading">Review student internship status</h1>
+        <p class="intro">Review students in your internship cycles, assign a site, or reject a preferred site.</p>
+      </div>
+      <div class="panel-body">
+        <p id="page-status" class="message info" role="status" aria-live="polite">Checking your sign-in status...</p>
+        <p id="page-error" class="message error" role="alert" hidden></p>
+        <p id="action-message" class="message" role="status" hidden></p>
+
+        <div id="student-content" hidden>
+          <div class="filter">
+            <label for="status-filter">Placement status</label>
+            <select id="status-filter">
+              <option value="All">All statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Assigned">Assigned</option>
+            </select>
+          </div>
+          <p id="empty-message" class="message info" hidden></p>
+          <div class="table-wrap">
+            <table id="student-table" hidden>
+              <thead>
+                <tr>
+                  <th scope="col">Student</th>
+                  <th scope="col">Major</th>
+                  <th scope="col">Preferred site</th>
+                  <th scope="col">Placement status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="student-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STUDENT_TABLE = "student";
+    const PROFESSOR_TABLE = "supervisingprofessor";
+    const CYCLE_TABLE = "internshipcycle";
+    const PLACE_TABLE = "employmentplace";
+    const statusBox = document.getElementById("page-status");
+    const errorBox = document.getElementById("page-error");
+    const actionMessage = document.getElementById("action-message");
+    const studentContent = document.getElementById("student-content");
+    const studentRows = document.getElementById("student-rows");
+    const studentTable = document.getElementById("student-table");
+    const emptyMessage = document.getElementById("empty-message");
+    const statusFilter = document.getElementById("status-filter");
+
+    let supabaseClient;
+    let professorId;
+    let students = [];
+    let approvedPlaces = [];
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+      statusBox.hidden = true;
+      actionMessage.hidden = true;
+      studentContent.hidden = true;
+    }
+
+    function setActionMessage(message, type) {
+      actionMessage.textContent = message;
+      actionMessage.className = "message " + type;
+      actionMessage.hidden = false;
+      errorBox.hidden = true;
+    }
+
+    function validId(value) {
+      return Number.isInteger(value) && value > 0;
+    }
+
+    function validateStudents(rows) {
+      if (!Array.isArray(rows)) return "The student list has an invalid format.";
+      for (const row of rows) {
+        if (!row || !validId(row.student_id)) return "A student record has a missing or invalid student_id.";
+        if (typeof row.name !== "string" || !row.name.trim()) return `Student ${row.student_id} has a missing or invalid name.`;
+        if (!Object.prototype.hasOwnProperty.call(row, "employment_preference")) {
+          return `Student ${row.student_id} is missing the employment_preference field.`;
+        }
+        if (row.employment_preference !== null
+          && (typeof row.employment_preference !== "string" || !row.employment_preference.trim())) {
+          return `Student ${row.student_id} has an invalid employment_preference value.`;
+        }
+        if (row.employment_place !== null
+          && (typeof row.employment_place !== "string" || !row.employment_place.trim())) {
+          return `Student ${row.student_id} has an invalid placement value.`;
+        }
+      }
+      return "";
+    }
+
+    function makeCell(text) {
+      const cell = document.createElement("td");
+      cell.textContent = text;
+      return cell;
+    }
+
+    function buildActions(row) {
+      const cell = document.createElement("td");
+      cell.className = "actions";
+      if (row.employment_place) {
+        cell.textContent = "Placement assigned";
+        return cell;
+      }
+
+      const controls = document.createElement("div");
+      controls.className = "row-actions";
+      if (approvedPlaces.length) {
+        const siteSelect = document.createElement("select");
+        siteSelect.setAttribute("aria-label", "Site to assign to " + row.name);
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Choose site";
+        siteSelect.append(placeholder);
+        approvedPlaces.forEach((place) => {
+          const option = document.createElement("option");
+          option.value = place.place_name;
+          option.textContent = place.place_name;
+          if (place.place_name === row.employment_preference) option.selected = true;
+          siteSelect.append(option);
+        });
+
+        const assignButton = document.createElement("button");
+        assignButton.type = "button";
+        assignButton.textContent = "Assign site";
+        assignButton.addEventListener("click", () => assignStudent(row, siteSelect.value, assignButton));
+        controls.append(siteSelect, assignButton);
+      } else {
+        const noSites = document.createElement("span");
+        noSites.textContent = "No approved sites available";
+        controls.append(noSites);
+      }
+
+      if (row.employment_preference) {
+        const rejectButton = document.createElement("button");
+        rejectButton.type = "button";
+        rejectButton.className = "secondary";
+        rejectButton.textContent = "Reject preference";
+        rejectButton.addEventListener("click", () => rejectPreference(row, rejectButton));
+        controls.append(rejectButton);
+      }
+      cell.append(controls);
+      return cell;
+    }
+
+    function renderStudents() {
+      const filterValue = statusFilter.value;
+      const shownStudents = students.filter((student) => {
+        const status = student.employment_place ? "Assigned" : "Pending";
+        return filterValue === "All" || status === filterValue;
+      });
+      studentRows.replaceChildren();
+      shownStudents.forEach((student) => {
+        const row = document.createElement("tr");
+        row.append(makeCell(student.name), makeCell(student.major || "Not provided"));
+        row.append(makeCell(student.employment_preference || "No preference submitted"));
+        const statusCell = document.createElement("td");
+        const badge = document.createElement("span");
+        const status = student.employment_place ? "Assigned" : "Pending";
+        badge.className = "status-badge" + (status === "Assigned" ? " assigned" : "");
+        badge.textContent = status;
+        statusCell.append(badge);
+        row.append(statusCell, buildActions(student));
+        studentRows.append(row);
+      });
+
+      studentTable.hidden = shownStudents.length === 0;
+      emptyMessage.hidden = shownStudents.length !== 0;
+      emptyMessage.textContent = students.length === 0
+        ? "No students were found in your internship cycles."
+        : "No students match this placement-status filter.";
+    }
+
+    async function loadStudents(professorId) {
+      statusBox.textContent = "Loading students in your internship cycles...";
+      statusBox.hidden = false;
+      errorBox.hidden = true;
+
+      const { data: cycles, error: cycleError } = await supabaseClient
+        .from(CYCLE_TABLE)
+        .select("cycle_id")
+        .eq("professor_id", professorId);
+      if (cycleError) throw cycleError;
+      if (!Array.isArray(cycles) || cycles.some((cycle) => !validId(cycle.cycle_id))) {
+        throw new Error("The professor's internship cycle data is missing or invalid.");
+      }
+      if (cycles.length === 0) {
+        students = [];
+        statusBox.hidden = true;
+        studentContent.hidden = false;
+        renderStudents();
+        return;
+      }
+
+      const { data: rows, error: studentError } = await supabaseClient
+        .from(STUDENT_TABLE)
+        .select("student_id, name, major, employment_preference, employment_place")
+        .in("internship_cycle_id", cycles.map((cycle) => cycle.cycle_id))
+        .order("name");
+      if (studentError) throw studentError;
+      const problem = validateStudents(rows);
+      if (problem) throw new Error(problem);
+
+      students = rows;
+      statusBox.hidden = true;
+      studentContent.hidden = false;
+      renderStudents();
+    }
+
+    function actionError(error, fallback) {
+      console.error(fallback, error);
+      const message = String(error && error.message || "").toLowerCase();
+      if (message.includes("not in your internship cycles")) return "This student is not in your internship cycles. No changes were made.";
+      if (message.includes("not approved")) return "The selected site is not approved. No changes were made.";
+      if (message.includes("already has a placement")) return "This student already has an assigned placement. No changes were made.";
+      if (message.includes("no preference to reject")) return "This student has no preference to reject or has already been assigned.";
+      return fallback;
+    }
+
+    async function assignStudent(student, placeName, button) {
+      if (!approvedPlaces.some((place) => place.place_name === placeName)) {
+        setActionMessage("Choose an approved site before assigning this student.", "error");
+        return;
+      }
+      button.disabled = true;
+      let error;
+      try {
+        const result = await supabaseClient.rpc("assign_student_placement", {
+          p_student_id: student.student_id,
+          p_place_name: placeName
+        });
+        error = result.error;
+      } catch (requestError) {
+        console.error("Could not assign student placement", requestError);
+        button.disabled = false;
+        setActionMessage("Could not assign this student. No changes were made.", "error");
+        return;
+      }
+      button.disabled = false;
+      if (error) {
+        setActionMessage(actionError(error, "Could not assign this student. No changes were made."), "error");
+        return;
+      }
+      setActionMessage(`${student.name} was assigned to ${placeName}.`, "success");
+      try {
+        await refreshStudents();
+      } catch (refreshError) {
+        console.error("Could not refresh student placement status", refreshError);
+        showError("The assignment was saved, but the updated student list could not be loaded. Refresh the page.");
+      }
+    }
+
+    async function rejectPreference(student, button) {
+      button.disabled = true;
+      let error;
+      try {
+        const result = await supabaseClient.rpc("reject_student_site_preference", {
+          p_student_id: student.student_id
+        });
+        error = result.error;
+      } catch (requestError) {
+        console.error("Could not reject student preference", requestError);
+        button.disabled = false;
+        setActionMessage("Could not reject this preference. No changes were made.", "error");
+        return;
+      }
+      button.disabled = false;
+      if (error) {
+        setActionMessage(actionError(error, "Could not reject this preference. No changes were made."), "error");
+        return;
+      }
+      setActionMessage(`${student.name}'s preference was rejected. They can choose a site again.`, "success");
+      try {
+        await refreshStudents();
+      } catch (refreshError) {
+        console.error("Could not refresh student preference status", refreshError);
+        showError("The preference was rejected, but the updated student list could not be loaded. Refresh the page.");
+      }
+    }
+
+    async function refreshStudents() {
+      await loadStudents(professorId);
+    }
+
+    async function initialize() {
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        showError("Supabase is not configured, so student internship status is unavailable.");
+        return;
+      }
+
+      try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) throw sessionError;
+        const user = sessionData && sessionData.session ? sessionData.session.user : null;
+        if (!user) {
+          statusBox.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to continue.';
+          return;
+        }
+        const { data: professor, error: professorError } = await supabaseClient
+          .from(PROFESSOR_TABLE)
+          .select("professor_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (professorError) throw professorError;
+        if (!professor || !validId(professor.professor_id)) {
+          showError("Only supervising professors can access this page.");
+          return;
+        }
+        professorId = professor.professor_id;
+
+        const { data: places, error: placeError } = await supabaseClient
+          .from(PLACE_TABLE)
+          .select("place_name")
+          .eq("is_approved", true)
+          .order("place_name");
+        if (placeError) throw placeError;
+        if (!Array.isArray(places) || places.some((place) => !place.place_name || !place.place_name.trim())) {
+          throw new Error("Approved internship site data is missing or invalid.");
+        }
+        approvedPlaces = places;
+        await loadStudents(professorId);
+      } catch (error) {
+        console.error("Could not load student internship status", error);
+        showError("Student placement data could not be loaded. Required fields include student_id, name, and employment_preference. Please try again later.");
+      }
+    }
+
+    statusFilter.addEventListener("change", renderStudents);
+    initialize();
+
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      sidebar.classList.add("open");
+      overlay.classList.add("active");
+    });
+    document.getElementById("closeSidebar").addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      overlay.classList.remove("active");
+    });
+    overlay.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      overlay.classList.remove("active");
+    });
+  </script>
+</body>
+</html>
