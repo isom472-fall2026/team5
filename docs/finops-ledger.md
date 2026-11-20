@@ -16,9 +16,16 @@ four lines. Revisit it in Phase 4 and say whether it held.*
 
 | Kind of work | What we use | Why |
 |---|---|---|
-| Managing backlog and user story requirements | Claude, ChatGPT, and Gemini | To refine user stories, verify acceptance criteria, and track model usage per task. | 
 | Managing backlog and user story requirements | Claude, ChatGPT, and Gemini |To refine user stories, verify acceptance criteria, and track model usage per task| 
-| Coding and repository maintenance | VS Code agents and Antigravity | To accelerate development, manage merge conflicts, and automate documentation |  
+| Coding and repository maintenance | VS Code agents and Antigravity | To accelerate development, manage merge conflicts, and automate documentation | 
+
+### Phase 2 Plan Review (Phase 5)
+
+The Phase 2 plan was to use Claude, ChatGPT, and Gemini for user stories and acceptance criteria, and VS Code agents and Antigravity for coding and documentation.
+
+The plan was partially followed. The team used AI assistants across Phases 2–4, but usage tracking was inconsistent. Some token counts were estimated, while others were not recorded. The team also identified a need for better testing and more accurate database schema information before submitting pull requests.
+
+Changes for Phase 5: Record AI usage after each story, use the actual database schema when developing features, and test completed work before requesting review.
 ## Phase 2
 
 | Story | Assistant used | What it used (tokens, requests, or your own estimate) | What we gave it (files, story, schema) | What we would do differently |
