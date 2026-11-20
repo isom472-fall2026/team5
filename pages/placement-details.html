@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Placement Details</title>
+<title>Placement Details | Field Training</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/config.js"></script>
 <style>
   :root {
     --navy: #0f1f3d;
@@ -23,30 +25,32 @@
   .sidebar a:hover { color: var(--gold); }
   .sidebar a.current { font-weight: bold; color: var(--gold); }
   .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-  .sidebar .nav-section + a { margin-top: 4px; }
   #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
   .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
   .overlay.active { display: block; }
   main { max-width: 700px; margin: 28px auto; padding: 0 16px; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
   h1 { margin-bottom: 6px; color: var(--navy); }
   .sub { color: var(--muted); margin-bottom: 20px; }
+  #refreshBtn { background: var(--navy); color: var(--white); border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; font-weight: bold; }
+  #refreshBtn:hover { background: var(--gold); color: var(--navy); }
   .card { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
   .card h2 { font-size: 17px; margin-bottom: 10px; color: var(--navy); }
   .row { margin-bottom: 8px; color: var(--navy-soft); }
-  .row span { color: var(--muted); display: inline-block; min-width: 110px; }
+  .row span { color: var(--muted); display: inline-block; min-width: 130px; }
   .card a { color: var(--navy); font-weight: bold; text-decoration: underline; }
-  .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
-  .pending { background: #fff7da; color: #6b5317; border-left: 4px solid var(--gold); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .status { border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .error { background: #fdecec; color: #8a1c1c; }
+  .pending { background: #fff7da; color: #6b5317; border-left: 4px solid var(--gold); }
+  .info { background: #eef2f8; color: var(--navy-soft); }
+  .status a { color: inherit; font-weight: bold; }
   .updated { color: var(--muted); font-size: 13px; margin-top: 4px; }
-  .demo { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 14px; color: var(--muted); font-size: 14px; }
-  .demo button { margin-top: 8px; background: var(--navy); color: var(--white); border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; font-weight: bold; }
-  .demo button:hover { background: var(--gold); color: var(--navy); }
 </style>
 </head>
 <body>
 
 <header>
-  <button id="menuToggle">&#9776;</button>
+  <button id="menuToggle" aria-label="Open menu">&#9776;</button>
   <strong>Internship Platform</strong>
 </header>
 
@@ -55,96 +59,150 @@
 <div class="overlay" id="overlay"></div>
 
 <main>
-  <h1>My Placement</h1>
-  <p class="sub">Details of your assigned training placement.</p>
-  <div id="content"></div>
-
-  <div class="demo">
-    Prototype test: simulate the coordinator's final assignment.<br>
-    <button id="assignBtn">Coordinator: assign placement</button>
+  <div class="top">
+    <div>
+      <h1>My Placement</h1>
+      <p class="sub">Details of your assigned training placement.</p>
+    </div>
+    <button id="refreshBtn" type="button">Refresh</button>
   </div>
+  <div id="content"><div class="status info">Loading your placement…</div></div>
 </main>
 
 <script>
-  let placement = {
-    status: "pending",
-    place_id: null,
-    place_name: "",
-    target_major: "",
-    sector: "",
-    location: "",
-    mentor_name: "",
-    mentor_email: "",
-    mentor_phone: "",
-    last_updated: null
-  };
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const content = document.getElementById("content");
 
-  function validate(p) {
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function show(type, html) {
+    content.innerHTML = `<div class="status ${type}">${html}</div>`;
+  }
+
+  function contactRow(label, value, kind) {
+    if (!value) return `<div class="row"><span>${label}:</span> Not provided</div>`;
+    const safe = escapeHtml(value);
+    const href = kind === "email" ? `mailto:${safe}` : `tel:${safe.replace(/\s/g, "")}`;
+    return `<div class="row"><span>${label}:</span> <a href="${href}">${safe}</a></div>`;
+  }
+
+  // Required placement columns (acceptance criterion 4)
+  function missingColumns(place) {
     const missing = [];
-    if (!p.place_id) missing.push("place_id");
-    if (!p.place_name || p.place_name.trim() === "") missing.push("place_name");
-    if (!p.target_major || p.target_major.trim() === "") missing.push("target_major");
-    if (!p.sector || p.sector.trim() === "") missing.push("sector");
+    if (!Number.isInteger(place.place_id) || place.place_id < 1) missing.push("place_id");
+    ["place_name", "target_major", "sector"].forEach((col) => {
+      if (!place[col] || String(place[col]).trim() === "") missing.push(col);
+    });
     return missing;
   }
 
-  function render() {
-    const content = document.getElementById("content");
+  async function loadPlacement() {
+    show("info", "Loading your placement…");
+    try {
+      const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+      if (sessionError) throw sessionError;
+      const session = sessionData.session;
+      if (!session) {
+        show("info", `Please <a href="../index.html">sign in</a> to see your placement.`);
+        return;
+      }
 
-    if (placement.status !== "final") {
-      content.innerHTML = `<div class="pending">Your placement has not been assigned yet. It will appear here automatically once the coordinator makes the final assignment.</div>`;
-      return;
+      // 1. The signed-in student
+      const { data: student, error: studentError } = await supabaseClient
+        .from("student")
+        .select("student_id, employment_place, internship_cycle_id")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (studentError) throw studentError;
+      if (!student) {
+        show("info", "Your account is not linked to a student record yet. Please contact the field training office.");
+        return;
+      }
+
+      // 2. Not assigned yet: it appears here once the coordinator assigns it (criterion 3)
+      if (!student.employment_place) {
+        show("pending", "Your placement has not been assigned yet. It will appear here once the coordinator makes the final assignment.");
+        return;
+      }
+
+      // 3. The assigned training site
+      const { data: place, error: placeError } = await supabaseClient
+        .from("employmentplace")
+        .select("place_id, place_name, target_major, sector, coordination_office, available_departments, phone_number, email, last_updated_at")
+        .eq("place_name", student.employment_place)
+        .maybeSingle();
+      if (placeError) throw placeError;
+
+      if (!place) {
+        show("error", "<strong>Placement information is unavailable or incorrect.</strong><br>Your assigned training site could not be found. Please contact the field training office.");
+        return;
+      }
+      const missing = missingColumns(place);
+      if (missing.length) {
+        show("error", `<strong>Placement information is unavailable or incorrect.</strong><br>Missing or invalid: ${escapeHtml(missing.join(", "))}`);
+        return;
+      }
+
+      // 4. The supervising professor (mentor) from the student's internship cycle
+      let professor = null;
+      if (student.internship_cycle_id) {
+        const { data: cycle, error: cycleError } = await supabaseClient
+          .from("internshipcycle")
+          .select("supervisingprofessor(name, email, phone_number)")
+          .eq("cycle_id", student.internship_cycle_id)
+          .maybeSingle();
+        if (cycleError) throw cycleError;
+        professor = cycle ? cycle.supervisingprofessor : null;
+      }
+
+      const updated = place.last_updated_at ? new Date(place.last_updated_at).toLocaleString() : "Not recorded";
+
+      content.innerHTML = `
+        <div class="card">
+          <h2>Training site</h2>
+          <div class="row"><span>Name:</span> ${escapeHtml(place.place_name)}</div>
+          <div class="row"><span>Sector:</span> ${escapeHtml(place.sector)}</div>
+          <div class="row"><span>Target major:</span> ${escapeHtml(place.target_major)}</div>
+          <div class="row"><span>Location / office:</span> ${escapeHtml(place.coordination_office) || "Not provided"}</div>
+          <div class="row"><span>Departments:</span> ${escapeHtml(place.available_departments) || "Not provided"}</div>
+        </div>
+        <div class="card">
+          <h2>Training site contact</h2>
+          ${contactRow("Email", place.email, "email")}
+          ${contactRow("Phone", place.phone_number, "phone")}
+        </div>
+        <div class="card">
+          <h2>Mentor (supervising professor)</h2>
+          ${professor
+            ? `<div class="row"><span>Name:</span> ${escapeHtml(professor.name) || "Not provided"}</div>
+               ${contactRow("Email", professor.email, "email")}
+               ${contactRow("Phone", professor.phone_number, "phone")}`
+            : `<div class="row">Your mentor will appear here once you are added to an internship cycle.</div>`}
+        </div>
+        <div class="updated">Last updated: ${escapeHtml(updated)}</div>`;
+    } catch (err) {
+      console.error("Placement details error:", err);
+      show("error", "We could not load your placement right now. Please try again later.");
     }
-
-    const missing = validate(placement);
-    if (missing.length) {
-      content.innerHTML = `<div class="error"><strong>Placement information is unavailable or incorrect.</strong><br>Missing or invalid: ${missing.join(", ")}</div>`;
-      return;
-    }
-
-    content.innerHTML = `
-      <div class="card">
-        <h2>Company</h2>
-        <div class="row"><span>Name:</span> ${placement.place_name}</div>
-        <div class="row"><span>Sector:</span> ${placement.sector}</div>
-        <div class="row"><span>Target major:</span> ${placement.target_major}</div>
-        <div class="row"><span>Location:</span> ${placement.location || "Not provided"}</div>
-      </div>
-      <div class="card">
-        <h2>Mentor</h2>
-        <div class="row"><span>Name:</span> ${placement.mentor_name || "Not provided"}</div>
-        <div class="row"><span>Email:</span> ${placement.mentor_email ? `<a href="mailto:${placement.mentor_email}">${placement.mentor_email}</a>` : "Not provided"}</div>
-        <div class="row"><span>Phone:</span> ${placement.mentor_phone ? `<a href="tel:+965${placement.mentor_phone}">+965 ${placement.mentor_phone}</a>` : "Not provided"}</div>
-      </div>
-      <div class="updated">Last updated: ${placement.last_updated}</div>`;
   }
 
-  function coordinatorAssign() {
-    placement = {
-      status: "final",
-      place_id: 101,
-      place_name: "[Company name]",
-      target_major: "[Major]",
-      sector: "[Sector]",
-      location: "[Company address]",
-      mentor_name: "[Mentor name]",
-      mentor_email: "mentor@example.com",
-      mentor_phone: "00000000",
-      last_updated: new Date().toLocaleString()
-    };
-    render();
-  }
+  document.getElementById("refreshBtn").addEventListener("click", loadPlacement);
+  loadPlacement();
 
-  document.getElementById("assignBtn").addEventListener("click", coordinatorAssign);
-  render();
-
-  const sidebar = document.getElementById("sidebar");
-  const overlay = document.getElementById("overlay");
-  function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
-  function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+  // Menu open/close (same as the other pages; safe if sidebar.js already handles it)
+  const sidebarEl = document.getElementById("sidebar");
+  const overlayEl = document.getElementById("overlay");
+  function openSidebar() { sidebarEl.classList.add("open"); if (overlayEl) overlayEl.classList.add("active"); }
+  function hideSidebar() { sidebarEl.classList.remove("open"); if (overlayEl) overlayEl.classList.remove("active"); }
   document.getElementById("menuToggle").addEventListener("click", openSidebar);
-  document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
-  overlay.addEventListener("click", hideSidebar);
+  const closeBtn = document.getElementById("closeSidebar");
+  if (closeBtn) closeBtn.addEventListener("click", hideSidebar);
+  if (overlayEl) overlayEl.addEventListener("click", hideSidebar);
 </script>
 
 </body>
+</html>
