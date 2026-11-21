@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Open issues by training site | Field Training</title>
+  <style>
+    :root {
+      --navy: #0f1f3d;
+      --gold: #f2c230;
+      --white: #ffffff;
+      --line: #e3e8f0;
+      --muted: #5a6785;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+    main { max-width: 900px; margin: 28px auto; padding: 0 16px; display: grid; gap: 14px; }
+    h1 { margin-bottom: 6px; color: var(--navy); }
+    .hint { color: var(--muted); font-size: 14px; margin: 0; }
+    .message { border-radius: 10px; padding: 14px 18px; margin: 0; }
+    .error { background: #fdecec; color: #8a1c1c; }
+    .empty { background: #fff7da; border: 1px solid var(--line); border-left: 4px solid var(--gold); color: #6b5317; text-align: center; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 14px 16px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { background: var(--navy); color: var(--white); }
+    td.count { font-variant-numeric: tabular-nums; }
+    tbody tr:last-child td { border-bottom: 0; }
+    [hidden] { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menuToggle" type="button" aria-label="Open navigation">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+  <div id="sidebar"></div>
+  <script src="../js/sidebar.js"></script>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <h1>Open Issues by Training Site</h1>
+    <p id="page-status" class="hint" role="status" aria-live="polite">Checking your sign-in status...</p>
+    <p id="page-error" class="message error" role="alert" hidden></p>
+    <p id="access-denied" class="message error" role="alert" hidden></p>
+    <p id="empty-message" class="message empty" hidden>No issues have been reported yet.</p>
+    <div id="table-wrap" class="table-wrap" hidden>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Training site</th>
+            <th scope="col">Open issues</th>
+            <th scope="col">Total issues</th>
+          </tr>
+        </thead>
+        <tbody id="issue-rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const statusBox = document.getElementById("page-status");
+    const errorBox = document.getElementById("page-error");
+    const accessDenied = document.getElementById("access-denied");
+    const emptyMessage = document.getElementById("empty-message");
+    const tableWrap = document.getElementById("table-wrap");
+    const issueRows = document.getElementById("issue-rows");
+    const ACCESS_MESSAGE = "This page is for the field training coordinator.";
+
+    function showError(message) {
+      statusBox.hidden = true;
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+      emptyMessage.hidden = true;
+      tableWrap.hidden = true;
+    }
+
+    function validateRows(rows) {
+      if (!Array.isArray(rows)) return "The issue summary has an invalid format.";
+      for (const row of rows) {
+        if (!row || typeof row.training_site_name !== "string" || !row.training_site_name.trim()) {
+          return "An issue summary row has a missing training site name.";
+        }
+        if (!Number.isInteger(Number(row.open_issue_count)) || Number(row.open_issue_count) < 0
+          || !Number.isInteger(Number(row.total_issue_count)) || Number(row.total_issue_count) < 1
+          || Number(row.open_issue_count) > Number(row.total_issue_count)) {
+          return `The issue counts for ${row.training_site_name} are invalid.`;
+        }
+      }
+      return "";
+    }
+
+    function renderRows(rows) {
+      issueRows.replaceChildren();
+      for (const issue of rows) {
+        const row = document.createElement("tr");
+        const site = document.createElement("td");
+        site.textContent = issue.training_site_name;
+        const openCount = document.createElement("td");
+        openCount.className = "count";
+        openCount.textContent = String(issue.open_issue_count);
+        const totalCount = document.createElement("td");
+        totalCount.className = "count";
+        totalCount.textContent = String(issue.total_issue_count);
+        row.append(site, openCount, totalCount);
+        issueRows.append(row);
+      }
+    }
+
+    async function initialize() {
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        showError("Supabase is not configured, so the issue summary is unavailable.");
+        return;
+      }
+
+      try {
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) throw sessionError;
+        const user = sessionData && sessionData.session ? sessionData.session.user : null;
+        if (!user) {
+          statusBox.textContent = "You are not signed in. Sign in to view this report.";
+          return;
+        }
+
+        const { data: professor, error: professorError } = await supabaseClient
+          .from("supervisingprofessor")
+          .select("professor_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (professorError) throw professorError;
+        if (!professor) {
+          statusBox.hidden = true;
+          accessDenied.textContent = ACCESS_MESSAGE;
+          accessDenied.hidden = false;
+          return;
+        }
+
+        const { data: rows, error: reportError } = await supabaseClient.rpc("get_open_issues_by_training_site");
+        if (reportError) throw reportError;
+        const problem = validateRows(rows);
+        if (problem) throw new Error(problem);
+
+        statusBox.hidden = true;
+        if (rows.length === 0) {
+          emptyMessage.hidden = false;
+          return;
+        }
+        renderRows(rows);
+        tableWrap.hidden = false;
+      } catch (error) {
+        console.error("Could not load open issues by training site", error);
+        showError(`Could not load the issue summary: ${error.message || "Please try again later."}`);
+      }
+    }
+
+    initialize();
+  </script>
+</body>
+</html>
