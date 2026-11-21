@@ -1,65 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Update Student Profile</title>
-<style>
-body{font-family:Arial,sans-serif;background:#f4f7fb;margin:0;color:#243047}
-main{max-width:520px;margin:45px auto;background:white;padding:28px;border-radius:12px;box-shadow:0 3px 14px #0001}
-h1{font-size:25px}label{display:block;margin-top:16px;font-weight:bold}
-input{box-sizing:border-box;width:100%;padding:11px;margin-top:6px;border:1px solid #aab4c3;border-radius:6px}
-button{margin-top:20px;padding:12px 20px;background:#164b79;color:white;border:0;border-radius:6px;cursor:pointer}
-#message{margin-top:16px;font-weight:bold}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student Profile | Field Training</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <style>
+    :root { --navy: #0f1f3d; --navy-soft: #33415c; --gold: #f2c230; --white: #ffffff; --line: #e3e8f0; --muted: #5a6785; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    main { max-width: 640px; margin: 28px auto; padding: 0 16px; }
+    h1 { margin-bottom: 6px; }
+    .sub { color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .card { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .card h2 { font-size: 17px; margin-bottom: 12px; }
+    .row { margin-bottom: 8px; color: var(--navy-soft); }
+    .row span { color: var(--muted); display: inline-block; min-width: 120px; }
+    label { display: block; margin-top: 14px; font-weight: bold; color: var(--navy-soft); }
+    input, textarea { width: 100%; margin-top: 6px; padding: 10px; border: 1px solid #c3cad8; border-radius: 7px; font: inherit; color: var(--navy); }
+    textarea { min-height: 80px; resize: vertical; }
+    .hint { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .save { margin-top: 18px; background: var(--navy); color: var(--white); border: 0; border-radius: 8px; padding: 10px 18px; cursor: pointer; font-weight: bold; }
+    .save:hover:not(:disabled) { background: var(--gold); color: var(--navy); }
+    .save:disabled { background: #9aa4b8; cursor: not-allowed; }
+    .msg { border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+    .info { background: #eef2f8; color: var(--navy-soft); }
+    .error { background: #fdecec; color: #8a1c1c; }
+    .success { background: #e8f6ee; color: #1d5a36; }
+    .msg a { color: inherit; font-weight: bold; }
+    [hidden] { display: none !important; }
+  </style>
 </head>
 <body>
-<header>
-  <button id="menuToggle">&#9776;</button>
-  <strong>Internship Platform</strong>
-</header>
-<div id="sidebar"></div>
-<script src="../js/sidebar.js"></script>
-<div class="overlay" id="overlay"></div>
-<main>
-<h1>Update Student Profile</h1>
-<p>Story #54 — Student contact information</p>
-<form id="profileForm">
-<label for="studentId">Student ID</label>
-<input id="studentId" required placeholder="Enter student ID">
-<label for="phone">Phone Number</label>
-<input id="phone" type="tel" required placeholder="Enter phone number">
-<label for="email">Student Email</label>
-<input id="email" type="email" required placeholder="student@example.com">
-<label for="cv">CV Link</label>
-<input id="cv" type="url" placeholder="https://example.com/cv.pdf">
-<button type="submit">Save Changes</button>
-</form>
-<p id="message" role="status" aria-live="polite"></p>
-</main>
-<script>
-document.getElementById('profileForm').addEventListener('submit',function(e){
-e.preventDefault();
-const id=document.getElementById('studentId').value.trim();
-const phone=document.getElementById('phone').value.trim();
-const email=document.getElementById('email').value.trim();
-const message=document.getElementById('message');
-message.style.color='#b42318';
-if(!/^[A-Za-z0-9-]{4,20}$/.test(id)){
-message.textContent='Error: Invalid student ID.';return;
-}
-if(!/^\+?[0-9 ()-]{7,20}$/.test(phone)){
-message.textContent='Error: Invalid phone number.';return;
-}
-if(!email.includes('@')){
-message.textContent='Error: Invalid email address.';return;
-}
-if(!confirm('Are you sure you want to save these profile changes?')){
-message.textContent='Update cancelled.';return;
-}
-message.style.color='#9a6700';
-message.textContent='Form validated. Demo only: database update is not connected.';
-});
-</script>
+  <header>
+    <button id="menuToggle" type="button" aria-label="Open menu">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+  <div id="sidebar"></div>
+  <script src="../js/sidebar.js"></script>
+
+  <main>
+    <h1>Student Profile</h1>
+    <p class="sub">Keep your contact information and CV up to date for the training office and training sites.</p>
+
+    <p id="status" class="msg info" role="status">Loading your profile...</p>
+    <p id="error" class="msg error" role="alert" hidden></p>
+    <p id="success" class="msg success" role="status" hidden></p>
+
+    <section class="card" id="readonly" hidden>
+      <h2>Your record</h2>
+      <div class="row"><span>Name:</span> <b id="name"></b></div>
+      <div class="row"><span>Student ID:</span> <b id="studentId"></b></div>
+      <div class="row"><span>Major:</span> <b id="major"></b></div>
+    </section>
+
+    <form class="card" id="profileForm" hidden novalidate>
+      <h2>Contact information</h2>
+      <label for="email">Email</label>
+      <input id="email" type="email" maxlength="255" required>
+
+      <label for="phone">Phone number</label>
+      <input id="phone" type="tel" maxlength="30" required>
+      <p class="hint">Digits only, with an optional + at the start (7 to 15 digits).</p>
+
+      <label for="cv">CV link (optional)</label>
+      <input id="cv" type="url" maxlength="255" placeholder="https://...">
+
+      <label for="skills">Skills (optional)</label>
+      <textarea id="skills" maxlength="1000" placeholder="e.g. Excel, SQL, communication"></textarea>
+
+      <button class="save" id="saveBtn" type="submit">Save changes</button>
+    </form>
+  </main>
+
+  <script>
+    const el = (id) => document.getElementById(id);
+    let db = null;
+    let studentId = null;
+
+    function show(id, text, isHtml) {
+      ["status", "error", "success"].forEach((k) => { el(k).hidden = true; });
+      if (isHtml) el(id).innerHTML = text; else el(id).textContent = text;
+      el(id).hidden = false;
+    }
+    const orDash = (v) => (v === null || v === undefined || String(v).trim() === "") ? "Not provided" : String(v).trim();
+
+    async function load() {
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        show("error", "This page cannot connect to the database right now. Please try again later.");
+        return;
+      }
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      try {
+        const { data: sessionData, error: sessionError } = await db.auth.getSession();
+        if (sessionError) throw sessionError;
+        const user = sessionData.session ? sessionData.session.user : null;
+        if (!user) {
+          show("status", 'You are not signed in. <a href="../index.html">Sign in</a> to update your profile.', true);
+          return;
+        }
+
+        const { data: student, error } = await db
+          .from("student")
+          .select("student_id, name, major, student_email, phone_number, cv_url, skills")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (!student || !Number.isInteger(student.student_id) || student.student_id < 1) {
+          show("error", "Your student_id is missing or invalid, so your profile cannot be loaded.");
+          return;
+        }
+
+        studentId = student.student_id;
+        el("name").textContent = orDash(student.name);
+        el("studentId").textContent = student.student_id;
+        el("major").textContent = orDash(student.major);
+        el("email").value = student.student_email || "";
+        el("phone").value = student.phone_number || "";
+        el("cv").value = student.cv_url || "";
+        el("skills").value = student.skills || "";
+
+        el("status").hidden = true;
+        el("readonly").hidden = false;
+        el("profileForm").hidden = false;
+      } catch (err) {
+        console.error("Profile load error:", err);
+        show("error", "Your profile could not be loaded. Please try again later.");
+      }
+    }
+
+    function validate(values) {
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(values.student_email)) return "Please enter a valid email address.";
+      if (!/^\+?[0-9]{7,15}$/.test(values.phone_number.replace(/[\s-]/g, ""))) return "Please enter a valid phone number (7 to 15 digits).";
+      if (values.cv_url && !/^https?:\/\/\S+$/i.test(values.cv_url)) return "The CV link must start with http:// or https://.";
+      return "";
+    }
+
+    el("profileForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!Number.isInteger(studentId) || studentId < 1) {
+        show("error", "Your student_id is missing or invalid, so your profile was not saved.");
+        return;
+      }
+      const values = {
+        student_email: el("email").value.trim(),
+        phone_number: el("phone").value.trim(),
+        cv_url: el("cv").value.trim() || null,
+        skills: el("skills").value.trim() || null,
+      };
+      const problem = validate({ ...values, cv_url: values.cv_url || "" });
+      if (problem) { show("error", problem); return; }
+
+      const btn = el("saveBtn");
+      btn.disabled = true;
+      try {
+        const { data, error } = await db
+          .from("student")
+          .update(values)
+          .eq("student_id", studentId)
+          .select("student_id")
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) {
+          show("error", "No matching student record was updated, so your profile was not saved.");
+          return;
+        }
+        show("success", "Your profile has been saved.");
+      } catch (err) {
+        console.error("Profile save error:", err);
+        show("error", "Your profile could not be saved. Please check your details and try again.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    load();
+  </script>
 </body>
 </html>

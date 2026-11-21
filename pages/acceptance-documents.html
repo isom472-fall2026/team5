@@ -3,121 +3,279 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Acceptance Documents</title>
+  <title>Acceptance Documents | Field Training</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 30px; background: #f5f7fb; }
-    main { max-width: 800px; margin: auto; background: white; padding: 24px; border-radius: 12px; }
-    input, button { padding: 10px; margin: 8px 0; }
-    input { display: block; width: 95%; }
-    button { background: #164b82; color: white; border: 0; border-radius: 5px; cursor: pointer; }
-    #message { color: #b00020; }
-    li { margin: 12px 0; }
+    :root { --navy: #0f1f3d; --navy-soft: #33415c; --gold: #f2c230; --white: #ffffff; --line: #e3e8f0; --muted: #5a6785; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    main { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+    h1 { margin-bottom: 6px; }
+    .sub { color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .card { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .card h2 { font-size: 17px; margin-bottom: 12px; }
+    label { display: block; margin-top: 12px; font-weight: bold; color: var(--navy-soft); }
+    input[type="text"], select { width: 100%; margin-top: 6px; padding: 10px; border: 1px solid #c3cad8; border-radius: 7px; font: inherit; color: var(--navy); background: var(--white); }
+    input[type="file"] { margin-top: 8px; }
+    .hint { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .btn { margin-top: 16px; background: var(--navy); color: var(--white); border: 0; border-radius: 8px; padding: 10px 18px; cursor: pointer; font-weight: bold; }
+    .btn:hover:not(:disabled) { background: var(--gold); color: var(--navy); }
+    .btn:disabled { background: #9aa4b8; cursor: not-allowed; }
+    .link-btn { background: none; border: 0; color: var(--navy); font-weight: bold; text-decoration: underline; cursor: pointer; font: inherit; }
+    .msg { border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+    .info { background: #eef2f8; color: var(--navy-soft); }
+    .error { background: #fdecec; color: #8a1c1c; }
+    .success { background: #e8f6ee; color: #1d5a36; }
+    .msg a { color: inherit; font-weight: bold; }
+    ul.docs { list-style: none; }
+    ul.docs li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    ul.docs li:last-child { border-bottom: 0; }
+    .doc-meta { color: var(--muted); font-size: 13px; }
+    .place-title { font-size: 15px; margin: 12px 0 4px; color: var(--navy-soft); }
+    [hidden] { display: none !important; }
   </style>
 </head>
 <body>
-<header>
-  <button id="menuToggle">&#9776;</button>
-  <strong>Internship Platform</strong>
-</header>
-<div id="sidebar"></div>
-<script src="../js/sidebar.js"></script>
-<div class="overlay" id="overlay"></div>
-<main>
-  <h1>Acceptance Documents</h1>
-  <p>Upload acceptance files and reports to company channels.</p>
+  <header>
+    <button id="menuToggle" type="button" aria-label="Open menu">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+  <div id="sidebar"></div>
+  <script src="../js/sidebar.js"></script>
 
-  <label>Company Channel ID</label>
-  <input id="channel" placeholder="Enter channel UUID">
+  <main>
+    <h1>Acceptance Documents</h1>
+    <p class="sub" id="intro">Official acceptance letters and documents for each training site.</p>
 
-  <label>Document Name</label>
-  <input id="documentName" placeholder="Enter document name">
+    <p id="status" class="msg info" role="status">Loading...</p>
+    <p id="error" class="msg error" role="alert" hidden></p>
+    <p id="success" class="msg success" role="status" hidden></p>
 
-  <label>Select Document</label>
-  <input id="file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+    <!-- Upload: training site and coordinator / supervising professor only -->
+    <section class="card" id="uploadCard" hidden>
+      <h2>Upload a document</h2>
+      <label for="placeSelect">Training site</label>
+      <select id="placeSelect"></select>
 
-  <button id="upload">Upload Document</button>
-  <p id="message" role="status"></p>
+      <label for="docName">Document name</label>
+      <input type="text" id="docName" maxlength="255" placeholder="e.g. Acceptance letter">
 
-  <h2>Channel Documents</h2>
-  <button id="load">Refresh Documents</button>
-  <ul id="documents"></ul>
-</main>
+      <label for="docFile">File</label>
+      <input type="file" id="docFile" accept=".pdf,.docx,.jpg,.jpeg,.png">
+      <p class="hint">PDF, DOCX, JPG or PNG, up to 5 MB.</p>
 
-<script src="../js/config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const message = document.getElementById("message");
+      <button class="btn" id="uploadBtn" type="button">Upload document</button>
+    </section>
 
-document.getElementById("upload").onclick = async () => {
-  const channel = document.getElementById("channel").value.trim();
-  const name = document.getElementById("documentName").value.trim();
-  const file = document.getElementById("file").files[0];
+    <!-- Everyone allowed by the database sees the document list -->
+    <section class="card" id="listCard" hidden>
+      <h2>Documents</h2>
+      <div id="docList"></div>
+    </section>
+  </main>
 
-  if (!channel || !name || !file) {
-    message.textContent = "Error: Channel, document name and file are required.";
-    return;
-  }
+  <script>
+    // Story #49 — table AcceptanceDocument (place_name, document_name, file_path, uploaded_at), see db/schema.sql
+    const BUCKET = "acceptance-documents";
+    const MAX_MB = 5;
+    const ALLOWED = {
+      pdf: ["application/pdf"],
+      docx: ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+      jpg: ["image/jpeg"],
+      jpeg: ["image/jpeg"],
+      png: ["image/png"],
+    };
 
-  const extension = file.name.split(".").pop().toLowerCase();
-  if (!["pdf","doc","docx","jpg","jpeg","png"].includes(extension)) {
-    message.textContent = "Error: Unsupported file format.";
-    return;
-  }
+    const el = (id) => document.getElementById(id);
+    let db = null;
+    let role = null;          // "site", "professor" or "student"
+    let places = [];          // place names this user may see / upload for
 
-  message.textContent = "Uploading...";
-  const path = `${channel}/${crypto.randomUUID()}.${extension}`;
+    function show(id, text, isHtml) {
+      ["status", "error", "success"].forEach((k) => { el(k).hidden = true; });
+      if (isHtml) el(id).innerHTML = text; else el(id).textContent = text;
+      el(id).hidden = false;
+    }
 
-  const uploaded = await db.storage.from("acceptance-documents").upload(path, file);
-  if (uploaded.error) {
-    message.textContent = "Upload failed: " + uploaded.error.message;
-    return;
-  }
+    function checkFile(file) {
+      if (!file) return "Please choose a file to upload.";
+      const ext = file.name.includes(".") ? file.name.split(".").pop().toLowerCase() : "";
+      if (!ALLOWED[ext] || (file.type && !ALLOWED[ext].includes(file.type))) {
+        return `"${file.name}" is not allowed. Please upload a PDF, DOCX, JPG or PNG file.`;
+      }
+      if (file.size > MAX_MB * 1024 * 1024) return `"${file.name}" is larger than ${MAX_MB} MB.`;
+      return "";
+    }
 
-  const saved = await db.from("acceptance_documents").insert({
-    channel_id: channel,
-    document_name: name,
-    file_path: path,
-    file_type: extension,
-    version_number: 1
-  });
+    // Who is signed in? Training site, supervising professor/coordinator, or student
+    async function detectRole(userId) {
+      const site = await db.from("employmentplace").select("place_name").eq("user_id", userId).maybeSingle();
+      if (site.error) throw site.error;
+      if (site.data) return { role: "site", places: [site.data.place_name] };
 
-  if (saved.error) {
-    await db.storage.from("acceptance-documents").remove([path]);
-    message.textContent = "Save failed: " + saved.error.message;
-    return;
-  }
+      const prof = await db.from("supervisingprofessor").select("professor_id").eq("user_id", userId).maybeSingle();
+      if (prof.error) throw prof.error;
+      if (prof.data) {
+        const cycles = await db.from("internshipcycle").select("place_name").eq("professor_id", prof.data.professor_id);
+        if (cycles.error) throw cycles.error;
+        const names = [...new Set((cycles.data || []).map((c) => c.place_name).filter(Boolean))].sort();
+        return { role: "professor", places: names };
+      }
 
-  message.textContent = "Document uploaded successfully.";
-  document.getElementById("load").click();
-};
+      const stu = await db.from("student").select("student_id, employment_place").eq("user_id", userId).maybeSingle();
+      if (stu.error) throw stu.error;
+      if (stu.data) return { role: "student", places: stu.data.employment_place ? [stu.data.employment_place] : [] };
 
-document.getElementById("load").onclick = async () => {
-  const channel = document.getElementById("channel").value.trim();
-  if (!channel) {
-    message.textContent = "Error: Enter a company channel ID.";
-    return;
-  }
+      return { role: null, places: [] };
+    }
 
-  const result = await db.from("acceptance_documents")
-    .select("document_id,document_name,file_path,version_number,uploaded_at")
-    .eq("channel_id", channel)
-    .order("uploaded_at", { ascending: false });
+    async function loadDocuments() {
+      const box = el("docList");
+      box.textContent = "Loading documents...";
+      if (places.length === 0) {
+        box.textContent = role === "student"
+          ? "You have no assigned training site yet, so there are no acceptance documents to show."
+          : "You have no training sites linked to your account yet.";
+        return;
+      }
+      const { data, error } = await db
+        .from("acceptancedocument")
+        .select("document_id, place_name, document_name, file_path, uploaded_at")
+        .in("place_name", places)
+        .order("uploaded_at", { ascending: false });
+      if (error) throw error;
 
-  const list = document.getElementById("documents");
-  list.replaceChildren();
+      box.replaceChildren();
+      if (!data || data.length === 0) {
+        box.textContent = "No documents have been uploaded yet.";
+        return;
+      }
+      places.forEach((place) => {
+        const docs = data.filter((d) => d.place_name === place);
+        if (!docs.length) return;
+        if (places.length > 1) {
+          const h = document.createElement("p");
+          h.className = "place-title";
+          h.textContent = place;
+          box.append(h);
+        }
+        const ul = document.createElement("ul");
+        ul.className = "docs";
+        docs.forEach((doc) => {
+          const li = document.createElement("li");
+          const info = document.createElement("div");
+          const name = document.createElement("div");
+          name.textContent = doc.document_name || "Untitled document";
+          const meta = document.createElement("div");
+          meta.className = "doc-meta";
+          meta.textContent = doc.uploaded_at ? "Uploaded " + new Date(doc.uploaded_at).toLocaleString() : "";
+          info.append(name, meta);
 
-  if (result.error) {
-    message.textContent = result.error.message;
-    return;
-  }
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "link-btn";
+          btn.textContent = "Download";
+          btn.addEventListener("click", () => download(doc.file_path));
+          li.append(info, btn);
+          ul.append(li);
+        });
+        box.append(ul);
+      });
+    }
 
-  for (const doc of result.data) {
-    const li = document.createElement("li");
-    li.textContent = `${doc.document_name} — Version ${doc.version_number}`;
-    list.appendChild(li);
-  }
-};
-</script>
+    async function download(path) {
+      try {
+        const { data, error } = await db.storage.from(BUCKET).createSignedUrl(path, 60);
+        if (error) throw error;
+        window.open(data.signedUrl, "_blank", "noopener");
+      } catch (err) {
+        console.error("Download error:", err);
+        show("error", "This document could not be opened right now. Please try again later.");
+      }
+    }
+
+    el("uploadBtn").addEventListener("click", async () => {
+      const place = el("placeSelect").value;
+      const name = el("docName").value.trim();
+      const file = el("docFile").files[0];
+      if (!places.includes(place)) { show("error", "Please choose one of your training sites."); return; }
+      if (!name) { show("error", "Please enter a document name."); return; }
+      const problem = checkFile(file);
+      if (problem) { show("error", problem); return; }
+
+      const btn = el("uploadBtn");
+      btn.disabled = true;
+      show("status", "Uploading...");
+      const ext = file.name.split(".").pop().toLowerCase();
+      const safePlace = place.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const path = `${safePlace}/${Date.now()}.${ext}`;
+      try {
+        const up = await db.storage.from(BUCKET).upload(path, file);
+        if (up.error) throw up.error;
+
+        const saved = await db.from("acceptancedocument").insert({ place_name: place, document_name: name, file_path: path });
+        if (saved.error) {
+          await db.storage.from(BUCKET).remove([path]);
+          throw saved.error;
+        }
+        el("docName").value = "";
+        el("docFile").value = "";
+        show("success", "Document uploaded successfully.");
+        await loadDocuments();
+      } catch (err) {
+        console.error("Upload error:", err);
+        show("error", "The document could not be uploaded. Please try again, or contact the field training office.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    async function init() {
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        show("error", "This page cannot connect to the database right now. Please try again later.");
+        return;
+      }
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      try {
+        const { data: sessionData, error: sessionError } = await db.auth.getSession();
+        if (sessionError) throw sessionError;
+        const user = sessionData.session ? sessionData.session.user : null;
+        if (!user) {
+          show("status", 'You are not signed in. <a href="../index.html">Sign in</a> to see acceptance documents.', true);
+          return;
+        }
+
+        const who = await detectRole(user.id);
+        role = who.role;
+        places = who.places;
+        if (!role) {
+          show("error", "Your account is not linked to a student, professor or training site yet. Please contact the field training office.");
+          return;
+        }
+
+        // Students only view and download; sites and professors also upload
+        if (role !== "student" && places.length) {
+          el("placeSelect").replaceChildren(...places.map((p) => {
+            const o = document.createElement("option");
+            o.value = p; o.textContent = p; return o;
+          }));
+          el("uploadCard").hidden = false;
+          el("intro").textContent = "Upload acceptance letters and official documents for your training site. Students assigned to the site can view and download them.";
+        } else if (role === "student") {
+          el("intro").textContent = "Acceptance letters and official documents from your training site. You can view and download them.";
+        }
+
+        el("status").hidden = true;
+        el("listCard").hidden = false;
+        await loadDocuments();
+      } catch (err) {
+        console.error("Acceptance documents error:", err);
+        show("error", "Acceptance documents could not be loaded. Please try again later.");
+      }
+    }
+
+    init();
+  </script>
 </body>
 </html>

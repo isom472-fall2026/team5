@@ -3,33 +3,51 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Internship site preference | Field Training</title>
+  <title>Select internship site | Field Training</title>
   <style>
     :root {
       --navy: #0f1f3d;
       --navy-soft: #33415c;
       --gold: #f2c230;
+      --white: #ffffff;
       --line: #e3e8f0;
       --muted: #5a6785;
     }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, sans-serif; color: var(--navy); }
-    header { background: var(--navy); color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
-    #menuToggle { background: none; border: 0; color: #fff; font-size: 24px; cursor: pointer; }
-    main { max-width: 760px; margin: 32px auto; padding: 0 16px; }
-    h1 { margin: 0 0 8px; }
-    .hint { margin: 0 0 22px; color: var(--muted); line-height: 1.5; }
-    .card { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
-    label { display: block; margin: 18px 0 8px; font-weight: 700; }
-    select, button { font: inherit; }
-    select { width: 100%; padding: 11px; border: 1px solid #c3cad8; border-radius: 7px; color: var(--navy); background: #fff; }
-    button { margin-top: 16px; padding: 10px 18px; border: 0; border-radius: 8px; background: var(--navy); color: #fff; cursor: pointer; font-weight: 700; }
-    button:hover:not(:disabled) { background: var(--gold); color: var(--navy); }
-    button:disabled { opacity: .6; cursor: not-allowed; }
-    .message { margin: 0 0 16px; padding: 12px 14px; border-radius: 8px; }
-    .error { background: #fdecec; color: #8a1c1c; }
-    .success { background: #e8f6ee; color: #1d5a36; }
-    .assigned { background: #fff7da; border-left: 4px solid var(--gold); padding: 14px; border-radius: 8px; line-height: 1.5; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    header { background: var(--navy); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid var(--gold); }
+    #menuToggle { background: none; border: none; color: var(--white); font-size: 24px; cursor: pointer; }
+    .sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100%; background: var(--navy); padding: 20px; transition: left .3s; z-index: 20; overflow-y: auto; }
+    .sidebar.open { left: 0; }
+    .sidebar a { display: block; padding: 10px 0; color: var(--white); text-decoration: none; }
+    .sidebar a:hover { color: var(--gold); }
+    .sidebar a.current { font-weight: bold; color: var(--gold); }
+    .nav-section { margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.15); color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    #closeSidebar { background: none; border: none; color: var(--white); font-size: 22px; float: right; cursor: pointer; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(15,31,61,.4); z-index: 10; }
+    .overlay.active { display: block; }
+    main { max-width: 860px; margin: 28px auto; padding: 0 16px; display: grid; gap: 14px; }
+    h1 { margin-bottom: 6px; }
+    .hint { color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .error { background: #fdecec; color: #8a1c1c; border-radius: 10px; padding: 14px 18px; }
+    .success { background: #e8f6ec; color: #1d5e33; border-radius: 10px; padding: 14px 18px; }
+    .current-choice, .assigned { background: #fff7da; border-left: 4px solid var(--gold); border-radius: 10px; padding: 12px 16px; line-height: 1.5; }
+    .filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .filter label { font-weight: 600; }
+    select, button.select-btn { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); }
+    ul { list-style: none; display: grid; gap: 12px; }
+    .site { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px 20px; display: grid; gap: 8px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .site.chosen { border-left-color: #2e8b57; background: #f4fbf6; }
+    .site-name { font-weight: 600; font-size: 17px; }
+    .tag { display: inline-block; background: var(--navy); color: var(--white); border-radius: 999px; padding: 2px 10px; font-size: 12px; margin-left: 8px; text-transform: capitalize; }
+    dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; }
+    dt { font-weight: 600; color: var(--navy-soft); font-size: 14px; }
+    dd { overflow-wrap: anywhere; }
+    button.select-btn { background: var(--navy); color: var(--white); border: none; cursor: pointer; justify-self: start; font-weight: bold; }
+    button.select-btn:hover:not(:disabled) { background: var(--gold); color: var(--navy); }
+    button.select-btn:disabled { background: #9aa4b8; cursor: not-allowed; }
+    .row-error { color: #8a1c1c; font-size: 14px; }
+    a { color: var(--navy); font-weight: bold; }
     [hidden] { display: none !important; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -45,218 +63,307 @@
   <div class="overlay" id="overlay"></div>
 
   <main>
-    <h1>Choose an internship site</h1>
-    <p class="hint">Choose one approved site as your preference. You can change it until the coordinator assigns your final placement.</p>
-    <div id="status" class="hint" role="status">Loading your student record...</div>
-    <p id="error" class="message error" role="alert" hidden></p>
-    <p id="success" class="message success" role="status" hidden></p>
-    <section class="card" id="preference-card" hidden>
-      <p id="assigned-message" class="assigned" hidden></p>
-      <p id="preference-summary" hidden></p>
-      <form id="preference-form" hidden>
-        <label for="site-select">Preferred approved site</label>
-        <select id="site-select" name="site" required>
-          <option value="">Choose a site</option>
-        </select>
-        <button id="save-button" type="submit">Save preference</button>
-      </form>
-    </section>
+    <div>
+      <h1>Select Internship Site</h1>
+      <p class="hint">Choose one approved training site as your preference. You can change it until the coordinator assigns your final placement.</p>
+    </div>
+
+    <p id="status-text" class="hint" role="status">Loading internship sites...</p>
+    <p id="error-box" class="error" role="alert" hidden></p>
+    <p id="success-box" class="success" role="status" hidden></p>
+    <p id="assigned-box" class="assigned" hidden></p>
+    <p id="current-box" class="current-choice" hidden></p>
+
+    <div class="filter" id="filter-box" hidden>
+      <label for="sector-filter">Sector</label>
+      <select id="sector-filter">
+        <option value="all">All sectors</option>
+        <option value="public">Public</option>
+        <option value="private">Private</option>
+        <option value="government">Government</option>
+      </select>
+      <span id="count-text" class="hint"></span>
+    </div>
+
+    <ul id="site-list"></ul>
   </main>
 
   <script>
-    const STUDENT_TABLE = "student";
+    // Stories #33 (choose a preferred site) and #37 (filter approved sites by sector)
+    // Database names: see db/schema.sql
     const PLACE_TABLE = "employmentplace";
-    const statusText = document.getElementById("status");
-    const errorBox = document.getElementById("error");
-    const successBox = document.getElementById("success");
-    const preferenceCard = document.getElementById("preference-card");
-    const preferenceSummary = document.getElementById("preference-summary");
-    const assignedMessage = document.getElementById("assigned-message");
-    const preferenceForm = document.getElementById("preference-form");
-    const siteSelect = document.getElementById("site-select");
-    const saveButton = document.getElementById("save-button");
+    const STUDENT_TABLE = "student";
+    const SECTORS = ["public", "private", "government"];
 
-    let supabaseClient;
-    let studentId;
-    let approvedPlaces = [];
+    const statusText = document.getElementById("status-text");
+    const errorBox = document.getElementById("error-box");
+    const successBox = document.getElementById("success-box");
+    const assignedBox = document.getElementById("assigned-box");
+    const currentBox = document.getElementById("current-box");
+    const filterBox = document.getElementById("filter-box");
+    const sectorFilter = document.getElementById("sector-filter");
+    const countText = document.getElementById("count-text");
+    const siteList = document.getElementById("site-list");
+
+    let supabaseClient = null;
+    let student = null;
+    let approvedSites = [];
+    let matchingSites = [];
+
+    function isEmpty(value) {
+      return value === null || value === undefined || String(value).trim() === "";
+    }
+    function normalize(value) {
+      return isEmpty(value) ? "" : String(value).trim().toLowerCase();
+    }
+    function validId(value) {
+      return !isEmpty(value) && Number.isInteger(Number(value)) && Number(value) > 0;
+    }
+    function validSector(value) {
+      return SECTORS.includes(normalize(value));
+    }
 
     function showError(message) {
+      successBox.hidden = true;
       errorBox.textContent = message;
       errorBox.hidden = false;
-      successBox.hidden = true;
+    }
+    function showSuccess(message) {
+      errorBox.hidden = true;
+      successBox.textContent = message;
+      successBox.hidden = false;
+    }
+    function stopWithError(message) {
+      statusText.hidden = true;
+      filterBox.hidden = true;
+      siteList.replaceChildren();
+      showError(message);
     }
 
-    function validId(value) {
-      return Number.isInteger(Number(value)) && Number(value) > 0;
+    function showCurrentChoice() {
+      if (isEmpty(student.employment_preference)) {
+        currentBox.hidden = true;
+        return;
+      }
+      currentBox.textContent = "Your current preference: " + String(student.employment_preference).trim();
+      currentBox.hidden = false;
     }
 
-    async function loadPage() {
-      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined") {
-        statusText.hidden = true;
-        showError("Supabase is not configured, so the site preference could not be loaded.");
+    // #33: once the coordinator assigns a final site, the preference is locked
+    function showAssigned(placeName) {
+      statusText.hidden = true;
+      filterBox.hidden = true;
+      siteList.replaceChildren();
+      currentBox.hidden = true;
+      assignedBox.textContent = "Your final placement is " + String(placeName).trim() + ". Your preference can no longer be changed.";
+      assignedBox.hidden = false;
+    }
+
+    // Returns why a site cannot be selected, or "" if it is fine
+    function rowProblem(site) {
+      if (!validId(site.place_id)) return "This site has a missing or invalid ID, so it cannot be selected.";
+      if (isEmpty(site.place_name)) return "This site has no name, so it cannot be selected.";
+      if (!validSector(site.sector)) return "This site has a missing or wrong sector, so it cannot be selected.";
+      return "";
+    }
+
+    function addRow(list, label, value) {
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+      const dd = document.createElement("dd");
+      dd.textContent = isEmpty(value) ? "Not provided" : String(value).trim();
+      list.append(dt, dd);
+    }
+
+    function buildSite(site) {
+      const item = document.createElement("li");
+      const chosen = normalize(student.employment_preference) === normalize(site.place_name);
+      item.className = "site" + (chosen ? " chosen" : "");
+
+      const title = document.createElement("div");
+      title.className = "site-name";
+      title.textContent = isEmpty(site.place_name) ? "Unnamed site" : String(site.place_name).trim();
+      if (validSector(site.sector)) {
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = normalize(site.sector);
+        title.append(tag);
+      }
+
+      const details = document.createElement("dl");
+      addRow(details, "Available positions", site.available_departments);
+      addRow(details, "Opportunity", site.opportunity_description);
+      addRow(details, "Requirements", site.requirements);
+      addRow(details, "Target majors", site.target_major);
+      addRow(details, "Contact", site.email);
+
+      const problem = rowProblem(site);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "select-btn";
+      button.textContent = chosen ? "Selected" : "Select this site";
+      button.disabled = chosen || Boolean(problem);
+      button.addEventListener("click", () => selectSite(site, button));
+
+      item.append(title, details);
+      if (problem) {
+        const note = document.createElement("p");
+        note.className = "row-error";
+        note.textContent = problem;
+        item.append(note);
+      }
+      item.append(button);
+      return item;
+    }
+
+    function render() {
+      const chosenSector = sectorFilter.value;
+      if (chosenSector !== "all" && !validSector(chosenSector)) {
+        showError("The selected sector is not valid. Please choose public, private or government.");
+        siteList.replaceChildren();
+        return;
+      }
+      const shown = matchingSites.filter((site) => chosenSector === "all" || normalize(site.sector) === chosenSector);
+      siteList.replaceChildren(...shown.map(buildSite));
+      countText.textContent = shown.length + (shown.length === 1 ? " site" : " sites");
+      if (!shown.length) {
+        const empty = document.createElement("li");
+        empty.className = "hint";
+        empty.textContent = "No approved sites in this sector.";
+        siteList.append(empty);
+      }
+    }
+
+    async function selectSite(site, button) {
+      // Re-check everything before saving (#33 criterion 4, #37 bad input)
+      if (!student || !validId(student.student_id)) {
+        showError("Your student_id is missing or invalid, so the site was not saved.");
+        return;
+      }
+      const problem = rowProblem(site);
+      if (problem) {
+        showError(problem);
+        return;
+      }
+      if (!approvedSites.some((s) => s.place_name === site.place_name)) {
+        showError("This site does not exist or is not approved. Your preference was not saved.");
         return;
       }
 
-      if (!window.supabase) {
-        statusText.hidden = true;
-        showError("The Supabase client could not be loaded, so the site preference is unavailable.");
-        return;
-      }
-
-      let user;
+      button.disabled = true;
+      button.textContent = "Saving...";
       try {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data, error } = await supabaseClient
+          .from(STUDENT_TABLE)
+          .update({ employment_preference: String(site.place_name).trim() })
+          .eq("student_id", Number(student.student_id))
+          .select("student_id, employment_preference, employment_place")
+          .maybeSingle();
+
+        if (error) {
+          console.error("Could not save internship site preference", error);
+          showError("Your preference was not saved. Your placement may already be assigned, or the site may no longer be approved. Reload and try again.");
+          button.disabled = false;
+          button.textContent = "Select this site";
+          return;
+        }
+        if (!data) {
+          showError("No matching student record was updated, so your preference was not saved.");
+          button.disabled = false;
+          button.textContent = "Select this site";
+          return;
+        }
+        if (data.employment_place) {
+          showAssigned(data.employment_place);
+          return;
+        }
+
+        student.employment_preference = data.employment_preference;
+        showCurrentChoice();
+        showSuccess("You selected " + String(site.place_name).trim() + " as your preferred internship site.");
+        render();
+      } catch (err) {
+        console.error("Could not save internship site preference", err);
+        showError("Your preference could not be saved because the request failed. Please try again.");
+        button.disabled = false;
+        button.textContent = "Select this site";
+      }
+    }
+
+    async function init() {
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        stopWithError("This page cannot connect to the database right now. Please try again later.");
+        return;
+      }
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      try {
         const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
         if (sessionError) throw sessionError;
-        user = sessionData && sessionData.session ? sessionData.session.user : null;
-      } catch (error) {
-        console.error("Could not check sign-in status", error);
-        statusText.hidden = true;
-        showError("Could not check your sign-in status. Please refresh the page and try again.");
-        return;
-      }
-      if (!user) {
-        statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to choose a site.';
-        return;
-      }
+        const user = sessionData && sessionData.session ? sessionData.session.user : null;
+        if (!user) {
+          statusText.innerHTML = 'You are not signed in. <a href="../index.html">Sign in</a> to select an internship site.';
+          return;
+        }
 
-      try {
-        const { data: student, error: studentError } = await supabaseClient
+        const { data: studentRow, error: studentError } = await supabaseClient
           .from(STUDENT_TABLE)
           .select("student_id, employment_preference, employment_place")
           .eq("user_id", user.id)
           .maybeSingle();
         if (studentError) throw studentError;
-        if (!student || !validId(student.student_id)) {
-          statusText.hidden = true;
-          showError("Your student_id is missing or invalid, so your site preference cannot be loaded or saved.");
+        if (!studentRow || !validId(studentRow.student_id)) {
+          stopWithError("Your student_id is missing or invalid, so internship sites cannot be selected.");
           return;
         }
-        studentId = Number(student.student_id);
+        student = studentRow;
+
+        // #33: final placement already assigned -> show it and stop
+        if (!isEmpty(student.employment_place)) {
+          showAssigned(student.employment_place);
+          return;
+        }
 
         const { data: places, error: placesError } = await supabaseClient
           .from(PLACE_TABLE)
-          .select("place_name")
+          .select("place_id, place_name, sector, target_major, available_departments, opportunity_description, requirements, email")
           .eq("is_approved", true)
           .order("place_name");
         if (placesError) throw placesError;
-        approvedPlaces = places || [];
-        if (approvedPlaces.some((place) => !place.place_name || !place.place_name.trim())) {
-          throw new Error("An approved site is missing its name.");
-        }
 
-        approvedPlaces.forEach((place) => {
-          const option = document.createElement("option");
-          option.value = place.place_name;
-          option.textContent = place.place_name;
-          siteSelect.append(option);
-        });
+        approvedSites = places || [];
+        matchingSites = approvedSites;
 
         statusText.hidden = true;
-        preferenceCard.hidden = false;
-        if (student.employment_place) {
-          assignedMessage.textContent = `Your final placement is ${student.employment_place}. Your preference can no longer be changed.`;
-          assignedMessage.hidden = false;
-          preferenceForm.hidden = true;
-          return;
+        filterBox.hidden = false;
+        showCurrentChoice();
+        if (!isEmpty(student.employment_preference) &&
+            !approvedSites.some((s) => s.place_name === student.employment_preference)) {
+          showError("Your saved preference is no longer an approved site. Choose an approved site to replace it.");
         }
-
-        if (student.employment_preference) {
-          const currentIsApproved = approvedPlaces.some((place) => place.place_name === student.employment_preference);
-          if (currentIsApproved) {
-            siteSelect.value = student.employment_preference;
-            preferenceSummary.textContent = `Current preference: ${student.employment_preference}`;
-            preferenceSummary.hidden = false;
-          } else {
-            showError("Your saved preference is no longer an approved site. Choose an approved site to replace it.");
-          }
-        }
-        if (approvedPlaces.length === 0) {
-          showError("There are no approved internship sites available to choose.");
-          siteSelect.disabled = true;
-          saveButton.disabled = true;
-        }
-        preferenceForm.hidden = false;
-      } catch (error) {
-        console.error("Could not load internship site preference", error);
-        statusText.hidden = true;
-        showError("Your student record or approved internship sites could not be loaded. Please try again later.");
+        render();
+      } catch (err) {
+        console.error("Could not load internship sites", err);
+        stopWithError("Internship sites could not be loaded. Please try again later.");
       }
     }
 
-    preferenceForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
+    sectorFilter.addEventListener("change", () => {
       errorBox.hidden = true;
-      successBox.hidden = true;
-      const selectedPlace = siteSelect.value;
-      if (!validId(studentId)) {
-        showError("Your student_id is missing or invalid, so the preference was not saved.");
-        return;
-      }
-      if (!approvedPlaces.some((place) => place.place_name === selectedPlace)) {
-        showError("Choose a site from the approved-site list. Your preference was not saved.");
-        return;
-      }
-
-      saveButton.disabled = true;
-      let data;
-      let updateError;
-      try {
-        const result = await supabaseClient
-          .from(STUDENT_TABLE)
-          .update({ employment_preference: selectedPlace })
-          .eq("student_id", studentId)
-          .select("student_id, employment_preference, employment_place")
-          .maybeSingle();
-        data = result.data;
-        updateError = result.error;
-      } catch (error) {
-        console.error("Could not save internship site preference", error);
-        saveButton.disabled = false;
-        showError("The preference could not be saved because the request failed. Please try again.");
-        return;
-      }
-      saveButton.disabled = false;
-
-      if (updateError) {
-        console.error("Could not save internship site preference", updateError);
-        showError("The preference was not saved. Your placement may have been assigned, or the selected site may no longer be approved. Reload and try again.");
-        return;
-      }
-      if (!data) {
-        showError("No matching student record was updated. Check your student account; the preference was not saved.");
-        return;
-      }
-      if (data.employment_place) {
-        preferenceForm.hidden = true;
-        assignedMessage.textContent = `Your final placement is ${data.employment_place}. Your preference can no longer be changed.`;
-        assignedMessage.hidden = false;
-        return;
-      }
-
-      siteSelect.value = data.employment_preference;
-      preferenceSummary.textContent = `Current preference: ${data.employment_preference}`;
-      preferenceSummary.hidden = false;
-      successBox.textContent = "Your preferred internship site has been saved.";
-      successBox.hidden = false;
+      render();
     });
 
-    loadPage();
+    init();
 
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("overlay");
-    document.getElementById("menuToggle").addEventListener("click", () => {
-      sidebar.classList.add("open");
-      overlay.classList.add("active");
-    });
-    document.getElementById("closeSidebar").addEventListener("click", () => {
-      sidebar.classList.remove("open");
-      overlay.classList.remove("active");
-    });
-    overlay.addEventListener("click", () => {
-      sidebar.classList.remove("open");
-      overlay.classList.remove("active");
-    });
+    // Side menu (safe if sidebar.js already handles it)
+    const sidebarEl = document.getElementById("sidebar");
+    const overlayEl = document.getElementById("overlay");
+    function openSidebar() { sidebarEl.classList.add("open"); overlayEl.classList.add("active"); }
+    function hideSidebar() { sidebarEl.classList.remove("open"); overlayEl.classList.remove("active"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    const closeBtn = document.getElementById("closeSidebar");
+    if (closeBtn) closeBtn.addEventListener("click", hideSidebar);
+    overlayEl.addEventListener("click", hideSidebar);
   </script>
 </body>
 </html>

@@ -1,91 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Manage Personal Data Privacy</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f9; }
-        header { background: #0f1f3d; color: #ffffff; padding: 14px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 4px solid #f2c230; }
-        #menuToggle { background: none; border: none; color: #ffffff; font-size: 24px; cursor: pointer; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: 40px auto; }
-        h2 { text-align: center; color: #333; }
-        .section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
-        .toggle-group { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
-        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #0056b3; }
-        .message { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; text-align: center; }
-        .error { display: block; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .success { display: block; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Settings | Field Training</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <style>
+    :root { --navy: #0f1f3d; --navy-soft: #33415c; --gold: #f2c230; --white: #ffffff; --line: #e3e8f0; --muted: #5a6785; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    main { max-width: 640px; margin: 28px auto; padding: 0 16px; }
+    h1 { margin-bottom: 6px; }
+    .sub { color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .card { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .card h2 { font-size: 17px; margin-bottom: 12px; }
+    .row { margin-bottom: 8px; color: var(--navy-soft); }
+    .row span { color: var(--muted); display: inline-block; min-width: 120px; }
+    .toggle { display: flex; align-items: flex-start; gap: 10px; color: var(--navy-soft); line-height: 1.5; }
+    .toggle input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--navy); }
+    .save { margin-top: 14px; background: var(--navy); color: var(--white); border: 0; border-radius: 8px; padding: 10px 18px; cursor: pointer; font-weight: bold; }
+    .save:hover:not(:disabled) { background: var(--gold); color: var(--navy); }
+    .save:disabled { background: #9aa4b8; cursor: not-allowed; }
+    .msg { border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+    .info { background: #eef2f8; color: var(--navy-soft); }
+    .error { background: #fdecec; color: #8a1c1c; }
+    .success { background: #e8f6ee; color: #1d5a36; }
+    .msg a { color: inherit; font-weight: bold; }
+    [hidden] { display: none !important; }
+  </style>
 </head>
 <body>
-    <header>
-        <button id="menuToggle">&#9776;</button>
-        <strong>Internship Platform</strong>
-    </header>
-    <div id="sidebar"></div>
-    <script src="js/sidebar.js"></script>
-    <div class="overlay" id="overlay"></div>
+  <header>
+    <button id="menuToggle" type="button" aria-label="Open menu">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+  <div id="sidebar"></div>
+  <script src="js/sidebar.js"></script>
 
-    <div class="container">
-        <h2>Manage Privacy Settings</h2>
-        
-        <!-- Section: View Contact Details -->
-        <div class="section">
-            <h3>Your Contact Details</h3>
-            <label>Student ID:</label>
-            <input type="text" id="viewStudentId" placeholder="Enter your Student ID">
-            <label style="margin-top: 10px;">Phone Number:</label>
-            <input type="text" id="viewPhone" placeholder="Enter your Phone Number">
-            <label style="margin-top: 10px;">Email Address:</label>
-            <input type="text" id="viewEmail" placeholder="Enter your Email Address">
-        </div>
+  <main>
+    <h1>Privacy Settings</h1>
+    <p class="sub">Choose whether training sites can see your contact details.</p>
 
-        <!-- Section: Toggle Permissions -->
-        <div class="section">
-            <h3>Privacy Permissions</h3>
-            <div class="toggle-group">
-                <label for="shareToggle">Share contact details with training sites:</label>
-                <input type="checkbox" id="shareToggle">
-            </div>
-        </div>
+    <p id="status" class="msg info" role="status">Loading your details...</p>
+    <p id="error" class="msg error" role="alert" hidden></p>
+    <p id="success" class="msg success" role="status" hidden></p>
 
-        <!-- Section: Update Settings -->
-        <h3>Update Settings</h3>
-        <div class="form-group" style="margin-bottom: 15px;">
-            <label for="inputStudentId">Verify Student ID to save changes:</label>
-            <input type="text" id="inputStudentId" placeholder="Enter Student ID to confirm">
-        </div>
-        <button onclick="updatePrivacySettings()">Update Settings</button>
+    <section class="card" id="details" hidden>
+      <h2>Your contact details</h2>
+      <div class="row"><span>Name:</span> <b id="name"></b></div>
+      <div class="row"><span>Student ID:</span> <b id="studentId"></b></div>
+      <div class="row"><span>Email:</span> <b id="email"></b></div>
+      <div class="row"><span>Phone:</span> <b id="phone"></b></div>
+    </section>
 
-        <!-- Response Messages -->
-        <div id="messageBox" class="message"></div>
-    </div>
+    <section class="card" id="permissions" hidden>
+      <h2>Privacy permissions</h2>
+      <label class="toggle">
+        <input type="checkbox" id="shareToggle">
+        <span>Share my contact details (email and phone) with training sites.</span>
+      </label>
+      <button class="save" id="saveBtn" type="button">Save settings</button>
+    </section>
+  </main>
 
-    <script>
-        function showMessage(text, isError = true) {
-            const box = document.getElementById('messageBox');
-            box.textContent = text;
-            box.className = 'message ' + (isError ? 'error' : 'success');
-            box.style.display = 'block';
+  <script>
+    const el = (id) => document.getElementById(id);
+    let db = null;
+    let studentId = null;
+
+    function show(id, text, isHtml) {
+      ["status", "error", "success"].forEach((k) => { el(k).hidden = true; });
+      if (isHtml) el(id).innerHTML = text; else el(id).textContent = text;
+      el(id).hidden = false;
+    }
+    const orDash = (v) => (v === null || v === undefined || String(v).trim() === "") ? "Not provided" : String(v).trim();
+
+    async function load() {
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        show("error", "This page cannot connect to the database right now. Please try again later.");
+        return;
+      }
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      try {
+        const { data: sessionData, error: sessionError } = await db.auth.getSession();
+        if (sessionError) throw sessionError;
+        const user = sessionData.session ? sessionData.session.user : null;
+        if (!user) {
+          show("status", 'You are not signed in. <a href="index.html">Sign in</a> to manage your privacy settings.', true);
+          return;
         }
 
-        function updatePrivacySettings() {
-            const studentId = document.getElementById('inputStudentId').value.trim();
-            const viewStudentId = document.getElementById('viewStudentId').value.trim();
-            const shareToggle = document.getElementById('shareToggle').checked;
-
-            // Simple validation to ensure Student ID is entered in both places
-            if (!studentId || studentId !== viewStudentId) {
-                showMessage('Error: Student ID is missing or does not match. Cannot update settings.');
-                return;
-            }
-
-            showMessage('Privacy settings updated successfully!', false);
+        const { data: student, error } = await db
+          .from("student")
+          .select("student_id, name, student_email, phone_number, share_contact")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (!student || !Number.isInteger(student.student_id) || student.student_id < 1) {
+          show("error", "Your student_id is missing or invalid, so your privacy settings cannot be loaded.");
+          return;
         }
-    </script>
 
+        studentId = student.student_id;
+        el("name").textContent = orDash(student.name);
+        el("studentId").textContent = student.student_id;
+        el("email").textContent = orDash(student.student_email);
+        el("phone").textContent = orDash(student.phone_number);
+        el("shareToggle").checked = student.share_contact === true;
+
+        el("status").hidden = true;
+        el("details").hidden = false;
+        el("permissions").hidden = false;
+      } catch (err) {
+        console.error("Privacy settings load error:", err);
+        show("error", "Your privacy settings could not be loaded. Please try again later.");
+      }
+    }
+
+    el("saveBtn").addEventListener("click", async () => {
+      if (!Number.isInteger(studentId) || studentId < 1) {
+        show("error", "Your student_id is missing or invalid, so your settings were not saved.");
+        return;
+      }
+      const btn = el("saveBtn");
+      btn.disabled = true;
+      try {
+        const { data, error } = await db
+          .from("student")
+          .update({ share_contact: el("shareToggle").checked })
+          .eq("student_id", studentId)
+          .select("share_contact")
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) {
+          show("error", "No matching student record was updated, so your settings were not saved.");
+          return;
+        }
+        el("shareToggle").checked = data.share_contact === true;
+        show("success", data.share_contact
+          ? "Saved. Training sites can now see your contact details."
+          : "Saved. Your contact details are now hidden from training sites.");
+      } catch (err) {
+        console.error("Privacy settings save error:", err);
+        show("error", "Your settings could not be saved. Please try again later.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    load();
+  </script>
 </body>
 </html>
