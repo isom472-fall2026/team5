@@ -60,6 +60,29 @@
       <div class="section-body">
         <p id="attendance-status" class="alert alert-info" role="status" aria-live="polite">Checking your sign-in status...</p>
 
+        <form id="student-log-form" class="border rounded p-3 mb-4" novalidate hidden>
+          <h2 class="h5">Log today's hours</h2>
+          <p class="text-secondary small mb-3">Your log is sent to your supervisor as <strong>Pending</strong> until it is approved.</p>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label" for="log-date">Date</label>
+              <input id="log-date" name="work_date" class="form-control" type="date" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="log-check-in">Check-in time</label>
+              <select id="log-check-in" name="check_in_time" class="form-select" required></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="log-check-out">Check-out time</label>
+              <select id="log-check-out" name="check_out_time" class="form-select" required></select>
+            </div>
+            <div class="col-12">
+              <p class="mb-2">Total hours: <strong id="log-total">-</strong></p>
+              <button id="log-submit" class="btn btn-success" type="submit">Submit hours</button>
+            </div>
+          </div>
+        </form>
+
         <form id="attendance-form" class="border rounded p-3 mb-4" novalidate hidden>
           <h2 class="h5">Record intern attendance</h2>
           <div class="row g-3">
@@ -115,6 +138,7 @@
                 <th scope="col">Check-in</th>
                 <th scope="col">Check-out</th>
                 <th scope="col">Total hours</th>
+                <th scope="col">Status</th>
                 <th scope="col">Remarks</th>
               </tr>
             </thead>
@@ -175,6 +199,7 @@
           String(log.check_in_time).slice(0, 5),
           String(log.check_out_time).slice(0, 5),
           `${Number(log.total_hours).toFixed(2)} h`,
+          log.approval_status || "Pending",
           log.supervisor_notes || "-"
         ]) {
           const cell = document.createElement("td");
@@ -197,7 +222,7 @@
 
       let query = supabaseClient
         .from("dailyinternshiplog")
-        .select("student_id, work_date, check_in_time, check_out_time, total_hours, supervisor_notes")
+        .select("student_id, work_date, check_in_time, check_out_time, total_hours, approval_status, supervisor_notes")
         .order("work_date", { ascending: false });
       if (isWorkplaceSupervisor) {
         const internIds = interns.map((intern) => intern.student_id);
@@ -264,19 +289,92 @@
         if (error) throw error;
 
         attendanceForm.reset();
-        showStatus("Attendance saved. The student can now see the updated record.", "success");
         await loadAttendance();
+        showStatus("Attendance saved. The student can now see the updated record.", "success");
       } catch (error) {
+        console.error("Attendance save error:", error);
         const message = ["22007", "22008", "22P02", "23502", "23514"].includes(error?.code)
           ? "Check the student, date, and time values. Check-out must be later than check-in."
           : error?.code === "23503"
             ? "The selected intern is not linked to your training site."
             : error?.code === "42501"
               ? "You can record attendance only for interns assigned to your training site."
-              : error.message || "Could not save attendance. Please try again.";
+              : "Could not save attendance. Please try again.";
         showStatus(message, "danger");
       } finally {
         attendanceSubmit.disabled = false;
+      }
+    }
+
+    const studentLogForm = document.getElementById("student-log-form");
+    const logSubmit = document.getElementById("log-submit");
+
+    function minutesOf(value) {
+      return Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
+    }
+
+    function updateLogTotal() {
+      const checkIn = document.getElementById("log-check-in").value;
+      const checkOut = document.getElementById("log-check-out").value;
+      const total = document.getElementById("log-total");
+      if (isValidTimeSlot(checkIn) && isValidTimeSlot(checkOut) && minutesOf(checkOut) > minutesOf(checkIn)) {
+        total.textContent = ((minutesOf(checkOut) - minutesOf(checkIn)) / 60).toFixed(2) + " h";
+      } else {
+        total.textContent = "-";
+      }
+    }
+
+    // Story #34: the student logs their own daily hours (saved as Pending)
+    async function submitStudentLog(event) {
+      event.preventDefault();
+      const workDate = document.getElementById("log-date").value;
+      const checkIn = document.getElementById("log-check-in").value;
+      const checkOut = document.getElementById("log-check-out").value;
+      const parsedDate = new Date(`${workDate}T00:00:00Z`);
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (!Number.isInteger(studentId) || studentId <= 0) {
+        showStatus("Your student_id is missing or invalid, so your hours were not saved.", "danger");
+        return;
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(workDate) || Number.isNaN(parsedDate.getTime())) {
+        showStatus("Choose the date you worked.", "danger");
+        return;
+      }
+      if (workDate > today) {
+        showStatus("You cannot log hours for a future date.", "danger");
+        return;
+      }
+      if (!isValidTimeSlot(checkIn) || !isValidTimeSlot(checkOut)) {
+        showStatus("Choose a check-in and check-out time from the list.", "danger");
+        return;
+      }
+      if (minutesOf(checkOut) <= minutesOf(checkIn)) {
+        showStatus("Check-out time must be later than check-in time. Your hours were not saved.", "danger");
+        return;
+      }
+
+      logSubmit.disabled = true;
+      try {
+        const { error } = await supabaseClient
+          .from("dailyinternshiplog")
+          .insert({
+            student_id: studentId,
+            work_date: workDate,
+            check_in_time: checkIn,
+            check_out_time: checkOut,
+            approval_status: "Pending"
+          });
+        if (error) throw error;
+        studentLogForm.reset();
+        updateLogTotal();
+        await loadAttendance();
+        showStatus("Your hours were submitted and are waiting for your supervisor's approval.", "success");
+      } catch (error) {
+        console.error("Student log save error:", error);
+        showStatus("Your hours could not be saved. Check the date and times and try again.", "danger");
+      } finally {
+        logSubmit.disabled = false;
       }
     }
 
@@ -328,31 +426,27 @@
         studentColumn.hidden = false;
         attendanceIntro.textContent = "Record attendance for interns assigned to your training site.";
       } else {
-        attendanceIntro.textContent = "Your training site attendance records.";
+        timeOptions(document.getElementById("log-check-in"));
+        timeOptions(document.getElementById("log-check-out"));
+        document.getElementById("log-date").max = new Date().toISOString().slice(0, 10);
+        studentLogForm.hidden = false;
+        attendanceIntro.textContent = "Log your daily internship hours and see your attendance records.";
       }
       attendanceFilter.hidden = false;
       await loadAttendance();
     }
 
     attendanceForm.addEventListener("submit", recordAttendance);
+    studentLogForm.addEventListener("submit", submitStudentLog);
+    document.getElementById("log-check-in").addEventListener("change", updateLogTotal);
+    document.getElementById("log-check-out").addEventListener("change", updateLogTotal);
     attendanceFilter.addEventListener("submit", (event) => {
       event.preventDefault();
       loadAttendance();
     });
     document.getElementById("refresh-attendance").addEventListener("click", loadAttendance);
 
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("overlay");
-    function hideSidebar() {
-      sidebar.classList.remove("open");
-      overlay.classList.remove("active");
-    }
-    document.getElementById("menuToggle").addEventListener("click", () => {
-      sidebar.classList.add("open");
-      overlay.classList.add("active");
-    });
-    document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
-    overlay.addEventListener("click", hideSidebar);
+    // The menu open/close is handled by ../js/sidebar.js
 
     init();
   </script>
