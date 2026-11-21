@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -181,6 +181,7 @@
         <div id="docInputs"></div>
         <button class="submit" id="submitBtn" disabled>Upload</button>
         <div class="msg" id="msg"></div>
+        <div id="uploaded"></div>
       </div>`;
 
     document.getElementById("placeSelect").addEventListener("change", renderDocInputs);
@@ -203,6 +204,28 @@
         <input type="file" accept=".pdf,.jpg,.jpeg,.png" data-doc="${esc(d)}">
       </div>`).join("");
     btn.disabled = !eligible;
+    listUploaded(place.place_id);
+  }
+
+  // Show the files the student already uploaded for this company
+  async function listUploaded(placeId) {
+    const box = document.getElementById("uploaded");
+    box.innerHTML = "";
+    try {
+      const { data, error } = await db.storage.from(BUCKET).list(`${currentUser.id}/${placeId}`);
+      if (error) throw error;
+      const files = (data || []).filter(f => f.name && !f.name.startsWith("."));
+      if (files.length === 0) {
+        box.innerHTML = `<p class="loading" style="margin-top:12px;">You have not uploaded any documents for this company yet.</p>`;
+        return;
+      }
+      box.innerHTML = `<p style="margin-top:14px;"><strong>Already uploaded:</strong></p><ul>` +
+        files.map(f => `<li>${esc(f.name)}${f.updated_at ? " (" + esc(new Date(f.updated_at).toLocaleString()) + ")" : ""}</li>`).join("") +
+        `</ul>`;
+    } catch (err) {
+      console.error(err);
+      box.innerHTML = `<p class="loading" style="margin-top:12px;">Your uploaded documents could not be listed right now.</p>`;
+    }
   }
 
   async function uploadDocuments() {
@@ -245,6 +268,8 @@
       }
       msg.className = "msg good";
       msg.textContent = "Documents uploaded successfully.";
+      inputs.forEach(i => { i.value = ""; });
+      listUploaded(placeId);
     } catch (err) {
       console.error(err);
       msg.className = "msg bad";
@@ -307,7 +332,8 @@
   function openSidebar() { sidebar.classList.add("open"); overlay.classList.add("active"); }
   function hideSidebar() { sidebar.classList.remove("open"); overlay.classList.remove("active"); }
   document.getElementById("menuToggle").addEventListener("click", openSidebar);
-  document.getElementById("closeSidebar").addEventListener("click", hideSidebar);
+  const closeBtn = document.getElementById("closeSidebar");
+  if (closeBtn) closeBtn.addEventListener("click", hideSidebar);
   overlay.addEventListener("click", hideSidebar);
 </script>
 </body>
