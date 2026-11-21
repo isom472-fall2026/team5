@@ -144,6 +144,7 @@
     { title: 'Reports', links: [
       { label: 'Progress Summary', href: 'pages/progress-summary.html' },
       { label: 'Reported Issues',  href: 'pages/reported-issues.html' },
+      { label: 'Open Issues by Site', href: 'pages/open-issues-by-site.html' },
     ]},
     { title: 'Evaluation', links: [
       { label: 'Evaluation Criteria',  href: 'pages/evaluation-criteria.html' },

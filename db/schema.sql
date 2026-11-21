@@ -90,6 +90,9 @@ CREATE TABLE Student (
     student_email VARCHAR(255),
     phone_number VARCHAR(30),
     credits_passed INT,
+    completed_units INT GENERATED ALWAYS AS (credits_passed) STORED,
+    learning_objective TEXT,
+    objective_status VARCHAR(30),
     
     -- Updated column from Issue #33
     employment_preference VARCHAR(150), 
@@ -107,6 +110,14 @@ CREATE TABLE Student (
     cv_url VARCHAR(255),
     skills TEXT,
 
+    CONSTRAINT student_learning_objective_length CHECK (
+        learning_objective IS NULL
+        OR length(btrim(learning_objective)) BETWEEN 1 AND 500
+    ),
+    CONSTRAINT student_objective_status_valid CHECK (
+        objective_status IS NULL
+        OR objective_status IN ('Pending', 'Approved', 'Revision Suggested')
+    ),
     CONSTRAINT fk_internship_cycle
         FOREIGN KEY(Internship_cycle_id) REFERENCES InternshipCycle(cycle_id) ON DELETE SET NULL,
     CONSTRAINT fk_employment_preference
@@ -1335,6 +1346,42 @@ WITH CHECK (EXISTS (SELECT 1 FROM Student s WHERE s.student_id = ApplicationNoti
 REVOKE UPDATE ON TABLE public.ApplicationNotification FROM authenticated;
 GRANT UPDATE (is_read) ON TABLE public.ApplicationNotification TO authenticated;
 
+-- Return aggregate issue counts to supervising professors without exposing report details.
+CREATE OR REPLACE FUNCTION public.get_open_issues_by_training_site()
+RETURNS TABLE (
+    training_site_name VARCHAR,
+    open_issue_count BIGINT,
+    total_issue_count BIGINT
+)
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM public.supervisingprofessor sp
+        WHERE sp.user_id = auth.uid()
+    ) THEN
+        RAISE EXCEPTION 'This page is for the field training coordinator.'
+            USING ERRCODE = '42501';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        COALESCE(s.employment_place, ic.place_name, 'Unassigned')::VARCHAR,
+        COUNT(*) FILTER (WHERE ir.status <> 'Resolved'),
+        COUNT(*)
+    FROM public.internshipissuereport ir
+    JOIN public.student s ON s.student_id = ir.student_id
+    LEFT JOIN public.internshipcycle ic ON ic.cycle_id = s.internship_cycle_id
+    GROUP BY 1
+    ORDER BY 2 DESC, 3 DESC, 1 ASC;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.get_open_issues_by_training_site() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_open_issues_by_training_site() TO authenticated;
 CREATE POLICY "Students manage their own notification preferences"
 ON NotificationPreference FOR ALL TO authenticated
 USING (EXISTS (SELECT 1 FROM Student s WHERE s.student_id = NotificationPreference.student_id AND s.user_id = auth.uid()))

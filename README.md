@@ -34,15 +34,32 @@ TODO: This system addresses the frequent loss of daily evaluation forms
 
 ## Testing accounts
 
-Run [`db/testing_accounts.sql`](db/testing_accounts.sql) in the Supabase SQL Editor after
-the schema and seed scripts. These accounts are confirmed and ready for password sign-in.
-They are test-only credentials and must not be used for real personal or production data.
+For a new Supabase project, run `db/schema.sql`, then `db/seed.SQL`, then
+[`db/testing_accounts.sql`](db/testing_accounts.sql) in the SQL Editor. The schema script
+drops and recreates tables, so do not run it against a database with data you need to keep.
+For an existing database, apply [`db/add-student-training-fields.sql`](db/add-student-training-fields.sql),
+[`db/issue-216-open-issues-per-site.sql`](db/issue-216-open-issues-per-site.sql), ensure the
+sample seed data is present, and then run the test-account script.
+To repair test logins created by an earlier version of the script, rerun
+[`db/testing_accounts.sql`](db/testing_accounts.sql) only; it resets the sample passwords and
+fills required Supabase Auth token fields. Do not rerun `db/seed.SQL` on an already seeded
+database.
+
+The script creates or updates password sign-ins, links the student and training-site
+accounts to their sample records, and links sample students to professor- and
+coordinator-managed internship cycles. All credentials and records are test-only; never
+use them for real personal or production data.
 
 | Persona | Email | Password |
 |---|---|---|
-| Student | `amina.sample.test@example.test` | `Student-7mK4!nR2pX9q` |
-| Supervising professor | `lina.sample.test@example.test` | `Professor-4D!vN8cT3hR6` |
-| Internship site | `training.test@example.test` | `InternSite-9K!bL5wV2xQ7` |
+| Student — Amina Sample | `amina.sample.test@example.test` | `Student-7mK4!nR2pX9q` |
+| Coordinator — Dr. Asma Sample | `asma.coordinator.test@example.test` | `Coordinator-5H!tQ8mP2zR4` |
+| Supervising professor — Dr. Lina Sample | `lina.sample.test@example.test` | `Professor-4D!vN8cT3hR6` |
+| Internship site — Sample Technology Group | `training.test@example.test` | `InternSite-9K!bL5wV2xQ7` |
+
+The coordinator test account is represented by a `SupervisingProfessor` profile and can
+manage the cycle assigned to it. The current schema does not define a separate coordinator
+role or unrestricted coordinator permissions.
 
 `AGENTS.md` holds the same rules, written for your AI assistant. You do not need to read
 it. Do not delete it.
