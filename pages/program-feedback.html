@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Program Feedback | Field Training</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <style>
+    :root { --navy: #0f1f3d; --navy-soft: #33415c; --gold: #f2c230; --white: #ffffff; --line: #e3e8f0; --muted: #5a6785; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--white); color: var(--navy); }
+    main { max-width: 720px; margin: 28px auto; padding: 0 16px; }
+    h1 { margin-bottom: 6px; }
+    .sub { color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .card { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(15,31,61,.06); }
+    .card h2 { font-size: 17px; margin-bottom: 12px; }
+    label { display: block; margin-top: 14px; font-weight: bold; color: var(--navy-soft); }
+    textarea { width: 100%; min-height: 120px; margin-top: 6px; padding: 10px; border: 1px solid #c3cad8; border-radius: 7px; font: inherit; color: var(--navy); resize: vertical; }
+    .stars { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .stars label { margin: 0; font-weight: normal; }
+    .stars input { position: absolute; opacity: 0; pointer-events: none; }
+    .stars span { display: inline-block; min-width: 44px; padding: 8px 12px; border: 1px solid #c3cad8; border-radius: 8px; text-align: center; cursor: pointer; color: var(--navy-soft); }
+    .stars input:checked + span { background: var(--navy); color: var(--white); border-color: var(--navy); }
+    .stars input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .hint { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .save { margin-top: 16px; background: var(--navy); color: var(--white); border: 0; border-radius: 8px; padding: 10px 18px; cursor: pointer; font-weight: bold; }
+    .save:hover:not(:disabled) { background: var(--gold); color: var(--navy); }
+    .save:disabled { background: #9aa4b8; cursor: not-allowed; }
+    .msg { border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+    .info { background: #eef2f8; color: var(--navy-soft); }
+    .error { background: #fdecec; color: #8a1c1c; }
+    .success { background: #e8f6ee; color: #1d5a36; }
+    .msg a { color: inherit; font-weight: bold; }
+    .summary { color: var(--navy-soft); margin-bottom: 12px; }
+    ul.list { list-style: none; }
+    ul.list li { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    ul.list li:last-child { border-bottom: 0; }
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .rating { font-weight: bold; color: var(--navy); }
+    .comment { color: var(--navy-soft); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="menuToggle" type="button" aria-label="Open menu">&#9776;</button>
+    <strong>Internship Platform</strong>
+  </header>
+  <div id="sidebar"></div>
+  <script src="../js/sidebar.js"></script>
+
+  <main>
+    <h1>Program Feedback</h1>
+    <p class="sub" id="intro">Tell OSTA how the field training program went for you, so it can improve for future students.</p>
+
+    <p id="status" class="msg info" role="status">Loading...</p>
+    <p id="error" class="msg error" role="alert" hidden></p>
+    <p id="success" class="msg success" role="status" hidden></p>
+
+    <!-- Student: submit or edit their own feedback -->
+    <form class="card" id="feedbackForm" hidden novalidate>
+      <h2 id="formTitle">Your feedback</h2>
+      <fieldset style="border:0">
+        <legend style="font-weight:bold;color:var(--navy-soft)">Overall rating (1 = poor, 5 = excellent)</legend>
+        <div class="stars" id="stars">
+          <label><input type="radio" name="rating" value="1"><span>1</span></label>
+          <label><input type="radio" name="rating" value="2"><span>2</span></label>
+          <label><input type="radio" name="rating" value="3"><span>3</span></label>
+          <label><input type="radio" name="rating" value="4"><span>4</span></label>
+          <label><input type="radio" name="rating" value="5"><span>5</span></label>
+        </div>
+      </fieldset>
+
+      <label for="comments">Comments</label>
+      <textarea id="comments" maxlength="2000" placeholder="What worked well? What should OSTA change?"></textarea>
+      <p class="hint"><span id="count">0</span> / 2000 characters</p>
+
+      <button class="save" id="saveBtn" type="submit">Submit feedback</button>
+      <p class="hint" id="savedAt"></p>
+    </form>
+
+    <!-- Supervising professor: feedback from their students -->
+    <section class="card" id="profCard" hidden>
+      <h2>Feedback from your students</h2>
+      <p class="summary" id="profSummary"></p>
+      <ul class="list" id="profList"></ul>
+    </section>
+  </main>
+
+  <script>
+    // Story #54 — table InternshipFeedback (feedback_id, student_id, rating, comments, submitted_at), see db/schema.sql
+    const el = (id) => document.getElementById(id);
+    let db = null;
+    let studentId = null;
+    let feedbackId = null;
+
+    function show(id, text, isHtml) {
+      ["status", "error", "success"].forEach((k) => { el(k).hidden = true; });
+      if (isHtml) el(id).innerHTML = text; else el(id).textContent = text;
+      el(id).hidden = false;
+    }
+    const validId = (v) => Number.isInteger(v) && v > 0;
+    const fmt = (d) => d ? new Date(d).toLocaleString() : "";
+
+    function selectedRating() {
+      const checked = document.querySelector('input[name="rating"]:checked');
+      return checked ? Number(checked.value) : null;
+    }
+
+    function fillForm(row) {
+      feedbackId = row ? row.feedback_id : null;
+      document.querySelectorAll('input[name="rating"]').forEach((r) => {
+        r.checked = row ? Number(r.value) === row.rating : false;
+      });
+      el("comments").value = row && row.comments ? row.comments : "";
+      el("count").textContent = el("comments").value.length;
+      el("formTitle").textContent = row ? "Edit your feedback" : "Your feedback";
+      el("saveBtn").textContent = row ? "Save changes" : "Submit feedback";
+      el("savedAt").textContent = row ? "Last submitted: " + fmt(row.submitted_at) : "";
+    }
+
+    async function loadStudent(student) {
+      studentId = student.student_id;
+      if (!validId(studentId)) {
+        show("error", "Your student_id is invalid, so feedback cannot be loaded or saved.");
+        return;
+      }
+      const { data, error } = await db
+        .from("internshipfeedback")
+        .select("feedback_id, rating, comments, submitted_at")
+        .eq("student_id", studentId)
+        .order("submitted_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      fillForm(data && data.length ? data[0] : null);
+      el("status").hidden = true;
+      el("feedbackForm").hidden = false;
+    }
+
+    async function loadProfessor() {
+      el("intro").textContent = "Feedback on the field training program from the students in your internship cycles.";
+      // RLS returns only feedback from this professor's students
+      const { data, error } = await db
+        .from("internshipfeedback")
+        .select("feedback_id, student_id, rating, comments, submitted_at")
+        .order("submitted_at", { ascending: false });
+      if (error) throw error;
+
+      const rows = data || [];
+      const ids = [...new Set(rows.map((r) => r.student_id))];
+      let names = {};
+      if (ids.length) {
+        const st = await db.from("student").select("student_id, name").in("student_id", ids);
+        if (st.error) throw st.error;
+        (st.data || []).forEach((s) => { names[s.student_id] = s.name; });
+      }
+
+      const list = el("profList");
+      list.replaceChildren();
+      if (!rows.length) {
+        el("profSummary").textContent = "No feedback has been submitted yet.";
+      } else {
+        const rated = rows.filter((r) => Number.isInteger(r.rating));
+        const avg = rated.length ? (rated.reduce((s, r) => s + r.rating, 0) / rated.length).toFixed(1) : "-";
+        el("profSummary").textContent = `${rows.length} feedback entr${rows.length === 1 ? "y" : "ies"} · average rating ${avg} / 5`;
+        rows.forEach((r) => {
+          const li = document.createElement("li");
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.textContent = `${names[r.student_id] || "Student " + r.student_id} · ${fmt(r.submitted_at)}`;
+          const rating = document.createElement("div");
+          rating.className = "rating";
+          rating.textContent = `Rating: ${r.rating ?? "-"} / 5`;
+          const comment = document.createElement("div");
+          comment.className = "comment";
+          comment.textContent = r.comments || "";
+          li.append(meta, rating, comment);
+          list.append(li);
+        });
+      }
+      el("status").hidden = true;
+      el("profCard").hidden = false;
+    }
+
+    el("comments").addEventListener("input", () => { el("count").textContent = el("comments").value.length; });
+
+    el("feedbackForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!validId(studentId)) {
+        show("error", "Your student_id is invalid, so your feedback was not saved.");
+        return;
+      }
+      const rating = selectedRating();
+      const comments = el("comments").value.trim();
+      if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+        show("error", "Please choose a rating from 1 to 5. Your feedback was not saved.");
+        return;
+      }
+      if (!comments) {
+        show("error", "Please write your comments. Your feedback was not saved.");
+        return;
+      }
+
+      const btn = el("saveBtn");
+      btn.disabled = true;
+      try {
+        const values = { rating, comments, submitted_at: new Date().toISOString() };
+        const query = feedbackId
+          ? db.from("internshipfeedback").update(values).eq("feedback_id", feedbackId).eq("student_id", studentId)
+          : db.from("internshipfeedback").insert({ ...values, student_id: studentId });
+        const { data, error } = await query.select("feedback_id, rating, comments, submitted_at").maybeSingle();
+        if (error) throw error;
+        if (!data) {
+          show("error", "No matching feedback was saved. Please reload the page and try again.");
+          return;
+        }
+        const wasEdit = Boolean(feedbackId);
+        fillForm(data);
+        show("success", wasEdit ? "Your feedback has been updated. Thank you!" : "Thank you! Your feedback has been submitted.");
+      } catch (err) {
+        console.error("Feedback save error:", err);
+        show("error", "Your feedback could not be saved. Please try again later.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    async function init() {
+      if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined" || !window.supabase) {
+        show("error", "This page cannot connect to the database right now. Please try again later.");
+        return;
+      }
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      try {
+        const { data: sessionData, error: sessionError } = await db.auth.getSession();
+        if (sessionError) throw sessionError;
+        const user = sessionData.session ? sessionData.session.user : null;
+        if (!user) {
+          show("status", 'You are not signed in. <a href="../index.html">Sign in</a> to give feedback.', true);
+          return;
+        }
+
+        const prof = await db.from("supervisingprofessor").select("professor_id").eq("user_id", user.id).maybeSingle();
+        if (prof.error) throw prof.error;
+        if (prof.data) { await loadProfessor(); return; }
+
+        const stu = await db.from("student").select("student_id").eq("user_id", user.id).maybeSingle();
+        if (stu.error) throw stu.error;
+        if (stu.data) { await loadStudent(stu.data); return; }
+
+        show("error", "Program feedback is for students and their supervising professors. Your account is not linked to either.");
+      } catch (err) {
+        console.error("Program feedback error:", err);
+        show("error", "Program feedback could not be loaded. Please try again later.");
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
