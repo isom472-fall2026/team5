@@ -22,7 +22,7 @@ whoever is free at the end.*
 | Manar | #34, #35, #44 ,#49|
 | Heba | #54 |
 
-
+Note: #49 moved from Heba to Manar, because Manar built its first version (#182)
 ## Links to the stories
 
 The full story list at this tag is saved in ../backlog.md — do not repeat it here.
