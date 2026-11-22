@@ -28,6 +28,17 @@
     th { background: var(--navy); color: var(--white); }
     td.count { font-variant-numeric: tabular-nums; }
     tbody tr:last-child td { border-bottom: 0; }
+    .question { background: #eef2f8; border-left: 4px solid var(--gold); border-radius: 10px; padding: 12px 16px; color: var(--navy); }
+    .question strong { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 4px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .stat { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 14px 16px; }
+    .stat .num { font-size: 28px; font-weight: bold; color: var(--navy); }
+    .stat .label { color: var(--muted); font-size: 13px; }
+    .bar-cell { min-width: 160px; }
+    .bar { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+    .bar span { display: block; height: 100%; background: var(--gold); }
+    .rate { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    #updated { font-size: 13px; }
     [hidden] { display: none !important; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -44,10 +55,16 @@
 
   <main>
     <h1>Open Issues by Training Site</h1>
+    <p class="question"><strong>Question for the field training office</strong>Which training sites have the most student issues that are still not resolved?</p>
     <p id="page-status" class="hint" role="status" aria-live="polite">Checking your sign-in status...</p>
     <p id="page-error" class="message error" role="alert" hidden></p>
     <p id="access-denied" class="message error" role="alert" hidden></p>
     <p id="empty-message" class="message empty" hidden>No issues have been reported yet.</p>
+    <div id="stats" class="stats" hidden>
+      <div class="stat"><div class="num" id="stat-sites">0</div><div class="label">Training sites with open issues</div></div>
+      <div class="stat"><div class="num" id="stat-open">0</div><div class="label">Open issues</div></div>
+      <div class="stat"><div class="num" id="stat-rate">0%</div><div class="label">Issues resolved</div></div>
+    </div>
     <div id="table-wrap" class="table-wrap" hidden>
       <table>
         <thead>
@@ -55,11 +72,13 @@
             <th scope="col">Training site</th>
             <th scope="col">Open issues</th>
             <th scope="col">Total issues</th>
+            <th scope="col">Share still open</th>
           </tr>
         </thead>
         <tbody id="issue-rows"></tbody>
       </table>
     </div>
+    <p id="updated" class="hint" hidden></p>
   </main>
 
   <script>
@@ -106,7 +125,21 @@
         const totalCount = document.createElement("td");
         totalCount.className = "count";
         totalCount.textContent = String(issue.total_issue_count);
-        row.append(site, openCount, totalCount);
+        const barCell = document.createElement("td");
+        barCell.className = "bar-cell";
+        const pct = Math.round((Number(issue.open_issue_count) / Number(issue.total_issue_count)) * 100);
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.setAttribute("role", "img");
+        bar.setAttribute("aria-label", `${pct}% of issues still open`);
+        const fill = document.createElement("span");
+        fill.style.width = pct + "%";
+        bar.append(fill);
+        const rate = document.createElement("div");
+        rate.className = "rate";
+        rate.textContent = pct + "% still open";
+        barCell.append(bar, rate);
+        row.append(site, openCount, totalCount, barCell);
         issueRows.append(row);
       }
     }
@@ -150,11 +183,24 @@
           emptyMessage.hidden = false;
           return;
         }
-        renderRows(rows);
+        const sorted = [...rows].sort((a, b) =>
+          Number(b.open_issue_count) - Number(a.open_issue_count) ||
+          Number(b.total_issue_count) - Number(a.total_issue_count) ||
+          a.training_site_name.localeCompare(b.training_site_name));
+        const open = sorted.reduce((sum, r) => sum + Number(r.open_issue_count), 0);
+        const total = sorted.reduce((sum, r) => sum + Number(r.total_issue_count), 0);
+        document.getElementById("stat-sites").textContent = sorted.filter((r) => Number(r.open_issue_count) > 0).length;
+        document.getElementById("stat-open").textContent = open;
+        document.getElementById("stat-rate").textContent = total ? Math.round(((total - open) / total) * 100) + "%" : "0%";
+        document.getElementById("stats").hidden = false;
+        renderRows(sorted);
         tableWrap.hidden = false;
+        const updated = document.getElementById("updated");
+        updated.textContent = "Calculated from the issues students reported in the system, as of " + new Date().toLocaleString() + ".";
+        updated.hidden = false;
       } catch (error) {
         console.error("Could not load open issues by training site", error);
-        showError(`Could not load the issue summary: ${error.message || "Please try again later."}`);
+        showError("Could not load the issue summary. Please try again later.");
       }
     }
 
