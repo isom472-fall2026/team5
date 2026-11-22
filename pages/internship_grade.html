@@ -86,10 +86,12 @@
   <script>
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Check these names against our database before merging.
-    const EVALUATION_TABLE = "evaluation";
-    const RATING_MAX = 100;   // change to 5 if ratings are stored out of 5
-    const PASS_MARK = 60;     // overall score needed to pass
+    // Matches db/schema.sql: InternshipEvaluation stores site_rating and
+    // supervisor_rating as whole numbers from 1 to 5.
+    const EVALUATION_TABLE = "internshipevaluation";
+    const RATING_MIN = 1;
+    const RATING_MAX = 5;
+    const PASS_MARK = 60;     // overall score (out of 100) needed to pass
 
     const requiredColumns = ["evaluation_id", "student_id", "site_rating", "supervisor_rating"];
 
@@ -116,7 +118,7 @@
         if (isEmpty(value)) return true;
         if (column === "site_rating" || column === "supervisor_rating") {
           const n = Number(value);
-          return Number.isNaN(n) || n < 0 || n > RATING_MAX;
+          return !Number.isInteger(n) || n < RATING_MIN || n > RATING_MAX;
         }
         return false;
       });
@@ -165,11 +167,12 @@
         .maybeSingle();
 
       if (studentError) {
-        showError("Could not check your student record: " + studentError.message);
+        console.error(studentError);
+        showError("We could not load your student record right now. Please refresh the page or try again later.");
         return;
       }
       if (!student || isEmpty(student.student_id) || !Number.isInteger(Number(student.student_id))) {
-        showError("Your student_id is missing or invalid, so your evaluation cannot be shown.");
+        showError("Your account is not linked to a student record yet, so your evaluation cannot be shown. Please contact your coordinator.");
         return;
       }
 
@@ -181,7 +184,8 @@
         .limit(1);
 
       if (error) {
-        showError("Could not load your evaluation: " + error.message);
+        console.error(error);
+        showError("We could not load your evaluation right now. Please refresh the page or try again later.");
         return;
       }
 
