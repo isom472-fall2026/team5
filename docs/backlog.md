@@ -86,7 +86,21 @@ the story ID, the title, who built it, and what happened to it.
 
 | Story | Title | Who | State at the tag |
 |---|---|---|---|
-|  |  |  |  |
+| #13 | View Approved Training Opportunities | Nouf | done |
+| #15 | View Placement Details | Nouf | fixed after phase 4 review |
+| #20 | View Company Requirements | Nouf | fixed after phase 4 review |
+| #33 | Select Preferred Internship Sites | Esraa | done |
+| #34 | Log Daily Internship Hours | Manar / Nouf | fixed after phase 4 review |
+| #35 | Optionally Define Learning Objectives | Manar | changes requested (#224), carried to phase 6 |
+| #37 | Select Suitable Internship Site | Nouf | merged with #33 into one page |
+| #40 | Manage Personal Data Privacy | Nouf | rebuilt, waiting for client approval |
+| #44 | View Internship Grade and Evaluation | Manar | changes requested (#223), carried to phase 6 |
+| #47 | Review Student Internship Status | Esraa | done |
+| #49 | Attach Acceptance Documents to Channels | Manar | upload waits for storage bucket; waiting for client approval |
+| #54 | Provide Feedback on Internship Experience | Heba | in progress |
+| #216 | View open issues per training site (analytics) | Esraa | done |
+| #41 | Prompt for Notification Permissions | - | on hold, outside the proposal |
+| #32 | Mark Sick Leave with Medical Certificate | - | removed, client said not needed |
 
 ## Phase 6 — saved 9 December
 
