@@ -396,7 +396,7 @@
         .from("student")
         .select("student_id")
         .eq("user_id", activeUserId)
-        .maybeSingle();
+        .order("student_id").limit(1).maybeSingle();
       if (studentError) {
         showStatus("Could not check your student profile.", "danger");
         return;
