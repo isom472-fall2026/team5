@@ -140,6 +140,7 @@
                 <th scope="col">Total hours</th>
                 <th scope="col">Status</th>
                 <th scope="col">Remarks</th>
+                <th scope="col" id="action-column" hidden>Action</th>
               </tr>
             </thead>
             <tbody id="attendance-rows"></tbody>
@@ -163,6 +164,7 @@
     let studentId = null;
     let interns = [];
     let isWorkplaceSupervisor = false;
+    let isProfessor = false;
 
     function showStatus(message, type = "info") {
       attendanceStatus.className = `alert alert-${type}`;
@@ -189,7 +191,7 @@
       attendanceRows.replaceChildren();
       for (const log of logs) {
         const row = document.createElement("tr");
-        if (isWorkplaceSupervisor) {
+        if (isWorkplaceSupervisor || isProfessor) {
           const studentCell = document.createElement("td");
           studentCell.textContent = interns.find((intern) => intern.student_id === log.student_id)?.name ?? `Student ${log.student_id}`;
           row.append(studentCell);
@@ -205,6 +207,25 @@
           const cell = document.createElement("td");
           cell.textContent = value;
           row.append(cell);
+        }
+        if (isProfessor) {
+          const actionCell = document.createElement("td");
+          if ((log.approval_status || "Pending") === "Pending") {
+            const approve = document.createElement("button");
+            approve.type = "button";
+            approve.className = "btn btn-success btn-sm me-1";
+            approve.textContent = "Approve";
+            approve.addEventListener("click", () => reviewLog(log, "Approved", approve));
+            const reject = document.createElement("button");
+            reject.type = "button";
+            reject.className = "btn btn-outline-danger btn-sm";
+            reject.textContent = "Reject";
+            reject.addEventListener("click", () => reviewLog(log, "Rejected", reject));
+            actionCell.append(approve, reject);
+          } else {
+            actionCell.textContent = "-";
+          }
+          row.append(actionCell);
         }
         attendanceRows.append(row);
       }
@@ -222,9 +243,9 @@
 
       let query = supabaseClient
         .from("dailyinternshiplog")
-        .select("student_id, work_date, check_in_time, check_out_time, total_hours, approval_status, supervisor_notes")
+        .select("log_id, student_id, work_date, check_in_time, check_out_time, total_hours, approval_status, supervisor_notes")
         .order("work_date", { ascending: false });
-      if (isWorkplaceSupervisor) {
+      if (isWorkplaceSupervisor || isProfessor) {
         const internIds = interns.map((intern) => intern.student_id);
         if (!internIds.length) {
           renderAttendance([]);
@@ -243,6 +264,48 @@
         return;
       }
       renderAttendance(data);
+    }
+
+    // Story #34: the supervising professor approves or rejects a student's Pending log
+    async function reviewLog(log, decision, button) {
+      if (!isProfessor || !["Approved", "Rejected"].includes(decision)) return;
+      if (!Number.isInteger(log.log_id) || log.log_id <= 0) {
+        showStatus("This attendance record has an invalid id, so it was not updated.", "danger");
+        return;
+      }
+      let note = null;
+      if (decision === "Rejected") {
+        note = window.prompt("Reason for rejecting these hours (shown to the student):", "");
+        if (note === null) return;
+        note = note.trim();
+        if (!note) {
+          showStatus("Please write a reason when you reject hours. Nothing was changed.", "danger");
+          return;
+        }
+      }
+      button.disabled = true;
+      try {
+        const values = { approval_status: decision };
+        if (note) values.supervisor_notes = note.slice(0, 1000);
+        const { data, error } = await supabaseClient
+          .from("dailyinternshiplog")
+          .update(values)
+          .eq("log_id", log.log_id)
+          .eq("approval_status", "Pending")
+          .select("log_id");
+        if (error) throw error;
+        if (!data || !data.length) {
+          showStatus("This record was not updated. It may already be reviewed, or the student is not in your internship cycle.", "warning");
+          await loadAttendance();
+          return;
+        }
+        await loadAttendance();
+        showStatus(decision === "Approved" ? "Hours approved. The student can now see them as Approved." : "Hours rejected. The student can see your reason.", "success");
+      } catch (error) {
+        console.error("Attendance review error:", error);
+        showStatus("Could not update this record. Please try again.", "danger");
+        button.disabled = false;
+      }
     }
 
     async function recordAttendance(event) {
@@ -410,11 +473,37 @@
       }
 
       if (!studentId && !isWorkplaceSupervisor) {
+        const { data: professor, error: professorError } = await supabaseClient
+          .from("supervisingprofessor")
+          .select("professor_id")
+          .eq("user_id", activeUserId)
+          .maybeSingle();
+        if (!professorError && professor) {
+          // RLS returns only the students in this professor's internship cycles
+          const { data: students, error: studentsError } = await supabaseClient
+            .from("student")
+            .select("student_id, name")
+            .order("name");
+          if (studentsError) {
+            console.error(studentsError);
+            showStatus("Could not load your students. Please try again.", "danger");
+            return;
+          }
+          interns = students ?? [];
+          isProfessor = true;
+        }
+      }
+
+      if (!studentId && !isWorkplaceSupervisor && !isProfessor) {
         showStatus(rosterError ? "Could not load your intern roster." : "No student profile or assigned interns were found for this account.", "warning");
         return;
       }
 
-      if (isWorkplaceSupervisor) {
+      if (isProfessor) {
+        studentColumn.hidden = false;
+        document.getElementById("action-column").hidden = false;
+        attendanceIntro.textContent = "Review the hours your students logged. Approve or reject each Pending record.";
+      } else if (isWorkplaceSupervisor) {
         timeOptions(document.getElementById("attendance-check-in"));
         timeOptions(document.getElementById("attendance-check-out"));
         const internSelect = document.getElementById("attendance-student");
